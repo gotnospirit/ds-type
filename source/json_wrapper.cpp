@@ -115,7 +115,7 @@ int load_sprites(JsonWrapper * o, const char * texture_name, List * sprites)
     const char * name = NULL;
     const char * method = NULL;
 
-    int width = 0, height = 0, start_frame = 0, nb_frames = 0;
+    int width = 0, height = 0, start_frame = 0, current_frame = 0, nb_frames = 0;
 
     for (auto const &node : json->value)
     {
@@ -124,6 +124,7 @@ int load_sprites(JsonWrapper * o, const char * texture_name, List * sprites)
         width = Json::GetNumber(node, "width");
         height = Json::GetNumber(node, "height");
         start_frame = Json::GetNumber(node, "start_frame");
+        current_frame = Json::GetNumber(node, "current_frame");
         nb_frames = Json::GetNumber(node, "nb_frames");
 
         if (NULL == name)
@@ -153,7 +154,8 @@ int load_sprites(JsonWrapper * o, const char * texture_name, List * sprites)
         sprite->texture = strdup(texture_name);
         sprite->start_frame = start_frame;
         sprite->nb_frames = nb_frames;
-        sprite->current_frame = 0;
+        sprite->current_frame = current_frame >= 0 ? current_frame : 0;
+        sprite->timestamp = 0;
     }
     return 0;
 }
