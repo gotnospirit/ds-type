@@ -22,9 +22,9 @@ uint32_t next_pow_2(uint32_t i)
         ? 64 : i;
 }
 
-float linear_ease_in(int t, float b, float c, int d)
+float linear_ease_in(int t, int d)
 {
-    return c * t / d + b;
+    return (float)t / d;
 }
 
 int clamp(int value, int min, int max)

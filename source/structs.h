@@ -30,6 +30,7 @@ typedef struct
     uint8_t start_frame;
     uint8_t nb_frames;
     uint8_t current_frame;
+    uint64_t timestamp;
 } Sprite;
 
 struct GameState;

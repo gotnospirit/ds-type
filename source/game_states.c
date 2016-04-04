@@ -10,31 +10,11 @@
 #include "inputs.h"
 #include "textures.h"
 #include "render.h"
-#include "utils.h"
+#include "update.h"
 
 static Surface screen;
 
-static u64 start_time;
-
 static List * sprites = NULL;
-
-static void update_hero(Sprite * sprite, Surface const * screen, uint64_t elapsed)
-{
-    int incr = 5;
-
-    float x_incr = stick_dx() * incr;
-    float y_incr = stick_dy() * incr;
-
-    y_incr *= -1;
-
-    sprite->x += x_incr;
-    sprite->y += y_incr;
-
-    sprite->x = clamp(sprite->x, 0, screen->width - sprite->width);
-    sprite->y = clamp(sprite->y, 0, screen->height - sprite->height);
-
-    sprite->current_frame = linear_ease_in(elapsed % 1000, 0, sprite->nb_frames, 1000);
-}
 
 static int basic_events()
 {
@@ -44,7 +24,7 @@ static int basic_events()
 
 static void level_one_update()
 {
-    u64 elapsed = osGetTime() - start_time;
+    u64 current_time = osGetTime();
 
     const char * method = NULL;
     Sprite * sprite = NULL;
@@ -55,7 +35,7 @@ static void level_one_update()
         {
             if (0 == strncmp(method, "UpdateHero", 10))
             {
-                update_hero(sprite, &screen, elapsed);
+                update_hero(sprite, &screen, current_time);
             }
         }
     }
@@ -89,7 +69,6 @@ void initialize(struct GameState * state)
     else
     {
         printf("\x1b[15;10HPress Start to exit.\n");
-        start_time = osGetTime();
         state->next = level_one;
     }
     json_delete(json);

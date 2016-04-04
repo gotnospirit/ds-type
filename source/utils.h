@@ -10,7 +10,7 @@ extern "C" {
 
 bool is_pow_2(uint32_t i);
 uint32_t next_pow_2(uint32_t i);
-float linear_ease_in(int, float, float, int);
+float linear_ease_in(int, int);
 int clamp(int, int, int);
 char * read_file(const char *);
 
