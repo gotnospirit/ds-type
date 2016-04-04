@@ -9,6 +9,8 @@ endif
 TOPDIR ?= $(CURDIR)
 include $(DEVKITARM)/3ds_rules
 
+CITRA_SDMC := C:/Users/James/Desktop/citra-3ds/user/sdmc
+
 #---------------------------------------------------------------------------------
 # TARGET is the name of the output
 # BUILD is the directory where object files & intermediate files will be placed
@@ -44,9 +46,6 @@ CFLAGS	:=	-g -Wall -O2 -mword-relocations \
 			$(ARCH)
 
 CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS
-ifeq ($(CITRA),1)
-CFLAGS	+=	-DCITRA
-endif
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 
@@ -82,10 +81,6 @@ CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
 SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
 PICAFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.v.pica)))
 SHLISTFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.shlist)))
-JSONFILES   :=  $(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.json)))
-ifeq ($(CITRA),1)
-BINFILES	:=	$(filter-out $(JSONFILES), $(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*))))
-endif
 
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
@@ -101,14 +96,8 @@ else
 endif
 #---------------------------------------------------------------------------------
 
-ifeq ($(CITRA),1)
-export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
-			$(PICAFILES:.v.pica=.shbin.o) $(SHLISTFILES:.shlist=.shbin.o) \
-			$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
-else
 export OFILES	:=	$(PICAFILES:.v.pica=.shbin.o) $(SHLISTFILES:.shlist=.shbin.o) \
 			$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
-endif
 
 export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 			$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
@@ -137,10 +126,10 @@ ifneq ($(ROMFS),)
 	export _3DSXFLAGS += --romfs=$(CURDIR)/$(ROMFS)
 endif
 
-.PHONY: $(BUILD) clean all
+.PHONY: $(BUILD) clean all sdmc
 
 #---------------------------------------------------------------------------------
-all: $(BUILD)
+all: $(BUILD) sdmc
 
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
@@ -151,8 +140,18 @@ clean:
 	@echo clean ...
 	@rm -fr $(BUILD) $(TARGET).3dsx $(OUTPUT).smdh $(TARGET).elf
 
+#---------------------------------------------------------------------------------
+ifneq ($(CITRA_SDMC),)
+TARGET_SDMC := $(CITRA_SDMC)/$(DATA)
 
 #---------------------------------------------------------------------------------
+sdmc:
+	@echo "Copy '$(DATA)' to '$(TARGET_SDMC)'..."
+	@[ -d $(TARGET_SDMC) ] || mkdir -p $(TARGET_SDMC)
+	@cp -rf $(DATA) $(CITRA_SDMC)
+
+endif
+
 else
 
 DEPENDS	:=	$(OFILES:.o=.d)
@@ -167,24 +166,6 @@ $(OUTPUT).3dsx	:	$(OUTPUT).elf
 endif
 
 $(OUTPUT).elf	:	$(OFILES)
-
-#---------------------------------------------------------------------------------
-# you need a rule like this for each extension you use as binary data
-#---------------------------------------------------------------------------------
-%.bin.o	:	%.bin
-#---------------------------------------------------------------------------------
-	@echo $(notdir $<)
-	@$(bin2o)
-#---------------------------------------------------------------------------------
-%.png.o	:	%.png
-#---------------------------------------------------------------------------------
-	@echo $(notdir $<)
-	@$(bin2o)
-#---------------------------------------------------------------------------------
-%.jpg.o	:	%.jpg
-#---------------------------------------------------------------------------------
-	@echo $(notdir $<)
-	@$(bin2o)
 
 #---------------------------------------------------------------------------------
 # rules for assembling GPU shaders
