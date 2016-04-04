@@ -27,9 +27,6 @@ static shaderProgram_s program;
 static int uLoc_projection;
 static C3D_Mtx projection;
 
-static Texture const * background;
-static Texture const * gpu_texture;
-
 static C3D_RenderTarget * top_left;
 static C3D_RenderTarget * top_right;
 
@@ -73,14 +70,14 @@ static void render_background(Texture const * background)
     }
 }
 
-static void render_sprite(Sprite const * sprite, float offset3d)
+static void render_sprite(Sprite const * sprite, Texture const ** gpu_texture, float offset3d)
 {
     Texture const * texture = get_texture(sprite->texture);
     if (NULL != texture)
     {
-        if (texture != gpu_texture)
+        if (texture != *gpu_texture)
         {
-            gpu_texture = texture;
+            *gpu_texture = texture;
             C3D_TexBind(0, &((Texture *)texture)->ptr);
         }
 
@@ -106,16 +103,11 @@ int init_rendering(Surface * screen)
     C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 
     consoleInit(GFX_BOTTOM, NULL);
-    printf("\x1b[15;10HPress Start to exit.\n");
 
-    if (0 != load_textures())
+    if (0 != init_textures())
     {
-        printf("\x1b[15;14HInit failed!");
         return 1;
     }
-
-    background = get_texture("background");
-    gpu_texture = NULL;
 
     // Initialize the render target
     top_left = C3D_RenderTargetCreate(SCREEN_HEIGHT, SCREEN_WIDTH, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
@@ -166,10 +158,11 @@ int init_rendering(Surface * screen)
     return 0;
 }
 
-void render(Sprite const * sprites, int nb_sprites)
+void render(List const * sprites)
 {
+    Texture const * background = get_texture("background");
+    Texture const * gpu_texture = NULL;
     float iod = osGet3DSliderState() * 15;
-    int i = 0;
 
     // Render the scene
     C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
@@ -179,22 +172,30 @@ void render(Sprite const * sprites, int nb_sprites)
         iod = 0;
     }
 
-    // sort sprites by texture?
-
     C3D_FrameDrawOn(top_left);
-    render_background(background);
-    for (i = 0; i < nb_sprites; ++i)
+    if (background)
     {
-        render_sprite(&sprites[i], -iod);
+        render_background(background);
+    }
+
+    Sprite const * sprite = NULL;
+    while (list_next(sprites, (void **)&sprite))
+    {
+        render_sprite(sprite, &gpu_texture, -iod);
     }
 
     if (iod > 0.0f)
     {
         C3D_FrameDrawOn(top_right);
-        render_background(background);
-        for (i = 0; i < nb_sprites; ++i)
+        if (background)
         {
-            render_sprite(&sprites[i], iod);
+            render_background(background);
+        }
+
+        sprite = NULL;
+        while (list_next(sprites, (void **)&sprite))
+        {
+            render_sprite(sprite, &gpu_texture, iod);
         }
     }
 
@@ -212,9 +213,6 @@ void shutdown_rendering()
 
     C3D_RenderTargetDelete(top_left);
     C3D_RenderTargetDelete(top_right);
-
-    background = NULL;
-    gpu_texture = NULL;
 
     unload_textures();
 

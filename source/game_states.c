@@ -1,36 +1,24 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <3ds.h>
 
 #include "game_states.h"
 #include "json_wrapper.h"
 #include "structs.h"
+#include "textures.h"
 #include "utils.h"
 #include "render.h"
+#include "list.h"
 
 static Surface screen;
 
 static u64 start_time;
 static circlePosition circle_pad;
 
-static Sprite * sprites;
-static int nb_sprites;
+static List * sprites = NULL;
 
-static Sprite const * ship;
-
-static Sprite * get_sprite(const char * name)
-{
-    for (int i = 0; i < nb_sprites; ++i)
-    {
-        if (0 == strcmp(sprites[i].name, name))
-        {
-            return &sprites[i];
-        }
-    }
-    return NULL;
-}
-
-static void update_hero(Sprite * chip, Surface const * screen, uint64_t elapsed)
+static void update_hero(Sprite * sprite, Surface const * screen, uint64_t elapsed)
 {
     int incr = 5;
 
@@ -42,17 +30,16 @@ static void update_hero(Sprite * chip, Surface const * screen, uint64_t elapsed)
 
     y_incr *= -1;
 
-    chip->x += x_incr;
-    chip->y += y_incr;
+    sprite->x += x_incr;
+    sprite->y += y_incr;
 
-    // update chip position
-    chip->x = clamp(chip->x, 0, screen->width - chip->width);
-    chip->y = clamp(chip->y, 0, screen->height - chip->height);
+    sprite->x = clamp(sprite->x, 0, screen->width - sprite->width);
+    sprite->y = clamp(sprite->y, 0, screen->height - sprite->height);
 
-    chip->current_frame = linear_ease_in(elapsed % 1000, 0, chip->nb_frames, 1000);
+    sprite->current_frame = linear_ease_in(elapsed % 1000, 0, sprite->nb_frames, 1000);
 }
 
-static int level_events()
+static int basic_events()
 {
     if (!aptMainLoop())
     {
@@ -67,6 +54,17 @@ static int level_events()
     {
         return 2; // in order to return to hbmenu
     }
+    return 0;
+}
+
+static int level_events()
+{
+    int result = basic_events();
+
+    if (0 != result)
+    {
+        return result;
+    }
 
     // Read the CirclePad position
     hidCircleRead(&circle_pad);
@@ -78,14 +76,15 @@ static void level_one_update()
     u64 elapsed = osGetTime() - start_time;
 
     const char * method = NULL;
-    for (int i = 0; i < nb_sprites; ++i)
+    Sprite * sprite = NULL;
+    while (list_next(sprites, (void **)&sprite))
     {
-        method = sprites[i].method;
+        method = sprite->method;
         if (NULL != method)
         {
             if (0 == strncmp(method, "UpdateHero", 10))
             {
-                update_hero(&sprites[i], &screen, elapsed);
+                update_hero(sprite, &screen, elapsed);
             }
         }
     }
@@ -95,19 +94,31 @@ void initialize(struct GameState * state)
 {
     if (0 != init_rendering(&screen))
     {
-        state->next = shutdown;
+        state->next = loading_error;
         return ;
     }
 
-    JsonWrapper * json = json_create("sprites");
-    if (NULL == json || 0 != load_sprites(json, &sprites, &nb_sprites))
+    if (NULL == load_texture("rtype"))
     {
-        state->next = shutdown;
+        state->next = loading_error;
+        return ;
+    }
+
+    if (NULL == load_texture("background"))
+    {
+        state->next = loading_error;
+        return ;
+    }
+
+    JsonWrapper * json = json_new("rtype_sprites");
+    if (NULL == json || NULL == (sprites = list_new(sizeof(Sprite), 1)) || 0 != load_sprites(json, "rtype", sprites))
+    {
+        state->next = loading_error;
     }
     else
     {
+        printf("\x1b[15;10HPress Start to exit.\n");
         start_time = osGetTime();
-        ship = get_sprite("ship");
         state->next = level_one;
     }
     json_delete(json);
@@ -123,22 +134,33 @@ void level_one(struct GameState * state)
     {
         level_one_update();
 
-        // render(sprites, nb_sprites);
-        render(ship, 1);
+        render(sprites);
     }
+}
+
+void loading_error(struct GameState * state)
+{
+    if (0 != basic_events())
+    {
+        state->next = shutdown;
+    }
+
+    printf("\x1b[14;12HLoading failed!");
+    printf("\x1b[15;10HPress Start to exit.");
 }
 
 void shutdown(struct GameState * state)
 {
     state->next = NULL;
 
-    for (int i = 0; i < nb_sprites; ++i)
+    Sprite * sprite = NULL;
+    while (list_next(sprites, (void **)&sprite))
     {
-        free(sprites[i].name);
-        free(sprites[i].method);
-        free(sprites[i].texture);
+        free(sprite->name);
+        free(sprite->method);
+        free(sprite->texture);
     }
-    free(sprites);
+    list_delete(sprites);
     sprites = NULL;
 
     shutdown_rendering();

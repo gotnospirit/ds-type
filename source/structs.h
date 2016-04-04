@@ -17,6 +17,7 @@ typedef struct
 {
     int width, height, real_width, real_height, bpp;
     C3D_Tex ptr;
+    char * name;
     Frame const * frames;
 } Texture;
 

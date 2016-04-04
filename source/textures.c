@@ -7,21 +7,13 @@
 #include "textures.h"
 #include "structs.h"
 #include "json_wrapper.h"
+#include "utils.h"
+#include "list.h"
 
-#ifdef CITRA
-#define STBI_NO_STDIO
-#endif
 #define STBI_ONLY_PNG
 #define STBI_ONLY_JPEG
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-
-#include "utils.h"
-
-#ifdef CITRA
-    #include "rtype_png.h"
-    #include "background_jpg.h"
-#endif
 
 // Used to convert textures to 3DS tiled format
 // Note: vertical flip flag set so 0,0 is top left of texture
@@ -30,14 +22,21 @@
     GX_TRANSFER_IN_FORMAT(format_in) | GX_TRANSFER_OUT_FORMAT(format_out) | \
     GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 
-static Texture * textures;
-static int nb_textures;
+static List * textures = NULL;
 
-#ifdef CITRA
-static int init_texture(Texture * texture, uint8_t const * data, uint32_t size)
-#else
-static int init_texture(Texture * texture, const char * filepath)
-#endif
+static int load_texture_frames(Texture * texture, const char * name)
+{
+    int result = 0;
+    JsonWrapper * json = json_new(name);
+    if (NULL == json || 0 != load_frames(json, texture))
+    {
+        result = 1;
+    }
+    json_delete(json);
+    return result;
+}
+
+static int load_image(Texture * texture, const char * filepath)
 {
     // Configure buffers
     // C3D_BufInfo * bufInfo = C3D_GetBufInfo();
@@ -46,11 +45,7 @@ static int init_texture(Texture * texture, const char * filepath)
     int width, height;
     int bpp;
 
-#ifdef CITRA
-    unsigned char * image = stbi_load_from_memory(data, size, &width, &height, &bpp, 0);
-#else
     unsigned char * image = stbi_load(filepath, &width, &height, &bpp, 0);
-#endif
 
     u32 pow2Width = !is_pow_2(width) ? next_pow_2(width) : width;
     u32 pow2Height = !is_pow_2(height) ? next_pow_2(height) : height;
@@ -112,71 +107,79 @@ static int init_texture(Texture * texture, const char * filepath)
     texture->real_width = pow2Width;
     texture->real_height = pow2Height;
     texture->bpp = bpp;
+    texture->name = NULL;
     texture->frames = NULL;
     return 0;
 }
 
-int load_textures()
+int init_textures()
 {
-    nb_textures = 2;
-    textures = malloc(sizeof(Texture) * nb_textures);
+    textures = list_new(sizeof(Texture), 2);
 
-#ifdef CITRA
-    if (0 != init_texture(&textures[0], rtype_png, rtype_png_size))
-#else
-    if (0 != init_texture(&textures[0], "data/rtype.png"))
-#endif
-    {
-        printf("Failed to load texture 'rtype'");
-        return 1;
-    }
-
-    int abort = 0;
-    JsonWrapper * json = json_create("rtype");
-    if (NULL == json || 0 != load_frames(json, &textures[0]))
-    {
-        abort = 1;
-    }
-    json_delete(json);
-
-    if (abort)
-    {
-        return 1;
-    }
-
-#ifdef CITRA
-    if (0 != init_texture(&textures[1], background_jpg, background_jpg_size))
-#else
-    if (0 != init_texture(&textures[1], "data/background.jpg"))
-#endif
-    {
-        printf("Failed to load texture 'background'");
-        return 1;
-    }
-    return 0;
+    return NULL != textures
+        ? 0 : 1;
 }
 
 void unload_textures()
 {
-    for (int i = 0; i < nb_textures; ++i)
+    Texture * texture = NULL;
+    while (list_next(textures, (void **)&texture))
     {
-        C3D_TexDelete(&textures[i].ptr);
+        C3D_TexDelete(&texture->ptr);
 
-        free((Frame *)textures[i].frames);
+        free(texture->name);
+        free((Frame *)texture->frames);
     }
-    free(textures);
+    list_delete(textures);
     textures = NULL;
+}
+
+Texture const * load_texture(const char * name)
+{
+    Texture * addr = (Texture *)list_alloc(textures);
+    printf("%s %p\n", name, addr);
+
+    const char * frames = 0;
+    if (0 == strncmp(name, "rtype", 5))
+    {
+        if (0 != load_image(addr, "data/rtype.png"))
+        {
+            printf("Failed to load texture 'rtype'");
+            list_dealloc(textures, addr);
+            return NULL;
+        }
+        frames = "rtype_frames";
+    }
+    else if (0 == strncmp(name, "background", 10))
+    {
+        if (0 != load_image(addr, "data/background.jpg"))
+        {
+            printf("Failed to load texture 'background'");
+            list_dealloc(textures, addr);
+            return NULL;
+        }
+    }
+
+    if (frames && 0 != load_texture_frames(addr, frames))
+    {
+        C3D_TexDelete(&addr->ptr);
+        list_dealloc(textures, addr);
+        return NULL;
+    }
+
+    addr->name = strdup(name);
+    return addr;
 }
 
 Texture const * get_texture(const char * name)
 {
-    if (0 == strncmp(name, "rtype", 11))
+    Texture const * texture = NULL;
+    while (list_next(textures, (void **)&texture))
     {
-        return &textures[0];
-    }
-    else if (0 == strncmp(name, "background", 10))
-    {
-        return &textures[1];
+        if (0 == strcmp(texture->name, name))
+        {
+            return texture;
+        }
     }
     return NULL;
 }

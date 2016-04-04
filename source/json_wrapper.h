@@ -9,11 +9,13 @@ typedef void JsonWrapper;
 extern "C" {
 #endif
 
-JsonWrapper * json_create(const char *);
+#include "list.h"
+
+JsonWrapper * json_new(const char *);
 void json_delete(JsonWrapper *);
 
 int load_frames(JsonWrapper *, Texture *);
-int load_sprites(JsonWrapper *, Sprite **, int *);
+int load_sprites(JsonWrapper *, const char *, List *);
 
 #ifdef __cplusplus
 } //end extern "C"
