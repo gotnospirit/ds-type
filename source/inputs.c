@@ -37,5 +37,6 @@ float stick_dx()
 
 float stick_dy()
 {
-    return (float)circle_pad.dy / 160;
+    // invert y-axis
+    return -1 * (float)circle_pad.dy / 160;
 }
