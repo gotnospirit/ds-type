@@ -3,23 +3,21 @@
 
 #include "json_wrapper.h"
 #include "json.h"
-#include "utils.h"
 
 extern "C" {
 
+#include "update.h"
+#include "utils.h"
+
 static char * get_json_data(const char * name)
 {
-    if (0 == strncmp(name, "rtype_sprites", 13))
+    if (0 == strncmp(name, "sprites", 7))
     {
-        return read_file("data/rtype_sprites.json");
+        return read_file("data/sprites.json");
     }
     else if (0 == strncmp(name, "rtype_frames", 12))
     {
         return read_file("data/rtype_frames.json");
-    }
-    else if (0 == strncmp(name, "level_one_sprites", 17))
-    {
-        return read_file("data/level_one_sprites.json");
     }
     else if (0 == strncmp(name, "level_one_frames", 16))
     {
@@ -58,7 +56,6 @@ int load_frames(JsonWrapper * o, Texture * spritesheet)
     auto json = static_cast<Json *>(o);
 
     int nb_frames = Json::Size(json);
-    printf("-- %d frames.\n", nb_frames);
 
     Frame * frames = (Frame *)malloc(sizeof(Frame) * nb_frames);
     if (NULL == frames)
@@ -107,22 +104,24 @@ int load_frames(JsonWrapper * o, Texture * spritesheet)
     return 0;
 }
 
-int load_sprites(JsonWrapper * o, const char * texture_name, List * sprites)
+int load_templates(JsonWrapper * o, List * templates)
 {
     auto json = static_cast<Json *>(o);
 
-    Sprite * sprite = NULL;
+    Template * tpl = NULL;
     const char * name = NULL;
     const char * method = NULL;
+    const char * texture = NULL;
 
     int width = 0, height = 0, start_frame = 0, current_frame = 0, nb_frames = 0;
 
     for (auto const &node : json->value)
     {
         name = Json::GetString(node, "id");
-        method = Json::GetString(node, "update");
+        texture = Json::GetString(node, "texture");
         width = Json::GetNumber(node, "width");
         height = Json::GetNumber(node, "height");
+        method = Json::GetString(node, "update");
         start_frame = Json::GetNumber(node, "start_frame");
         current_frame = Json::GetNumber(node, "current_frame");
         nb_frames = Json::GetNumber(node, "nb_frames");
@@ -130,32 +129,44 @@ int load_sprites(JsonWrapper * o, const char * texture_name, List * sprites)
         if (NULL == name)
         {
             printf("Missing sprite id\n");
+            return 1;
+        }
+        else if (NULL == texture)
+        {
+            printf("Missing texture id\n");
             return 2;
         }
         else if (width < 0 || height < 0)
         {
             printf("Missing dimension for %s\n", name);
-            return 4;
+            return 3;
         }
         else if (start_frame < 0 || nb_frames < 0)
         {
             printf("Missing frames for %s\n", name);
-            return 5;
+            return 4;
         }
 
-        sprite = (Sprite *)list_alloc(sprites);
+        tpl = (Template *)list_alloc(templates);
 
-        sprite->x = 0;
-        sprite->y = 0;
-        sprite->width = width;
-        sprite->height = height;
-        sprite->name = strdup(name);
-        sprite->method = NULL != method ? strdup(method) : NULL;
-        sprite->texture = strdup(texture_name);
-        sprite->start_frame = start_frame;
-        sprite->nb_frames = nb_frames;
-        sprite->current_frame = current_frame >= 0 ? current_frame : 0;
-        sprite->timestamp = 0;
+        tpl->width = width;
+        tpl->height = height;
+        tpl->name = strdup(name);
+        tpl->texture = NULL;
+        tpl->update = NULL;
+        tpl->start_frame = start_frame;
+        tpl->nb_frames = nb_frames;
+        tpl->initial_frame = current_frame >= 0 ? current_frame : 0;
+
+        if (NULL != texture)
+        {
+            tpl->texture = strdup(texture);
+        }
+
+        if (NULL != method && 0 == strncmp(method, "UpdateHero", 10))
+        {
+            tpl->update = update_hero;
+        }
     }
     return 0;
 }

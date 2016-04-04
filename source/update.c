@@ -2,29 +2,41 @@
 #include "input.h"
 #include "utils.h"
 
-void update_hero(Sprite * sprite, Surface const * screen, uint64_t current_time)
+static float linear_ease_in(int t, int d)
 {
-    int incr = 5;
+    return (float)t / d;
+}
 
-    float x_incr = stick_dx() * incr;
-    float y_incr = stick_dy() * incr;
+static int clamp(int value, int min, int max)
+{
+    return value < min ? min : value > max ? max : value;
+}
 
-    int idle_frame = sprite->nb_frames / 2;
-    int duration = 1000;
+void update_hero(Sprite * sprite, uint8_t nb_frames, uint32_t max_width, uint32_t max_height, uint64_t current_time)
+{
+    int const incr = 5;
 
+    float const x_incr = stick_dx() * incr;
+    float const y_incr = stick_dy() * incr;
+
+    int const idle_frame = nb_frames / 2;
+    int const duration = 1000;
+
+    int current_frame = sprite->current_frame;
+    uint64_t timestamp = sprite->timestamp;
+    int x = sprite->x;
+    int y = sprite->y;
     int start_at = 0;
     int end_at = 0;
 
     if (x_incr)
     {
-        sprite->x += x_incr;
-        sprite->x = clamp(sprite->x, 0, screen->width - sprite->width);
+        x = clamp(x + x_incr, 0, max_width);
     }
 
     if (y_incr)
     {
-        sprite->y += y_incr;
-        sprite->y = clamp(sprite->y, 0, screen->height - sprite->height);
+        y = clamp(y + y_incr, 0, max_height);
 
         if (y_incr > 0)
         {
@@ -36,27 +48,27 @@ void update_hero(Sprite * sprite, Surface const * screen, uint64_t current_time)
         {
             // animate from idle to nb_frames
             start_at = idle_frame;
-            end_at = sprite->nb_frames - 1;
+            end_at = nb_frames - 1;
         }
     }
     else
     {
         // animate to idle
-        start_at = sprite->current_frame;
+        start_at = current_frame;
         end_at = idle_frame;
     }
 
-    if (start_at != end_at && sprite->current_frame != end_at)
+    if (start_at != end_at && current_frame != end_at)
     {
-        if (!sprite->timestamp)
+        if (!timestamp)
         {
-            sprite->timestamp = current_time;
+            timestamp = current_time;
         }
 
-        u64 elapsed = current_time - sprite->timestamp;
+        u64 elapsed = current_time - timestamp;
         if (elapsed >= duration)
         {
-            sprite->current_frame = end_at;
+            current_frame = end_at;
         }
         else
         {
@@ -67,11 +79,16 @@ void update_hero(Sprite * sprite, Surface const * screen, uint64_t current_time)
                 progress = 1;
             }
 
-            sprite->current_frame = start_at + progress * (end_at - start_at);
+            current_frame = start_at + progress * (end_at - start_at);
         }
     }
     else
     {
-        sprite->timestamp = 0;
+        timestamp = 0;
     }
+
+    sprite->x = x;
+    sprite->y = y;
+    sprite->current_frame = current_frame;
+    sprite->timestamp = timestamp;
 }

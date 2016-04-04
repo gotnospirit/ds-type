@@ -14,6 +14,7 @@
 
 static Surface screen;
 
+static List * templates = NULL;
 static List * sprites = NULL;
 
 static int basic_events()
@@ -22,21 +23,45 @@ static int basic_events()
         ? 0 : 1;
 }
 
+static int spawn_sprite(const char * name)
+{
+    Template const * tpl = NULL;
+    while (list_next(templates, (void **)&tpl))
+    {
+        if (0 == strcmp(tpl->name, name))
+        {
+            break;
+        }
+    }
+
+    if (NULL != tpl)
+    {
+        Sprite * sprite = (Sprite *)list_alloc(sprites);
+        sprite->x = 0;
+        sprite->y = 0;
+        sprite->current_frame = tpl->initial_frame;
+        sprite->timestamp = 0;
+        sprite->tpl = tpl;
+        return 1;
+    }
+    return 0;
+}
+
 static void level_one_update()
 {
     u64 current_time = osGetTime();
 
-    const char * method = NULL;
     Sprite * sprite = NULL;
+    Template const * tpl = NULL;
+    UpdateFunction * update = NULL;
+
     while (list_next(sprites, (void **)&sprite))
     {
-        method = sprite->method;
-        if (NULL != method)
+        tpl = sprite->tpl;
+        update = tpl->update;
+        if (NULL != update)
         {
-            if (0 == strncmp(method, "UpdateHero", 10))
-            {
-                update_hero(sprite, &screen, current_time);
-            }
+            update(sprite, tpl->nb_frames, screen.width - tpl->width, screen.height - tpl->height, current_time);
         }
     }
 }
@@ -61,17 +86,42 @@ void initialize(struct GameState * state)
         return ;
     }
 
-    JsonWrapper * json = json_new("rtype_sprites");
-    if (NULL == json || NULL == (sprites = list_new(sizeof(Sprite), 1)) || 0 != load_sprites(json, "rtype", sprites))
+    templates = list_new(sizeof(Template), 1);
+    if (NULL == templates)
     {
         state->next = loading_error;
+        return ;
     }
-    else
+
+    sprites = list_new(sizeof(Sprite), 1);
+    if (NULL == sprites)
     {
-        printf("\x1b[15;10HPress Start to exit.\n");
-        state->next = level_one;
+        state->next = loading_error;
+        return ;
+    }
+
+    JsonWrapper * json = json_new("sprites");
+    if (NULL == json)
+    {
+        state->next = loading_error;
+        return ;
+    }
+    else if (0 != load_templates(json, templates))
+    {
+        state->next = loading_error;
+        json_delete(json);
+        return ;
     }
     json_delete(json);
+
+    if (!spawn_sprite("ship"))
+    {
+        state->next = loading_error;
+        return ;
+    }
+
+    printf("\x1b[15;10HPress Start to exit.\n");
+    state->next = level_one;
 }
 
 void level_one(struct GameState * state)
@@ -103,15 +153,17 @@ void shutdown(struct GameState * state)
 {
     state->next = NULL;
 
-    Sprite * sprite = NULL;
-    while (list_next(sprites, (void **)&sprite))
-    {
-        free(sprite->name);
-        free(sprite->method);
-        free(sprite->texture);
-    }
     list_delete(sprites);
     sprites = NULL;
+
+    Template * tpl = NULL;
+    while (list_next(templates, (void **)&tpl))
+    {
+        free(tpl->name);
+        free(tpl->texture);
+    }
+    list_delete(templates);
+    templates = NULL;
 
     shutdown_rendering();
 }

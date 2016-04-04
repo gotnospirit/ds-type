@@ -24,6 +24,26 @@
 
 static List * textures = NULL;
 
+static uint8_t is_pow_2(uint32_t i)
+{
+    return (i && !(i & (i - 1)))
+        ? 1 : 0;
+}
+
+static u32 next_pow_2(int i)
+{
+    i--;
+    i |= i >> 1;
+    i |= i >> 2;
+    i |= i >> 4;
+    i |= i >> 8;
+    i |= i >> 16;
+    i++;
+
+    return (i < 64)
+        ? 64 : i;
+}
+
 static int load_texture_frames(Texture * texture, const char * name)
 {
     int result = 0;
@@ -137,7 +157,6 @@ void unload_textures()
 Texture const * load_texture(const char * name)
 {
     Texture * addr = (Texture *)list_alloc(textures);
-    printf("%s %p\n", name, addr);
 
     const char * frames = 0;
     if (0 == strncmp(name, "rtype", 5))
@@ -176,7 +195,7 @@ Texture const * get_texture(const char * name)
     Texture const * texture = NULL;
     while (list_next(textures, (void **)&texture))
     {
-        if (0 == strcmp(texture->name, name))
+        if (NULL != name && NULL != texture->name && 0 == strcmp(texture->name, name))
         {
             return texture;
         }
@@ -186,7 +205,7 @@ Texture const * get_texture(const char * name)
 
 Frame const * get_frame(Texture const * texture, int index)
 {
-    if (NULL != texture)
+    if (NULL != texture && NULL != texture->frames)
     {
         return &(texture->frames[index]);
     }

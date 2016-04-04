@@ -3,35 +3,6 @@
 
 #include "utils.h"
 
-bool is_pow_2(uint32_t i)
-{
-    return i && !(i & (i - 1));
-}
-
-uint32_t next_pow_2(uint32_t i)
-{
-    i--;
-    i |= i >> 1;
-    i |= i >> 2;
-    i |= i >> 4;
-    i |= i >> 8;
-    i |= i >> 16;
-    i++;
-
-    return (i < 64)
-        ? 64 : i;
-}
-
-float linear_ease_in(int t, int d)
-{
-    return (float)t / d;
-}
-
-int clamp(int value, int min, int max)
-{
-    return value < min ? min : value > max ? max : value;
-}
-
 char * read_file(const char * filepath)
 {
     char * result = 0;

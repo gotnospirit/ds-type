@@ -72,7 +72,8 @@ static void render_background(Texture const * background)
 
 static void render_sprite(Sprite const * sprite, Texture const ** gpu_texture, float offset3d)
 {
-    Texture const * texture = get_texture(sprite->texture);
+    Template const * tpl = sprite->tpl;
+    Texture const * texture = get_texture(tpl->texture);
     if (NULL != texture)
     {
         if (texture != *gpu_texture)
@@ -81,13 +82,13 @@ static void render_sprite(Sprite const * sprite, Texture const ** gpu_texture, f
             C3D_TexBind(0, &((Texture *)texture)->ptr);
         }
 
-        Frame const * frame = get_frame(texture, sprite->start_frame + sprite->current_frame);
+        Frame const * frame = get_frame(texture, tpl->start_frame + sprite->current_frame);
         if (NULL != frame)
         {
             float x = sprite->x + offset3d;
 
             draw_quad(
-                x, sprite->y, x + sprite->width, sprite->y + sprite->height,
+                x, sprite->y, x + tpl->width, sprite->y + tpl->height,
                 frame->left, frame->top, frame->right, frame->bottom
             );
         }
