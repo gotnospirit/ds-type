@@ -6,7 +6,7 @@
 
 #include "render.h"
 #include "structs.h"
-#include "textures.h"
+#include "texture.h"
 
 // Used to transfer the final rendered display to the framebuffer
 #define DISPLAY_TRANSFER_FLAGS \

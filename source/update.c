@@ -1,5 +1,5 @@
 #include "update.h"
-#include "inputs.h"
+#include "input.h"
 #include "utils.h"
 
 void update_hero(Sprite * sprite, Surface const * screen, uint64_t current_time)

@@ -3,12 +3,12 @@
 
 #include <3ds.h>
 
-#include "game_states.h"
+#include "state.h"
 #include "json_wrapper.h"
 #include "list.h"
 #include "structs.h"
-#include "inputs.h"
-#include "textures.h"
+#include "input.h"
+#include "texture.h"
 #include "render.h"
 #include "update.h"
 

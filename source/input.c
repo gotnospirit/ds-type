@@ -1,6 +1,6 @@
 #include <3ds.h>
 
-#include "inputs.h"
+#include "input.h"
 
 static circlePosition circle_pad;
 static u32 kDown;

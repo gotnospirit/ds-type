@@ -4,7 +4,7 @@
 #include <3ds.h>
 #include <citro3d.h>
 
-#include "textures.h"
+#include "texture.h"
 #include "structs.h"
 #include "json_wrapper.h"
 #include "utils.h"
