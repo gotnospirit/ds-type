@@ -5,16 +5,16 @@
 
 #include "game_states.h"
 #include "json_wrapper.h"
-#include "structs.h"
-#include "textures.h"
-#include "utils.h"
-#include "render.h"
 #include "list.h"
+#include "structs.h"
+#include "inputs.h"
+#include "textures.h"
+#include "render.h"
+#include "utils.h"
 
 static Surface screen;
 
 static u64 start_time;
-static circlePosition circle_pad;
 
 static List * sprites = NULL;
 
@@ -22,11 +22,8 @@ static void update_hero(Sprite * sprite, Surface const * screen, uint64_t elapse
 {
     int incr = 5;
 
-    int dx = circle_pad.dx;
-    int dy = circle_pad.dy;
-
-    float x_incr = dx * incr / 160;
-    float y_incr = dy * incr / 160;
+    float x_incr = stick_dx() * incr;
+    float y_incr = stick_dy() * incr;
 
     y_incr *= -1;
 
@@ -41,34 +38,8 @@ static void update_hero(Sprite * sprite, Surface const * screen, uint64_t elapse
 
 static int basic_events()
 {
-    if (!aptMainLoop())
-    {
-        return 1;
-    }
-
-    hidScanInput();
-
-    // Respond to user input
-    u32 kDown = hidKeysDown();
-    if (kDown & KEY_START)
-    {
-        return 2; // in order to return to hbmenu
-    }
-    return 0;
-}
-
-static int level_events()
-{
-    int result = basic_events();
-
-    if (0 != result)
-    {
-        return result;
-    }
-
-    // Read the CirclePad position
-    hidCircleRead(&circle_pad);
-    return 0;
+    return (aptMainLoop() && read_inputs())
+        ? 0 : 1;
 }
 
 static void level_one_update()
@@ -126,7 +97,7 @@ void initialize(struct GameState * state)
 
 void level_one(struct GameState * state)
 {
-    if (0 != level_events())
+    if (0 != basic_events())
     {
         state->next = shutdown;
     }
