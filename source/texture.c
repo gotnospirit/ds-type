@@ -138,7 +138,7 @@ static int load_image(Texture * texture, const char * filepath)
 
 int init_textures()
 {
-    textures = list_new(sizeof(Texture), 2);
+    textures = list_new(sizeof(Texture), 3);
 
     return NULL != textures
         ? 0 : 1;
@@ -162,24 +162,32 @@ Texture const * load_texture(const char * name)
 {
     Texture * addr = (Texture *)list_alloc(textures);
 
-    int abort = 0;
+    int abort = 1;
     if (0 == strncmp(name, "rtype", 5))
     {
-        if (0 != load_image(addr, "data/rtype.png"))
+        if (0 == load_image(addr, "data/rtype.png"))
         {
-            abort = 1;
-        }
-        else if (0 != load_texture_frames(addr, "rtype_frames"))
-        {
-            C3D_TexDelete(&addr->ptr);
-            abort = 1;
+            abort = 0;
+
+            if (0 != load_texture_frames(addr, "rtype_frames"))
+            {
+                C3D_TexDelete(&addr->ptr);
+                abort = 1;
+            }
         }
     }
     else if (0 == strncmp(name, "background", 10))
     {
-        if (0 != load_image(addr, "data/background.jpg"))
+        if (0 == load_image(addr, "data/background.jpg"))
         {
-            abort = 1;
+            abort = 0;
+        }
+    }
+    else if (0 == strncmp(name, "level_one", 9))
+    {
+        if (0 == load_image(addr, "data/level_one.png"))
+        {
+            abort = 0;
         }
     }
 

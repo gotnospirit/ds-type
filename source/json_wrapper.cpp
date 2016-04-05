@@ -19,9 +19,9 @@ static char * get_json_data(const char * name)
     {
         return read_file("data/rtype_frames.json");
     }
-    else if (0 == strncmp(name, "level_one_frames", 16))
+    else if (0 == strncmp(name, "level_one", 9))
     {
-        return read_file("data/level_one_frames.json");
+        return read_file("data/level_one.json");
     }
     return NULL;
 }
