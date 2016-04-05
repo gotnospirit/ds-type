@@ -66,6 +66,10 @@ static int load_image(Texture * texture, const char * filepath)
     int bpp;
 
     unsigned char * image = stbi_load(filepath, &width, &height, &bpp, 0);
+    if (NULL == image)
+    {
+        return 1;
+    }
 
     u32 pow2Width = !is_pow_2(width) ? next_pow_2(width) : width;
     u32 pow2Height = !is_pow_2(height) ? next_pow_2(height) : height;
@@ -75,7 +79,7 @@ static int load_image(Texture * texture, const char * filepath)
     if (!gpusrc)
     {
         printf("Failed to alloc %lu", texture_size);
-        return 1;
+        return 2;
     }
     memset(gpusrc, 0, texture_size);
 
@@ -158,30 +162,29 @@ Texture const * load_texture(const char * name)
 {
     Texture * addr = (Texture *)list_alloc(textures);
 
-    const char * frames = 0;
+    int abort = 0;
     if (0 == strncmp(name, "rtype", 5))
     {
         if (0 != load_image(addr, "data/rtype.png"))
         {
-            printf("Failed to load texture 'rtype'");
-            list_dealloc(textures, addr);
-            return NULL;
+            abort = 1;
         }
-        frames = "rtype_frames";
+        else if (0 != load_texture_frames(addr, "rtype_frames"))
+        {
+            C3D_TexDelete(&addr->ptr);
+            abort = 1;
+        }
     }
     else if (0 == strncmp(name, "background", 10))
     {
         if (0 != load_image(addr, "data/background.jpg"))
         {
-            printf("Failed to load texture 'background'");
-            list_dealloc(textures, addr);
-            return NULL;
+            abort = 1;
         }
     }
 
-    if (frames && 0 != load_texture_frames(addr, frames))
+    if (abort)
     {
-        C3D_TexDelete(&addr->ptr);
         list_dealloc(textures, addr);
         return NULL;
     }
