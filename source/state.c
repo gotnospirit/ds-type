@@ -77,12 +77,14 @@ void initialize(struct GameState * state)
     if (NULL == load_texture("rtype"))
     {
         state->next = loading_error;
+        state->data = "R-Type texture failed...";
         return ;
     }
 
     if (NULL == load_texture("background"))
     {
         state->next = loading_error;
+        state->data = "Background failed...";
         return ;
     }
 
@@ -109,6 +111,7 @@ void initialize(struct GameState * state)
     else if (0 != load_templates(json, templates))
     {
         state->next = loading_error;
+        state->data = "Templates failed...";
         json_delete(json);
         return ;
     }
@@ -117,6 +120,7 @@ void initialize(struct GameState * state)
     if (!spawn_sprite("ship"))
     {
         state->next = loading_error;
+        state->data = "Ship loaded...";
         return ;
     }
 
@@ -143,15 +147,36 @@ void loading_error(struct GameState * state)
     if (0 != basic_events())
     {
         state->next = shutdown;
+        state->data = NULL;
     }
 
-    printf("\x1b[14;12HLoading failed!");
+    const char * text = 0;
+    if (NULL == state->data)
+    {
+        text = "Loading failed!";
+    }
+    else
+    {
+        text = (const char *)state->data;
+    }
+
+    int len = strlen(text);
+    int w = 0;
+
+    if (len < 40)
+    {
+        w = (40 - len) / 2;
+    }
+    printf("\x1b[13;%dH%s", w, text);
     printf("\x1b[15;10HPress Start to exit.");
 }
 
 void shutdown(struct GameState * state)
 {
     state->next = NULL;
+
+    free(state->data);
+    state->data = NULL;
 
     list_delete(sprites);
     sprites = NULL;

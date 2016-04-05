@@ -55,6 +55,7 @@ struct Sprite
 struct GameState
 {
     StateFunction * next;
+    void * data;
 };
 
 #endif
