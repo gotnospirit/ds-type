@@ -44,18 +44,6 @@ static u32 next_pow_2(int i)
         ? 64 : i;
 }
 
-static int load_texture_frames(Texture * texture, const char * name)
-{
-    int result = 0;
-    JsonWrapper * json = json_new(name);
-    if (NULL == json || 0 != load_frames(json, texture))
-    {
-        result = 1;
-    }
-    json_delete(json);
-    return result;
-}
-
 static int load_image(Texture * texture, const char * filepath)
 {
     // Configure buffers
@@ -169,11 +157,13 @@ Texture const * load_texture(const char * name)
         {
             abort = 0;
 
-            if (0 != load_texture_frames(addr, "rtype_frames"))
+            JsonWrapper * json = json_new("rtype_frames");
+            if (NULL == json || 0 != load_frames(json, addr))
             {
                 C3D_TexDelete(&addr->ptr);
                 abort = 1;
             }
+            json_delete(json);
         }
     }
     else if (0 == strncmp(name, "background", 10))
