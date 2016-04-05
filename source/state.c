@@ -47,7 +47,7 @@ static int spawn_sprite(const char * name)
     return 0;
 }
 
-static void level_one_update()
+static void level_update()
 {
     u64 current_time = osGetTime();
 
@@ -59,6 +59,7 @@ static void level_one_update()
     {
         tpl = sprite->tpl;
         update = tpl->update;
+
         if (NULL != update)
         {
             update(sprite, tpl->nb_frames, screen.width - tpl->width, screen.height - tpl->height, current_time);
@@ -125,21 +126,8 @@ void initialize(struct GameState * state)
     }
 
     printf("\x1b[15;10HPress Start to exit.\n");
-    state->next = level_one;
-}
-
-void level_one(struct GameState * state)
-{
-    if (0 != basic_events())
-    {
-        state->next = shutdown;
-    }
-    else
-    {
-        level_one_update();
-
-        render(sprites);
-    }
+    state->next = level_start;
+    state->data = "level_one";
 }
 
 void loading_error(struct GameState * state)
@@ -148,6 +136,7 @@ void loading_error(struct GameState * state)
     {
         state->next = shutdown;
         state->data = NULL;
+        return ;
     }
 
     const char * text = 0;
@@ -169,6 +158,38 @@ void loading_error(struct GameState * state)
     }
     printf("\x1b[13;%dH%s", w, text);
     printf("\x1b[15;10HPress Start to exit.");
+}
+
+void level_start(struct GameState * state)
+{
+    if (NULL == state->data)
+    {
+        state->next = loading_error;
+        return ;
+    }
+
+    state->next = level_run;
+}
+
+void level_run(struct GameState * state)
+{
+    if (0 != basic_events())
+    {
+        state->next = shutdown;
+    }
+    else
+    {
+        level_update();
+
+        render(sprites);
+    }
+}
+
+void level_stop(struct GameState * state)
+{
+    // unload texture
+    // move to next level or credits
+    state->next = shutdown;
 }
 
 void shutdown(struct GameState * state)
