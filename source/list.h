@@ -3,6 +3,10 @@
 
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "mempool.h"
 
 typedef struct
@@ -14,11 +18,15 @@ typedef struct
 } List;
 
 List * list_new(size_t, size_t);
-void list_delete(List *);
+void list_delete(List **);
 
 void * list_alloc(List *);
-void list_dealloc(List *, void *);
+void * list_dealloc(List *, void *);
 
 int list_next(List const *, void **);
+
+#ifdef __cplusplus
+} //end extern "C"
+#endif
 
 #endif

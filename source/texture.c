@@ -7,7 +7,6 @@
 #include "texture.h"
 #include "structs.h"
 #include "json_wrapper.h"
-#include "utils.h"
 #include "list.h"
 
 #define STBI_ONLY_PNG
@@ -66,7 +65,7 @@ static int load_image(Texture * texture, const char * filepath)
     u8 * gpusrc = linearAlloc(texture_size);
     if (!gpusrc)
     {
-        printf("Failed to alloc %lu", texture_size);
+        printf("Failed to alloc %lu\n", texture_size);
         return 2;
     }
     memset(gpusrc, 0, texture_size);
@@ -124,12 +123,19 @@ static int load_image(Texture * texture, const char * filepath)
     return 0;
 }
 
+static void free_texture(Texture * texture)
+{
+    C3D_TexDelete(&texture->ptr);
+    free(texture->name);
+    free((Frame *)texture->frames);
+}
+
 int init_textures()
 {
     textures = list_new(sizeof(Texture), 3);
 
     return NULL != textures
-        ? 0 : 1;
+        ? 1 : 0;
 }
 
 void unload_textures()
@@ -137,16 +143,12 @@ void unload_textures()
     Texture * texture = NULL;
     while (list_next(textures, (void **)&texture))
     {
-        C3D_TexDelete(&texture->ptr);
-
-        free(texture->name);
-        free((Frame *)texture->frames);
+        free_texture(texture);
     }
-    list_delete(textures);
-    textures = NULL;
+    list_delete(&textures);
 }
 
-Texture const * load_texture(const char * name)
+Texture * prepare_texture(const char * name)
 {
     Texture * addr = (Texture *)list_alloc(textures);
 
@@ -156,14 +158,6 @@ Texture const * load_texture(const char * name)
         if (0 == load_image(addr, "data/rtype.png"))
         {
             abort = 0;
-
-            JsonWrapper * json = json_new("rtype_frames");
-            if (NULL == json || 0 != load_frames(json, addr))
-            {
-                C3D_TexDelete(&addr->ptr);
-                abort = 1;
-            }
-            json_delete(json);
         }
     }
     else if (0 == strncmp(name, "background", 10))
@@ -191,12 +185,61 @@ Texture const * load_texture(const char * name)
     return addr;
 }
 
+Texture const * load_texture(const char * name)
+{
+    Texture * addr = prepare_texture(name);
+
+    if (NULL == addr)
+    {
+        return NULL;
+    }
+
+    int abort = 0;
+    if (0 == strncmp(name, "rtype", 5))
+    {
+        JsonWrapper * json = json_new("rtype_frames");
+        if (NULL == json || 0 != load_frames(json, addr))
+        {
+            abort = 1;
+        }
+        json_delete(json);
+    }
+
+    if (abort)
+    {
+        free_texture(addr);
+        list_dealloc(textures, addr);
+        return NULL;
+    }
+    return addr;
+}
+
+int unload_texture(Texture const * texture)
+{
+    Texture * ptr = NULL;
+    while (list_next(textures, (void **)&ptr))
+    {
+        if (ptr == texture)
+        {
+            free_texture(ptr);
+            ptr = list_dealloc(textures, ptr);
+            return 1;
+        }
+    }
+    return 0;
+}
+
 Texture const * get_texture(const char * name)
 {
+    if (NULL == name)
+    {
+        return NULL;
+    }
+
     Texture const * texture = NULL;
     while (list_next(textures, (void **)&texture))
     {
-        if (NULL != name && NULL != texture->name && 0 == strcmp(texture->name, name))
+        if (NULL != texture->name && 0 == strcmp(texture->name, name))
         {
             return texture;
         }
@@ -206,7 +249,7 @@ Texture const * get_texture(const char * name)
 
 Frame const * get_frame(Texture const * texture, int index)
 {
-    if (NULL != texture && NULL != texture->frames)
+    if (NULL != texture && NULL != texture->frames && index >= 0)
     {
         return &(texture->frames[index]);
     }

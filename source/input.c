@@ -10,16 +10,14 @@ int read_inputs()
 {
     hidScanInput();
 
-    // Respond to user input
     kDown = hidKeysDown();
     if (kDown & KEY_START)
     {
-        return 0; // in order to return to hbmenu
+        return 0;
     }
 
     kHeld = hidKeysHeld();
 
-    // Read the CirclePad position
     hidCircleRead(&circle_pad);
     return 1;
 }

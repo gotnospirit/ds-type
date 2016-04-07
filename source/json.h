@@ -6,11 +6,10 @@
 class Json
 {
 public:
-    static JsonValue Find(JsonNode const *, const char *);
-    static const char * GetString(JsonNode const *, const char *);
-    static int GetNumber(JsonNode const *, const char *);
-    static int Size(JsonNode const *);
-    static int Size(Json const *);
+    static const char * GetString(JsonValue const &, const char *);
+    static int GetNumber(JsonValue const &, const char *);
+
+    static int Size(JsonValue const &);
 
     ~Json();
 
@@ -19,6 +18,8 @@ public:
     JsonValue value;
 
 private:
+    static JsonValue Find(JsonValue const &, const char *);
+
     char * source = 0;
     char * endptr = 0;
     JsonAllocator allocator;

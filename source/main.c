@@ -5,7 +5,7 @@
 
 int main(int argc, char ** argv)
 {
-    struct GameState state;
+    GameState state;
     state.next = initialize;
     state.data = NULL;
 

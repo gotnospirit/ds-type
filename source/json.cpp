@@ -15,9 +15,9 @@ bool Json::parse(const char * data)
     return jsonParse(source, &endptr, &value, allocator) == JSON_OK;
 }
 
-JsonValue Json::Find(JsonNode const * root, const char * key)
+JsonValue Json::Find(JsonValue const &root, const char * key)
 {
-    for (auto const &leaf : root->value)
+    for (auto const &leaf : root)
     {
         if (0 == strcmp(leaf->key, key))
         {
@@ -27,7 +27,7 @@ JsonValue Json::Find(JsonNode const * root, const char * key)
     return JsonValue(JSON_NULL);
 }
 
-const char * Json::GetString(JsonNode const * root, const char * key)
+const char * Json::GetString(JsonValue const &root, const char * key)
 {
     auto const &node = Json::Find(root, key);
     if (node.getTag() != JSON_NULL)
@@ -37,7 +37,7 @@ const char * Json::GetString(JsonNode const * root, const char * key)
     return NULL;
 }
 
-int Json::GetNumber(JsonNode const * root, const char * key)
+int Json::GetNumber(JsonValue const &root, const char * key)
 {
     auto const &node = Json::Find(root, key);
     if (node.getTag() != JSON_NULL)
@@ -47,22 +47,11 @@ int Json::GetNumber(JsonNode const * root, const char * key)
     return -1;
 }
 
-int Json::Size(JsonNode const * node)
+int Json::Size(JsonValue const &value)
 {
     int result = 0;
-    auto iter_end = end(node->value);
-    for (auto iter = begin(node->value); iter != iter_end; ++iter)
-    {
-        ++result;
-    }
-    return result;
-}
-
-int Json::Size(Json const * o)
-{
-    int result = 0;
-    auto iter_end = end(o->value);
-    for (auto iter = begin(o->value); iter != iter_end; ++iter)
+    auto iter_end = end(value);
+    for (auto iter = begin(value); iter != iter_end; ++iter)
     {
         ++result;
     }

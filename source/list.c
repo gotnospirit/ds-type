@@ -26,38 +26,26 @@ List * list_new(size_t item_size, size_t nb_items)
     return result;
 }
 
-void list_delete(List * list)
+void list_delete(List ** list)
 {
-    if (NULL == list)
+    if (NULL == *list)
     {
         return ;
     }
 
-    size_t max = list->nb_items;
-    for (size_t i = 0; i < max; ++i)
-    {
-        mempool_put(list->storage, list->items[i]);
-    }
+    (*list)->max_items = 0;
+    (*list)->nb_items = 0;
 
-    mempool_free(list->storage);
+    free((*list)->items);
 
-    free(list->items);
+    mempool_free((*list)->storage);
 
-    list->storage = NULL;
-    list->items = NULL;
-    list->nb_items = 0;
-    list->max_items = 0;
+    *list = NULL;
 }
 
 void * list_alloc(List * list)
 {
     if (NULL == list)
-    {
-        return NULL;
-    }
-
-    void * result = mempool_get(list->storage);
-    if (NULL == result)
     {
         return NULL;
     }
@@ -70,10 +58,15 @@ void * list_alloc(List * list)
         void * tmp = realloc(list->items, sizeof(void *) * list->max_items);
         if (NULL == tmp)
         {
-            mempool_put(list->storage, result);
             return NULL;
         }
         list->items = tmp;
+    }
+
+    void * result = mempool_get(list->storage);
+    if (NULL == result)
+    {
+        return NULL;
     }
 
     list->items[list->nb_items] = result;
@@ -81,11 +74,11 @@ void * list_alloc(List * list)
     return result;
 }
 
-void list_dealloc(List * list, void * data)
+void * list_dealloc(List * list, void * data)
 {
     if (NULL == list)
     {
-        return ;
+        return NULL;
     }
 
     size_t n = 0;
@@ -105,6 +98,8 @@ void list_dealloc(List * list, void * data)
 
     // arrange
     memmove(&list->items[n], &list->items[n + 1], sizeof(void *) * (max - n));
+    return 0 == n
+        ? NULL : list->items[n - 1];
 }
 
 int list_next(List const * list, void ** ptr)

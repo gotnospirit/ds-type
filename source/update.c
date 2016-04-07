@@ -1,10 +1,17 @@
 #include "update.h"
 #include "input.h"
-#include "utils.h"
+#include "texture.h"
 
 static float linear_ease_in(int t, int d)
 {
-    return (float)t / d;
+    float b = 0.0f;
+    float c = 1.0f;
+    float result = c * t / d + b;
+    if (result > 1)
+    {
+        result = 1;
+    }
+    return result;
 }
 
 static int clamp(int value, int min, int max)
@@ -12,8 +19,11 @@ static int clamp(int value, int min, int max)
     return value < min ? min : value > max ? max : value;
 }
 
-void update_hero(Sprite * sprite, uint8_t nb_frames, uint32_t max_width, uint32_t max_height, uint64_t current_time)
+void update_hero(Entity * entity, Surface const * screen, uint64_t dt)
 {
+    Template const * template = entity->tpl;
+    uint8_t nb_frames = template->nb_frames;
+
     int const incr = 5;
 
     float const x_incr = stick_dx() * incr;
@@ -22,21 +32,20 @@ void update_hero(Sprite * sprite, uint8_t nb_frames, uint32_t max_width, uint32_
     int const idle_frame = nb_frames / 2;
     int const duration = 1000;
 
-    int current_frame = sprite->current_frame;
-    uint64_t timestamp = sprite->timestamp;
-    int x = sprite->x;
-    int y = sprite->y;
+    int current_frame = entity->current_frame;
+    int x = entity->x;
+    int y = entity->y;
     int start_at = 0;
     int end_at = 0;
 
     if (x_incr)
     {
-        x = clamp(x + x_incr, 0, max_width);
+        x = clamp(x + x_incr, 0, screen->width - template->width);
     }
 
     if (y_incr)
     {
-        y = clamp(y + y_incr, 0, max_height);
+        y = clamp(y + y_incr, 0, screen->height - template->height);
 
         if (y_incr > 0)
         {
@@ -60,12 +69,8 @@ void update_hero(Sprite * sprite, uint8_t nb_frames, uint32_t max_width, uint32_
 
     if (start_at != end_at && current_frame != end_at)
     {
-        if (!timestamp)
-        {
-            timestamp = current_time;
-        }
+        uint16_t elapsed = entity->elapsed + dt;
 
-        u64 elapsed = current_time - timestamp;
         if (elapsed >= duration)
         {
             current_frame = end_at;
@@ -73,22 +78,26 @@ void update_hero(Sprite * sprite, uint8_t nb_frames, uint32_t max_width, uint32_
         else
         {
             float progress = linear_ease_in(elapsed, duration);
-            if (progress > 1)
-            {
-                // avoid frame overflow
-                progress = 1;
-            }
-
             current_frame = start_at + progress * (end_at - start_at);
         }
-    }
-    else
-    {
-        timestamp = 0;
+
+        entity->elapsed = (current_frame == end_at)
+            ? 0 : elapsed;
     }
 
-    sprite->x = x;
-    sprite->y = y;
-    sprite->current_frame = current_frame;
-    sprite->timestamp = timestamp;
+    Sprite * sprite = entity->sprite;
+    if (NULL != sprite)
+    {
+        sprite->x = x;
+        sprite->y = y;
+
+        if (entity->current_frame != current_frame)
+        {
+            sprite->frame = get_frame(sprite->texture, template->start_frame + current_frame);
+        }
+    }
+
+    entity->x = x;
+    entity->y = y;
+    entity->current_frame = current_frame;
 }

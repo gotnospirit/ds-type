@@ -6,6 +6,7 @@
 
 #include "render.h"
 #include "structs.h"
+#include "list.h"
 #include "texture.h"
 
 // Used to transfer the final rendered display to the framebuffer
@@ -29,6 +30,9 @@ static C3D_Mtx projection;
 
 static C3D_RenderTarget * top_left;
 static C3D_RenderTarget * top_right;
+
+static List * render_pipe = NULL;
+static uint8_t render_pipe_size = 0;
 
 static void draw_quad(float x1, float y1, float x2, float y2, float tx1, float ty1, float tx2, float ty2)
 {
@@ -72,8 +76,7 @@ static void render_background(Texture const * background)
 
 static void render_sprite(Sprite const * sprite, Texture const ** gpu_texture, float offset3d)
 {
-    Template const * tpl = sprite->tpl;
-    Texture const * texture = get_texture(tpl->texture);
+    Texture const * texture = sprite->texture;
     if (NULL != texture)
     {
         if (texture != *gpu_texture)
@@ -82,13 +85,13 @@ static void render_sprite(Sprite const * sprite, Texture const ** gpu_texture, f
             C3D_TexBind(0, &((Texture *)texture)->ptr);
         }
 
-        Frame const * frame = get_frame(texture, tpl->start_frame + sprite->current_frame);
+        Frame const * frame = sprite->frame;
         if (NULL != frame)
         {
             float x = sprite->x + offset3d;
 
             draw_quad(
-                x, sprite->y, x + tpl->width, sprite->y + tpl->height,
+                x, sprite->y, x + sprite->width, sprite->y + sprite->height,
                 frame->left, frame->top, frame->right, frame->bottom
             );
         }
@@ -105,9 +108,14 @@ int init_rendering(Surface * screen)
 
     consoleInit(GFX_BOTTOM, NULL);
 
-    if (0 != init_textures())
+    render_pipe = list_new(sizeof(Sprite *), 1);
+    if (NULL == render_pipe)
     {
         return 1;
+    }
+    else if (!init_textures())
+    {
+        return 2;
     }
 
     // Initialize the render target
@@ -159,7 +167,26 @@ int init_rendering(Surface * screen)
     return 0;
 }
 
-void render(List const * sprites)
+void shutdown_rendering()
+{
+    // Deinitialize the scene
+    // Free the shader program
+    shaderProgramFree(&program);
+    DVLB_Free(vshader_dvlb);
+
+    C3D_RenderTargetDelete(top_left);
+    C3D_RenderTargetDelete(top_right);
+
+    unload_textures();
+
+    list_delete(&render_pipe);
+
+    // Deinitialize graphics
+    C3D_Fini();
+    gfxExit();
+}
+
+void do_render()
 {
     Texture const * background = get_texture("background");
     Texture const * gpu_texture = NULL;
@@ -179,10 +206,20 @@ void render(List const * sprites)
         render_background(background);
     }
 
-    Sprite const * sprite = NULL;
-    while (list_next(sprites, (void **)&sprite))
+    printf("\x1b[2;0Hrender_pipe: %4d", render_pipe_size);
+
+    int i = 4;
+    Sprite const ** sprite = NULL;
+    while (list_next(render_pipe, (void **)&sprite))
     {
-        render_sprite(sprite, &gpu_texture, -iod);
+        render_sprite(*sprite, &gpu_texture, -iod);
+        printf("\x1b[%d;0H* %p at %4d %4d", i, *sprite, (*sprite)->x, (*sprite)->y);
+        ++i;
+    }
+
+    for (; i < 21; ++i)
+    {
+        printf("\x1b[%d;0H%40s", i, " ");
     }
 
     if (iod > 0.0f)
@@ -194,9 +231,9 @@ void render(List const * sprites)
         }
 
         sprite = NULL;
-        while (list_next(sprites, (void **)&sprite))
+        while (list_next(render_pipe, (void **)&sprite))
         {
-            render_sprite(sprite, &gpu_texture, iod);
+            render_sprite(*sprite, &gpu_texture, iod);
         }
     }
 
@@ -205,19 +242,39 @@ void render(List const * sprites)
     gpu_texture = NULL;
 }
 
-void shutdown_rendering()
+int add_to_rendering(Sprite * sprite)
 {
-    // Deinitialize the scene
-    // Free the shader program
-    shaderProgramFree(&program);
-    DVLB_Free(vshader_dvlb);
+    if (NULL == sprite)
+    {
+        return 0;
+    }
 
-    C3D_RenderTargetDelete(top_left);
-    C3D_RenderTargetDelete(top_right);
+    Sprite ** ptr = (Sprite **)list_alloc(render_pipe);
+    if (NULL == ptr)
+    {
+        return 0;
+    }
+    *ptr = sprite;
+    ++render_pipe_size;
+    return 1;
+}
 
-    unload_textures();
+int remove_from_rendering(Sprite * sprite)
+{
+    if (NULL == sprite)
+    {
+        return 0;
+    }
 
-    // Deinitialize graphics
-    C3D_Fini();
-    gfxExit();
+    Sprite ** ptr = NULL;
+    while (list_next(render_pipe, (void **)&ptr))
+    {
+        if (*ptr == sprite)
+        {
+            list_dealloc(render_pipe, ptr);
+            --render_pipe_size;
+            return 1;
+        }
+    }
+    return 0;
 }
