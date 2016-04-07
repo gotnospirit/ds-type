@@ -104,7 +104,7 @@ void list_dealloc(List * list, void * data)
     }
 
     // arrange
-    memmove(list->items[n], list->items[n + 1], sizeof(void *) * (max - n));
+    memmove(&list->items[n], &list->items[n + 1], sizeof(void *) * (max - n));
 }
 
 int list_next(List const * list, void ** ptr)
