@@ -138,7 +138,7 @@ int init_textures()
         ? 1 : 0;
 }
 
-void unload_textures()
+void shutdown_textures()
 {
     Texture * texture = NULL;
     while (list_next(textures, (void **)&texture))
@@ -148,81 +148,43 @@ void unload_textures()
     list_delete(&textures);
 }
 
-Texture * prepare_texture(const char * name)
+Texture * texture_new(const char * name)
 {
-    Texture * addr = (Texture *)list_alloc(textures);
-
-    int abort = 1;
-    if (0 == strncmp(name, "rtype", 5))
+    const char * filepath = NULL;
+    if (0 == strncmp(name, "base", 4))
     {
-        if (0 == load_image(addr, "data/rtype.png"))
-        {
-            abort = 0;
-        }
-    }
-    else if (0 == strncmp(name, "background", 10))
-    {
-        if (0 == load_image(addr, "data/background.jpg"))
-        {
-            abort = 0;
-        }
+        filepath = "data/base.png";
     }
     else if (0 == strncmp(name, "level_one", 9))
     {
-        if (0 == load_image(addr, "data/level_one.png"))
-        {
-            abort = 0;
-        }
+        filepath = "data/level_one.png";
     }
 
-    if (abort)
+    if (NULL == filepath)
+    {
+        return NULL;
+    }
+
+    Texture * addr = (Texture *)list_alloc(textures);
+    if (0 != load_image(addr, filepath))
     {
         list_dealloc(textures, addr);
         return NULL;
     }
-
     addr->name = strdup(name);
     return addr;
 }
 
-Texture const * load_texture(const char * name)
-{
-    Texture * addr = prepare_texture(name);
-
-    if (NULL == addr)
-    {
-        return NULL;
-    }
-
-    int abort = 0;
-    if (0 == strncmp(name, "rtype", 5))
-    {
-        JsonWrapper * json = json_new("rtype_frames");
-        if (NULL == json || 0 != load_frames(json, addr))
-        {
-            abort = 1;
-        }
-        json_delete(json);
-    }
-
-    if (abort)
-    {
-        free_texture(addr);
-        list_dealloc(textures, addr);
-        return NULL;
-    }
-    return addr;
-}
-
-int unload_texture(Texture const * texture)
+int texture_delete(Texture const ** texture)
 {
     Texture * ptr = NULL;
     while (list_next(textures, (void **)&ptr))
     {
-        if (ptr == texture)
+        if (ptr == *texture)
         {
             free_texture(ptr);
             ptr = list_dealloc(textures, ptr);
+            *texture = NULL;
             return 1;
         }
     }

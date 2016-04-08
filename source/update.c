@@ -14,15 +14,10 @@ static float linear_ease_in(int t, int d)
     return result;
 }
 
-static int clamp(int value, int min, int max)
+void update_hero(Level const * level, Entity * entity, uint64_t dt)
 {
-    return value < min ? min : value > max ? max : value;
-}
-
-void update_hero(Entity * entity, Surface const * screen, uint64_t dt)
-{
-    Template const * template = entity->tpl;
-    uint8_t nb_frames = template->nb_frames;
+    Sprite * sprite = entity->sprite;
+    uint8_t nb_frames = entity->nb_frames;
 
     int const incr = 5;
 
@@ -33,19 +28,16 @@ void update_hero(Entity * entity, Surface const * screen, uint64_t dt)
     int const duration = 1000;
 
     int current_frame = entity->current_frame;
-    int x = entity->x;
-    int y = entity->y;
+    int x = entity->world_x;
+    int y = entity->world_y;
     int start_at = 0;
     int end_at = 0;
 
-    if (x_incr)
-    {
-        x = clamp(x + x_incr, 0, screen->width - template->width);
-    }
+    x += x_incr;
 
     if (y_incr)
     {
-        y = clamp(y + y_incr, 0, screen->height - template->height);
+        y += y_incr;
 
         if (y_incr > 0)
         {
@@ -85,19 +77,12 @@ void update_hero(Entity * entity, Surface const * screen, uint64_t dt)
             ? 0 : elapsed;
     }
 
-    Sprite * sprite = entity->sprite;
-    if (NULL != sprite)
+    entity->world_x = x;
+    entity->world_y = y;
+
+    if (entity->current_frame != current_frame)
     {
-        sprite->x = x;
-        sprite->y = y;
-
-        if (entity->current_frame != current_frame)
-        {
-            sprite->frame = get_frame(sprite->texture, template->start_frame + current_frame);
-        }
+        sprite->frame = get_frame(sprite->texture, entity->start_frame + current_frame);
+        entity->current_frame = current_frame;
     }
-
-    entity->x = x;
-    entity->y = y;
-    entity->current_frame = current_frame;
 }

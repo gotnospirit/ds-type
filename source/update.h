@@ -5,6 +5,6 @@
 
 #include "structs.h"
 
-void update_hero(Entity *, Surface const *, uint64_t);
+void update_hero(Level const *, Entity *, uint64_t);
 
 #endif

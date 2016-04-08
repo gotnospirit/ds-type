@@ -6,19 +6,22 @@
 
 #include "list.h"
 
+typedef struct Rectangle Rectangle;
 typedef struct Surface Surface;
 typedef struct Frame Frame;
 typedef struct Texture Texture;
-typedef struct Template Template;
 typedef struct Entity Entity;
 typedef struct Sprite Sprite;
 typedef struct Tile Tile;
 typedef struct Level Level;
 typedef struct GameState GameState;
 
-typedef float EaseFunction(int, int);
-typedef void UpdateFunction(Entity *, Surface const *, uint64_t);
 typedef void StateFunction(GameState *);
+
+struct Rectangle
+{
+    int top, left, right, bottom;
+};
 
 struct Surface
 {
@@ -39,17 +42,6 @@ struct Texture
     Frame const * frames;
 };
 
-struct Template
-{
-    uint16_t width, height;
-    char * name;
-    char * texture;
-    UpdateFunction * update;
-    uint8_t start_frame;
-    uint8_t nb_frames;
-    uint8_t initial_frame;
-};
-
 struct Sprite
 {
     int x, y;
@@ -62,26 +54,28 @@ struct Sprite
 
 struct Entity
 {
-    int x, y;
+    char * name;
+    int world_x, world_y;
+    uint8_t start_frame;
+    uint8_t nb_frames;
     uint8_t current_frame;
     uint16_t elapsed;
-    Template const * tpl;
     Sprite * sprite;
 };
 
 struct Tile
 {
-    int x;
+    int world_x;
     uint8_t visible;
     Sprite * sprite;
 };
 
 struct Level
 {
-    int camera;
+    Rectangle camera;
     // uint16_t elapsed;
     int incr;
-    uint16_t max_camera;
+    uint16_t max_camera_left;
     Texture const * texture;
     List * top_tiles;
     List * bottom_tiles;

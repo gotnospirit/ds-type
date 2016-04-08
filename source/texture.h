@@ -4,11 +4,10 @@
 #include "structs.h"
 
 int init_textures();
-void unload_textures();
+void shutdown_textures();
 
-Texture * prepare_texture(const char *);
-Texture const * load_texture(const char *);
-int unload_texture(Texture const *);
+Texture * texture_new(const char *);
+int texture_delete(Texture const **);
 
 Texture const * get_texture(const char *);
 Frame const * get_frame(Texture const *, int);

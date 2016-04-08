@@ -59,21 +59,6 @@ static void draw_quad(float x1, float y1, float x2, float y2, float tx1, float t
     C3D_ImmDrawEnd();
 }
 
-static void render_background(Texture const * background)
-{
-    if (background->real_width && background->real_height)
-    {
-        float texture_width = (float)background->width / background->real_width;
-        float texture_height = (float)background->height / background->real_height;
-
-        C3D_TexBind(0, &((Texture *)background)->ptr);
-        draw_quad(
-            0, 0, background->width, background->height,
-            0.0f, 0.0f, texture_width, texture_height
-        );
-    }
-}
-
 static void render_sprite(Sprite const * sprite, Texture const ** gpu_texture, float offset3d)
 {
     Texture const * texture = sprite->texture;
@@ -177,7 +162,7 @@ void shutdown_rendering()
     C3D_RenderTargetDelete(top_left);
     C3D_RenderTargetDelete(top_right);
 
-    unload_textures();
+    shutdown_textures();
 
     list_delete(&render_pipe);
 
@@ -186,10 +171,10 @@ void shutdown_rendering()
     gfxExit();
 }
 
-void do_render()
+void process_rendering()
 {
-    Texture const * background = get_texture("background");
     Texture const * gpu_texture = NULL;
+    Sprite const ** sprite = NULL;
     float iod = osGet3DSliderState() * 15;
 
     // Render the scene
@@ -200,16 +185,10 @@ void do_render()
         iod = 0;
     }
 
+    printf("\x1b[3;0Hrender_pipe: %4d", render_pipe_size);
+
+    int i = 5;
     C3D_FrameDrawOn(top_left);
-    if (background)
-    {
-        render_background(background);
-    }
-
-    printf("\x1b[2;0Hrender_pipe: %4d", render_pipe_size);
-
-    int i = 4;
-    Sprite const ** sprite = NULL;
     while (list_next(render_pipe, (void **)&sprite))
     {
         render_sprite(*sprite, &gpu_texture, -iod);
@@ -217,20 +196,15 @@ void do_render()
         ++i;
     }
 
-    for (; i < 21; ++i)
+    for (; i < 28; ++i)
     {
         printf("\x1b[%d;0H%40s", i, " ");
     }
 
     if (iod > 0.0f)
     {
-        C3D_FrameDrawOn(top_right);
-        if (background)
-        {
-            render_background(background);
-        }
-
         sprite = NULL;
+        C3D_FrameDrawOn(top_right);
         while (list_next(render_pipe, (void **)&sprite))
         {
             render_sprite(*sprite, &gpu_texture, iod);

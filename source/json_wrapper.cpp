@@ -13,13 +13,9 @@ extern "C" {
 
 static char * get_json_data(const char * name)
 {
-    if (0 == strncmp(name, "sprites", 7))
+    if (0 == strncmp(name, "base", 4))
     {
-        return read_file("data/sprites.json");
-    }
-    else if (0 == strncmp(name, "rtype_frames", 12))
-    {
-        return read_file("data/rtype_frames.json");
+        return read_file("data/base.json");
     }
     else if (0 == strncmp(name, "level_one", 9))
     {
@@ -142,13 +138,15 @@ static int create_tile(const char * name, int x, List * container, JsonValue con
 
     // @TODO(james) handle error
     Sprite * sprite = (Sprite *)malloc(sizeof(Sprite));
+    sprite->x = 0;
+    sprite->y = 0;
     sprite->width = width;
     sprite->height = height;
     sprite->texture = texture;
     sprite->frame = frame;
 
     Tile * tile = (Tile *)list_alloc(container);
-    tile->x = x;
+    tile->world_x = x;
     tile->visible = 0;
     tile->sprite = sprite;
     return 1;
@@ -194,6 +192,77 @@ static int process_level_tiles(JsonValue const &root, Level * level, JsonValue c
     return 0;
 }
 
+static int process_base_entities(JsonValue const &root, List * entities, Texture const * texture)
+{
+    const char * name = NULL;
+    int width = 0, height = 0, start_frame = 0, current_frame = 0, nb_frames = 0;
+
+    Sprite * sprite = NULL;
+    Entity * entity = NULL;
+    Frame const * frame = NULL;
+    for (auto const &node : root)
+    {
+        auto const &value = node->value;
+
+        name = Json::GetString(value, "id");
+        width = Json::GetNumber(value, "width");
+        height = Json::GetNumber(value, "height");
+        start_frame = Json::GetNumber(value, "start_frame");
+        current_frame = Json::GetNumber(value, "current_frame");
+        nb_frames = Json::GetNumber(value, "nb_frames");
+
+        if (NULL == name)
+        {
+            printf("Missing entity id\n");
+            return 1;
+        }
+        else if (width < 0 || height < 0)
+        {
+            printf("Missing dimension for %s\n", name);
+            return 3;
+        }
+        else if (start_frame < 0 || nb_frames < 0)
+        {
+            printf("Missing frames for %s\n", name);
+            return 4;
+        }
+
+        if (-1 == current_frame)
+        {
+            current_frame = 0;
+        }
+        else if (current_frame > nb_frames)
+        {
+            current_frame = nb_frames;
+        }
+
+        frame = get_frame(texture, start_frame + current_frame);
+        if (NULL == frame)
+        {
+            printf("Frame %d not found\n", current_frame);
+            return 5;
+        }
+
+        // @TODO(james) handle error
+        sprite = (Sprite *)malloc(sizeof(Sprite));
+        sprite->width = width;
+        sprite->height = height;
+        sprite->texture = texture;
+        sprite->frame = frame;
+
+        entity = (Entity *)list_alloc(entities);
+        entity->name = strdup(name);
+        entity->world_x = 0;
+        entity->world_y = 0;
+        entity->start_frame = start_frame;
+        entity->nb_frames = nb_frames;
+        entity->current_frame = current_frame;
+        entity->elapsed = 0;
+        entity->sprite = sprite;
+    }
+    return 0;
+}
+
 JsonWrapper * json_new(const char * name)
 {
     char * data = get_json_data(name);
@@ -219,74 +288,12 @@ void json_delete(JsonWrapper * o)
     delete static_cast<Json *>(o);
 }
 
-int load_frames(JsonWrapper * o, Texture * spritesheet)
-{
-    return process_frames(static_cast<Json *>(o)->value, spritesheet);
-}
-
-int load_templates(JsonWrapper * o, List * templates, const char * texture)
+int parse_base(JsonWrapper * o, List * entities, Texture * spritesheet)
 {
     auto json = static_cast<Json *>(o);
 
-    Template * tpl = NULL;
-    const char * name = NULL;
-    const char * method = NULL;
-
-    int width = 0, height = 0, start_frame = 0, current_frame = 0, nb_frames = 0;
-
-    for (auto const &node : json->value)
-    {
-        auto const &value = node->value;
-
-        name = Json::GetString(value, "id");
-        width = Json::GetNumber(value, "width");
-        height = Json::GetNumber(value, "height");
-        method = Json::GetString(value, "update");
-        start_frame = Json::GetNumber(value, "start_frame");
-        current_frame = Json::GetNumber(value, "current_frame");
-        nb_frames = Json::GetNumber(value, "nb_frames");
-
-        if (NULL == name)
-        {
-            printf("Missing sprite id\n");
-            return 1;
-        }
-        else if (width < 0 || height < 0)
-        {
-            printf("Missing dimension for %s\n", name);
-            return 3;
-        }
-        else if (start_frame < 0 || nb_frames < 0)
-        {
-            printf("Missing frames for %s\n", name);
-            return 4;
-        }
-
-        tpl = (Template *)list_alloc(templates);
-
-        tpl->width = width;
-        tpl->height = height;
-        tpl->name = strdup(name);
-        tpl->texture = strdup(texture);
-        tpl->update = NULL;
-        tpl->start_frame = start_frame;
-        tpl->nb_frames = nb_frames;
-        tpl->initial_frame = current_frame >= 0 ? current_frame : 0;
-
-        if (NULL != method && 0 == strncmp(method, "UpdateHero", 10))
-        {
-            tpl->update = update_hero;
-        }
-    }
-    return 0;
-}
-
-int load_level(JsonWrapper * o, Level * level, Texture * spritesheet)
-{
-    auto json = static_cast<Json *>(o);
-
-    JsonNode const * frames = NULL;
-    JsonNode const * tiles = NULL;
+    JsonNode const * frames_node = NULL;
+    JsonNode const * entities_node = NULL;
 
     const char * key = 0;
 
@@ -296,34 +303,79 @@ int load_level(JsonWrapper * o, Level * level, Texture * spritesheet)
 
         if (0 == strncmp(key, "frames", 6))
         {
-            frames = node;
+            frames_node = node;
         }
-        else if (0 == strncmp(key, "tiles", 5))
+        else if (0 == strncmp(key, "entities", 8))
         {
-            tiles = node;
-        }
-        else if (0 == strncmp(key, "stop_scroll_at", 14))
-        {
-            level->max_camera = node->value.toNumber();
+            entities_node = node;
         }
     }
 
-    if (NULL == frames)
+    if (NULL == frames_node)
     {
         printf("No frames defined\n");
         return 1;
     }
-    else if (NULL == tiles)
+    else if (NULL == entities_node)
+    {
+        printf("No entities defined\n");
+        return 2;
+    }
+
+    if (0 != process_frames(frames_node->value, spritesheet))
+    {
+        return 3;
+    }
+    else if (0 != process_base_entities(entities_node->value, entities, spritesheet))
+    {
+        return 4;
+    }
+    return 0;
+}
+
+int parse_level(JsonWrapper * o, Level * level, Texture * spritesheet)
+{
+    auto json = static_cast<Json *>(o);
+
+    JsonNode const * frames_node = NULL;
+    JsonNode const * tiles_node = NULL;
+
+    const char * key = 0;
+
+    for (auto const &node : json->value)
+    {
+        key = node->key;
+
+        if (0 == strncmp(key, "frames", 6))
+        {
+            frames_node = node;
+        }
+        else if (0 == strncmp(key, "tiles", 5))
+        {
+            tiles_node = node;
+        }
+        else if (0 == strncmp(key, "stop_scroll_at", 14))
+        {
+            level->max_camera_left = node->value.toNumber();
+        }
+    }
+
+    if (NULL == frames_node)
+    {
+        printf("No frames defined\n");
+        return 1;
+    }
+    else if (NULL == tiles_node)
     {
         printf("No tiles defined\n");
         return 2;
     }
 
-    if (0 != process_frames(frames->value, spritesheet))
+    if (0 != process_frames(frames_node->value, spritesheet))
     {
         return 3;
     }
-    else if (0 != process_level_tiles(tiles->value, level, frames->value, spritesheet))
+    else if (0 != process_level_tiles(tiles_node->value, level, frames_node->value, spritesheet))
     {
         return 4;
     }

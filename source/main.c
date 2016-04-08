@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
 #include "structs.h"
-#include "state.h"
+#include "game.h"
 
 int main(int argc, char ** argv)
 {

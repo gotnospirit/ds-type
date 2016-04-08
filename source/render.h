@@ -6,7 +6,7 @@
 int init_rendering(Surface *);
 void shutdown_rendering();
 
-void do_render();
+void process_rendering();
 
 int add_to_rendering(Sprite *);
 int remove_from_rendering(Sprite *);

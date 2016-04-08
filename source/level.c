@@ -16,7 +16,7 @@ static void update_level_tiles(List * container, uint16_t camera_left, uint16_t 
     int x = 0;
     while (list_next(container, (void **)&tile))
     {
-        x = tile->x;
+        x = tile->world_x;
         sprite = tile->sprite;
 
         if ((x >= camera_right) || ((x + sprite->width) < camera_left))
@@ -61,10 +61,16 @@ static void clear_level_tiles(List ** list)
 
 Level * level_new()
 {
+    Rectangle camera;
+    camera.top = 0;
+    camera.left = 0;
+    camera.right = 0;
+    camera.bottom = 0;
+
     Level * level = malloc(sizeof(Level));
-    level->camera = 0;
+    level->camera = camera;
     level->incr = 1;
-    level->max_camera = 0;
+    level->max_camera_left = 0;
     // level->elapsed = 0;
     level->texture = NULL;
     level->top_tiles = list_new(sizeof(Tile), 1);
@@ -74,10 +80,10 @@ Level * level_new()
 
 void level_delete(Level * level)
 {
-    unload_texture(level->texture);
-
     clear_level_tiles(&level->top_tiles);
     clear_level_tiles(&level->bottom_tiles);
+
+    texture_delete(&level->texture);
 
     free(level);
 }
@@ -110,23 +116,29 @@ void level_update(Level * level, Surface const * screen, uint64_t dt)
         }
     }
 
-    level->camera += incr;
-    if (level->camera < 0)
+    int32_t camera_left = level->camera.left + incr;
+    uint16_t max_camera_left = level->max_camera_left;
+    if (camera_left < 0)
     {
-        level->camera = 0;
+        camera_left = 0;
     }
-    else if (level->camera >= level->max_camera)
+    else if (camera_left >= max_camera_left)
     {
-        level->camera = level->max_camera;
+        camera_left = max_camera_left;
     }
-
-    uint16_t camera_left = level->camera;
     uint16_t camera_right = camera_left + screen->width;
+    uint16_t camera_bottom = screen->height;
+
+    level->camera.left = camera_left;
+    level->camera.right = camera_right;
+    level->camera.top = 0;
+    level->camera.bottom = camera_bottom;
 
     update_level_tiles(level->top_tiles, camera_left, camera_right, 0);
-    update_level_tiles(level->bottom_tiles, camera_left, camera_right, screen->height);
+    update_level_tiles(level->bottom_tiles, camera_left, camera_right, camera_bottom);
 
-    printf("\x1b[0;0H %3d, cam: %5d %5d, end: %5d", level->incr, (int)camera_left, (int)camera_right, level->max_camera);
+    printf("\x1b[0;0Hcam: %5d %5d %5d %5d", level->camera.top, level->camera.right, level->camera.bottom, level->camera.left);
+    printf("\x1b[1;0Hincr: %3d, scroll end: %5d", level->incr, max_camera_left);
 
     // level->elapsed += dt;
 }
