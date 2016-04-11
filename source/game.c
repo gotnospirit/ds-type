@@ -70,41 +70,40 @@ static int load_base()
 
 static void keep_inside(Entity * entity, Rectangle const * camera)
 {
+    int y = entity->y;
+    int height = entity->height;
     int camera_top = camera->top;
-    int camera_left = camera->left;
-    int camera_right = camera->right;
     int camera_bottom = camera->bottom;
-
-    int x = entity->world_x;
-    int y = entity->world_y;
-    Sprite * sprite = entity->sprite;
-    int width = sprite->width;
-    int height = sprite->height;
 
     if (y < camera_top)
     {
-        entity->world_y = camera_top;
+        entity->y = camera_top;
     }
     else if ((y + height) > camera_bottom)
     {
-        entity->world_y = camera_bottom - height;
+        entity->y = camera_bottom - height;
     }
+
+    int x = entity->x;
+    int width = entity->width;
+    int camera_left = camera->left;
+    int camera_right = camera->right;
 
     if (x < camera_left)
     {
-        entity->world_x = camera_left;
+        entity->x = camera_left;
     }
     else if ((x + width) > camera_right)
     {
-        entity->world_x = camera_right - width;
+        entity->x = camera_right - width;
     }
 }
 
 static void update_sprite_position(Entity * entity, Rectangle const * camera)
 {
     Sprite * sprite = entity->sprite;
-    sprite->x = entity->world_x - camera->left;
-    sprite->y = entity->world_y - camera->top;
+    sprite->x = entity->x - camera->left;
+    sprite->y = entity->y - camera->top;
 }
 
 static void game_update(Level * level)

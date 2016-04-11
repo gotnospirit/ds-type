@@ -45,17 +45,17 @@ struct Texture
 struct Sprite
 {
     int x, y;
-    uint16_t width, height;
+    int width, height;
     Texture const * texture;
     Frame const * frame;
     // uint8_t depth
-    // uint8_t flip_x, flip_y
 };
 
 struct Entity
 {
     char * name;
-    int world_x, world_y;
+    int x, y;
+    uint16_t width, height;
     uint8_t start_frame;
     uint8_t nb_frames;
     uint8_t current_frame;
@@ -65,7 +65,8 @@ struct Entity
 
 struct Tile
 {
-    int world_x;
+    int x;
+    uint16_t width, height;
     uint8_t visible;
     Sprite * sprite;
 };

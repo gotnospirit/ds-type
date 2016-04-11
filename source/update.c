@@ -16,7 +16,6 @@ static float linear_ease_in(int t, int d)
 
 void update_hero(Level const * level, Entity * entity, uint64_t dt)
 {
-    Sprite * sprite = entity->sprite;
     uint8_t nb_frames = entity->nb_frames;
 
     int const incr = 5;
@@ -28,8 +27,8 @@ void update_hero(Level const * level, Entity * entity, uint64_t dt)
     int const duration = 1000;
 
     int current_frame = entity->current_frame;
-    int x = entity->world_x;
-    int y = entity->world_y;
+    int x = entity->x;
+    int y = entity->y;
     int start_at = 0;
     int end_at = 0;
 
@@ -77,11 +76,12 @@ void update_hero(Level const * level, Entity * entity, uint64_t dt)
             ? 0 : elapsed;
     }
 
-    entity->world_x = x;
-    entity->world_y = y;
+    entity->x = x;
+    entity->y = y;
 
     if (entity->current_frame != current_frame)
     {
+        Sprite * sprite = entity->sprite;
         sprite->frame = get_frame(sprite->texture, entity->start_frame + current_frame);
         entity->current_frame = current_frame;
     }

@@ -11,6 +11,19 @@ extern "C" {
 #include "texture.h"
 #include "utils.h"
 
+static Sprite * sprite_new(int x, int y, uint16_t width, uint16_t height, Texture const * texture, Frame const * frame)
+{
+    // @TODO(james) handle error
+    Sprite * sprite = (Sprite *)malloc(sizeof(Sprite));
+    sprite->x = x;
+    sprite->y = y;
+    sprite->width = width;
+    sprite->height = height;
+    sprite->texture = texture;
+    sprite->frame = frame;
+    return sprite;
+}
+
 static char * get_json_data(const char * name)
 {
     if (0 == strncmp(name, "base", 4))
@@ -41,8 +54,11 @@ static int process_frames(JsonValue const &root, Texture * spritesheet)
     float const texture_width = (float)spritesheet->width;
     float const texture_height = (float)spritesheet->height;
 
-    float const texture_width_ratio = texture_width / spritesheet->real_width;
-    float const texture_height_ratio = texture_height / spritesheet->real_height;
+    float const texture_real_width = (float)spritesheet->real_width;
+    float const texture_real_height = (float)spritesheet->real_height;
+
+    float const texture_width_ratio = texture_width / texture_real_width;
+    float const texture_height_ratio = texture_height / texture_real_height;
 
     float frame_width_ratio = 0;
     float frame_height_ratio = 0;
@@ -62,8 +78,8 @@ static int process_frames(JsonValue const &root, Texture * spritesheet)
         frame_width_ratio = width * texture_width_ratio / texture_width;
         frame_height_ratio = height * texture_height_ratio / texture_height;
 
-        left = (float)x / spritesheet->real_width;
-        top = (float)y / spritesheet->real_height;
+        left = (float)x / texture_real_width;
+        top = (float)y / texture_real_height;
 
         frame = &frames[nb_frames];
 
@@ -137,18 +153,12 @@ static int create_tile(const char * name, int x, List * container, JsonValue con
     }
 
     // @TODO(james) handle error
-    Sprite * sprite = (Sprite *)malloc(sizeof(Sprite));
-    sprite->x = 0;
-    sprite->y = 0;
-    sprite->width = width;
-    sprite->height = height;
-    sprite->texture = texture;
-    sprite->frame = frame;
-
     Tile * tile = (Tile *)list_alloc(container);
-    tile->world_x = x;
+    tile->x = x;
+    tile->width = width;
+    tile->height = height;
     tile->visible = 0;
-    tile->sprite = sprite;
+    tile->sprite = sprite_new(0, 0, width, height, texture, frame);
     return 1;
 }
 
@@ -185,7 +195,7 @@ static int process_level_tiles(JsonValue const &root, Level * level, JsonValue c
 
         if (!create_tile(bottom_name, x, level->bottom_tiles, frames_node, texture))
         {
-            printf("'%s' failed\n", top_name);
+            printf("'%s' failed\n", bottom_name);
             return 4;
         }
     }
@@ -197,7 +207,6 @@ static int process_base_entities(JsonValue const &root, List * entities, Texture
     const char * name = NULL;
     int width = 0, height = 0, start_frame = 0, current_frame = 0, nb_frames = 0;
 
-    Sprite * sprite = NULL;
     Entity * entity = NULL;
     Frame const * frame = NULL;
     for (auto const &node : root)
@@ -244,21 +253,17 @@ static int process_base_entities(JsonValue const &root, List * entities, Texture
         }
 
         // @TODO(james) handle error
-        sprite = (Sprite *)malloc(sizeof(Sprite));
-        sprite->width = width;
-        sprite->height = height;
-        sprite->texture = texture;
-        sprite->frame = frame;
-
         entity = (Entity *)list_alloc(entities);
         entity->name = strdup(name);
-        entity->world_x = 0;
-        entity->world_y = 0;
+        entity->x = 0;
+        entity->y = 0;
+        entity->width = width;
+        entity->height = height;
         entity->start_frame = start_frame;
         entity->nb_frames = nb_frames;
         entity->current_frame = current_frame;
         entity->elapsed = 0;
-        entity->sprite = sprite;
+        entity->sprite = sprite_new(0, 0, width, height, texture, frame);
     }
     return 0;
 }

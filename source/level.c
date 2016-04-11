@@ -16,10 +16,10 @@ static void update_level_tiles(List * container, uint16_t camera_left, uint16_t 
     int x = 0;
     while (list_next(container, (void **)&tile))
     {
-        x = tile->world_x;
+        x = tile->x;
         sprite = tile->sprite;
 
-        if ((x >= camera_right) || ((x + sprite->width) < camera_left))
+        if ((x >= camera_right) || ((x + tile->width) < camera_left))
         {
             if (tile->visible)
             {
@@ -36,7 +36,7 @@ static void update_level_tiles(List * container, uint16_t camera_left, uint16_t 
         else
         {
             sprite->x = x - camera_left;
-            sprite->y = !offset_y ? 0 : offset_y - sprite->height;
+            sprite->y = !offset_y ? 0 : offset_y - tile->height;
 
             add_to_rendering(sprite);
             tile->visible = 1;
@@ -137,7 +137,7 @@ void level_update(Level * level, Surface const * screen, uint64_t dt)
     update_level_tiles(level->top_tiles, camera_left, camera_right, 0);
     update_level_tiles(level->bottom_tiles, camera_left, camera_right, camera_bottom);
 
-    printf("\x1b[0;0Hcam: %5d %5d %5d %5d", level->camera.top, level->camera.right, level->camera.bottom, level->camera.left);
+    printf("\x1b[0;0Hcamera: %5d %5d %5d %5d", level->camera.top, level->camera.right, level->camera.bottom, level->camera.left);
     printf("\x1b[1;0Hincr: %3d, scroll end: %5d", level->incr, max_camera_left);
 
     // level->elapsed += dt;
