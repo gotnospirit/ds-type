@@ -8,6 +8,7 @@ class Json
 public:
     static const char * GetString(JsonValue const &, const char *);
     static int GetNumber(JsonValue const &, const char *);
+    static bool GetBoolean(JsonValue const &, const char *);
 
     static int Size(JsonValue const &);
 

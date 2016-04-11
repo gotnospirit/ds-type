@@ -14,14 +14,16 @@ extern "C" {
 static Sprite * sprite_new(int x, int y, uint16_t width, uint16_t height, Texture const * texture, Frame const * frame)
 {
     // @TODO(james) handle error
-    Sprite * sprite = (Sprite *)malloc(sizeof(Sprite));
-    sprite->x = x;
-    sprite->y = y;
-    sprite->width = width;
-    sprite->height = height;
-    sprite->texture = texture;
-    sprite->frame = frame;
-    return sprite;
+    Sprite * result = (Sprite *)malloc(sizeof(Sprite));
+    result->x = x;
+    result->y = y;
+    result->width = width;
+    result->height = height;
+    result->texture = texture;
+    result->frame = frame;
+    result->flip_x = 0;
+    result->flip_y = 0;
+    return result;
 }
 
 static char * get_json_data(const char * name)
@@ -121,7 +123,7 @@ static int get_frame_index(JsonValue const &root, JsonNode const * target)
     return -1;
 }
 
-static int create_tile(const char * name, int x, List * container, JsonValue const &frames_node, Texture const * texture)
+static int create_tile(const char * name, int x, bool flip_x, bool flip_y, List * container, JsonValue const &frames_node, Texture const * texture)
 {
     if (NULL == name)
     {
@@ -152,13 +154,17 @@ static int create_tile(const char * name, int x, List * container, JsonValue con
         return 0;
     }
 
+    Sprite * sprite = sprite_new(0, 0, width, height, texture, frame);
+    sprite->flip_x = flip_x ? 1 : 0;
+    sprite->flip_y = flip_y ? 1 : 0;
+
     // @TODO(james) handle error
     Tile * tile = (Tile *)list_alloc(container);
     tile->x = x;
     tile->width = width;
     tile->height = height;
     tile->visible = 0;
-    tile->sprite = sprite_new(0, 0, width, height, texture, frame);
+    tile->sprite = sprite;
     return 1;
 }
 
@@ -167,6 +173,7 @@ static int process_level_tiles(JsonValue const &root, Level * level, JsonValue c
     int x = -1;
     const char * top_name = NULL;
     const char * bottom_name = NULL;
+    bool flip_y = false;
 
     for (auto const &node : root)
     {
@@ -175,6 +182,7 @@ static int process_level_tiles(JsonValue const &root, Level * level, JsonValue c
         x = Json::GetNumber(value, "x");
         top_name = Json::GetString(value, "top");
         bottom_name = Json::GetString(value, "bottom");
+        flip_y = Json::GetBoolean(value, "flip_y");
 
         if (-1 == x)
         {
@@ -187,13 +195,13 @@ static int process_level_tiles(JsonValue const &root, Level * level, JsonValue c
             return 2;
         }
 
-        if (!create_tile(top_name, x, level->top_tiles, frames_node, texture))
+        if (!create_tile(top_name, x, true, flip_y, level->top_tiles, frames_node, texture))
         {
             printf("'%s' failed\n", top_name);
             return 3;
         }
 
-        if (!create_tile(bottom_name, x, level->bottom_tiles, frames_node, texture))
+        if (!create_tile(bottom_name, x, false, flip_y, level->bottom_tiles, frames_node, texture))
         {
             printf("'%s' failed\n", bottom_name);
             return 4;

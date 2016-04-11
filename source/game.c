@@ -111,12 +111,15 @@ static void game_update(Level * level)
     u64 current_time = osGetTime();
     u64 dt = current_time - last_time;
 
+    // logic
     level_update(level, &screen, dt);
 
     update_hero(level, ship, dt);
 
+    // collisions
     keep_inside(ship, &level->camera);
 
+    // global to local
     update_sprite_position(ship, &level->camera);
 
     last_time = current_time;
@@ -264,8 +267,8 @@ void shutdown(GameState * state)
     while (list_next(entities, (void **)&entity))
     {
         remove_from_rendering(entity->sprite);
-        free(entity->sprite);
         free(entity->name);
+        free(entity->sprite);
     }
     list_delete(&entities);
 }

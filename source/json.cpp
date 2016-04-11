@@ -47,6 +47,12 @@ int Json::GetNumber(JsonValue const &root, const char * key)
     return -1;
 }
 
+bool Json::GetBoolean(JsonValue const &root, const char * key)
+{
+    auto const &node = Json::Find(root, key);
+    return JSON_TRUE == node.getTag();
+}
+
 int Json::Size(JsonValue const &value)
 {
     int result = 0;

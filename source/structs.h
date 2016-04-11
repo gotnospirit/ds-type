@@ -10,8 +10,8 @@ typedef struct Rectangle Rectangle;
 typedef struct Surface Surface;
 typedef struct Frame Frame;
 typedef struct Texture Texture;
-typedef struct Entity Entity;
 typedef struct Sprite Sprite;
+typedef struct Entity Entity;
 typedef struct Tile Tile;
 typedef struct Level Level;
 typedef struct GameState GameState;
@@ -49,6 +49,7 @@ struct Sprite
     Texture const * texture;
     Frame const * frame;
     // uint8_t depth
+    uint8_t flip_x, flip_y;
 };
 
 struct Entity

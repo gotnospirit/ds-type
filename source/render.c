@@ -34,27 +34,66 @@ static C3D_RenderTarget * top_right;
 static List * render_pipe = NULL;
 static uint8_t render_pipe_size = 0;
 
-static void draw_quad(float x1, float y1, float x2, float y2, float tx1, float ty1, float tx2, float ty2)
+static void draw_quad(float x1, float y1, float x2, float y2, float tx1, float ty1, float tx2, float ty2, uint8_t flip_x, uint8_t flip_y)
 {
-    C3D_ImmDrawBegin(GPU_TRIANGLES);
+    C3D_ImmDrawBegin(GPU_TRIANGLE_STRIP);
 
-    C3D_ImmSendAttrib(x1, y1, 0.5f, 0.0f);
-    C3D_ImmSendAttrib(tx1, ty1, 0.0f, 0.0f);
+    if (1 == flip_x && 1 == flip_y)
+    {
+        C3D_ImmSendAttrib(x1, y1, 0.5f, 0.0f);
+        C3D_ImmSendAttrib(tx2, ty2, 0.0f, 0.0f);
 
-    C3D_ImmSendAttrib(x2, y2, 0.5f, 0.0f);
-    C3D_ImmSendAttrib(tx2, ty2, 0.0f, 0.0f);
+        C3D_ImmSendAttrib(x1, y2, 0.5f, 0.0f);
+        C3D_ImmSendAttrib(tx2, ty1, 0.0f, 0.0f);
 
-    C3D_ImmSendAttrib(x2, y1, 0.5f, 0.0f);
-    C3D_ImmSendAttrib(tx2, ty1, 0.0f, 0.0f);
+        C3D_ImmSendAttrib(x2, y1, 0.5f, 0.0f);
+        C3D_ImmSendAttrib(tx1, ty2, 0.0f, 0.0f);
 
-    C3D_ImmSendAttrib(x1, y1, 0.5f, 0.0f);
-    C3D_ImmSendAttrib(tx1, ty1, 0.0f, 0.0f);
+        C3D_ImmSendAttrib(x2, y2, 0.5f, 0.0f);
+        C3D_ImmSendAttrib(tx1, ty1, 0.0f, 0.0f);
+    }
+    else if (1 == flip_x)
+    {
+        C3D_ImmSendAttrib(x1, y1, 0.5f, 0.0f);
+        C3D_ImmSendAttrib(tx1, ty2, 0.0f, 0.0f);
 
-    C3D_ImmSendAttrib(x1, y2, 0.5f, 0.0f);
-    C3D_ImmSendAttrib(tx1, ty2, 0.0f, 0.0f);
+        C3D_ImmSendAttrib(x1, y2, 0.5f, 0.0f);
+        C3D_ImmSendAttrib(tx1, ty1, 0.0f, 0.0f);
 
-    C3D_ImmSendAttrib(x2, y2, 0.5f, 0.0f);
-    C3D_ImmSendAttrib(tx2, ty2, 0.0f, 0.0f);
+        C3D_ImmSendAttrib(x2, y1, 0.5f, 0.0f);
+        C3D_ImmSendAttrib(tx2, ty2, 0.0f, 0.0f);
+
+        C3D_ImmSendAttrib(x2, y2, 0.5f, 0.0f);
+        C3D_ImmSendAttrib(tx2, ty1, 0.0f, 0.0f);
+    }
+    else if (1 == flip_y)
+    {
+        C3D_ImmSendAttrib(x1, y1, 0.5f, 0.0f);
+        C3D_ImmSendAttrib(tx2, ty1, 0.0f, 0.0f);
+
+        C3D_ImmSendAttrib(x1, y2, 0.5f, 0.0f);
+        C3D_ImmSendAttrib(tx2, ty2, 0.0f, 0.0f);
+
+        C3D_ImmSendAttrib(x2, y1, 0.5f, 0.0f);
+        C3D_ImmSendAttrib(tx1, ty1, 0.0f, 0.0f);
+
+        C3D_ImmSendAttrib(x2, y2, 0.5f, 0.0f);
+        C3D_ImmSendAttrib(tx1, ty2, 0.0f, 0.0f);
+    }
+    else
+    {
+        C3D_ImmSendAttrib(x1, y1, 0.5f, 0.0f);
+        C3D_ImmSendAttrib(tx1, ty1, 0.0f, 0.0f);
+
+        C3D_ImmSendAttrib(x1, y2, 0.5f, 0.0f);
+        C3D_ImmSendAttrib(tx1, ty2, 0.0f, 0.0f);
+
+        C3D_ImmSendAttrib(x2, y1, 0.5f, 0.0f);
+        C3D_ImmSendAttrib(tx2, ty1, 0.0f, 0.0f);
+
+        C3D_ImmSendAttrib(x2, y2, 0.5f, 0.0f);
+        C3D_ImmSendAttrib(tx2, ty2, 0.0f, 0.0f);
+    }
 
     C3D_ImmDrawEnd();
 }
@@ -80,7 +119,8 @@ static void render_sprite(Sprite const * sprite, Texture const ** gpu_texture, f
 
             draw_quad(
                 left, top, right, bottom,
-                frame->left, frame->top, frame->right, frame->bottom
+                frame->left, frame->top, frame->right, frame->bottom,
+                sprite->flip_x, sprite->flip_y
             );
         }
     }

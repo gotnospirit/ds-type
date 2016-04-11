@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "update.h"
 #include "input.h"
 #include "texture.h"
