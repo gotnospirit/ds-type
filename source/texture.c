@@ -183,7 +183,7 @@ int texture_delete(texture_t const ** texture)
         if (ptr == *texture)
         {
             free_texture(ptr);
-            ptr = list_dealloc(textures, ptr);
+            list_dealloc(textures, ptr);
             *texture = NULL;
             return 1;
         }

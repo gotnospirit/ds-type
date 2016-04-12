@@ -1,16 +1,14 @@
 #include "logic.h"
 #include "input.h"
+#include "entity.h"
 #include "animation.h"
 
 void logic_hero(entity_t * entity)
 {
     int const incr = 5;
 
-    float const x_incr = stick_dx() * incr;
-    float const y_incr = stick_dy() * incr;
-
-    entity->x += x_incr;
-    entity->y += y_incr;
+    entity->x += stick_dx() * incr;
+    entity->y += stick_dy() * incr;
 
     if (pressed(KEY_UP))
     {

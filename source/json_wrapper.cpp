@@ -8,22 +8,8 @@ extern "C" {
 
 #include "structs.h"
 #include "texture.h"
+#include "entity.h"
 #include "utils.h"
-
-static sprite_t * sprite_new(int x, int y, uint16_t width, uint16_t height, texture_t const * texture, frame_t const * frame)
-{
-    // @TODO(james) handle error
-    sprite_t * result = (sprite_t *)malloc(sizeof(sprite_t));
-    result->x = x;
-    result->y = y;
-    result->width = width;
-    result->height = height;
-    result->texture = texture;
-    result->frame = frame;
-    result->flip_x = 0;
-    result->flip_y = 0;
-    return result;
-}
 
 static char * get_json_data(const char * name)
 {
@@ -209,13 +195,11 @@ static int process_level_tiles(JsonValue const &root, level_t * level, JsonValue
     return 0;
 }
 
-static int process_base_entities(JsonValue const &root, list_t * entities, texture_t const * texture)
+static int process_base_entities(JsonValue const &root, texture_t const * texture)
 {
     const char * name = NULL;
     int width = 0, height = 0, start_frame = 0, current_frame = 0, nb_frames = 0;
 
-    entity_t * entity = NULL;
-    frame_t const * frame = NULL;
     for (auto const &node : root)
     {
         auto const &value = node->value;
@@ -252,24 +236,17 @@ static int process_base_entities(JsonValue const &root, list_t * entities, textu
             current_frame = nb_frames;
         }
 
-        frame = get_frame(texture, start_frame + current_frame);
-        if (NULL == frame)
+        if (NULL == get_frame(texture, start_frame + current_frame))
         {
             printf("Frame %d not found\n", current_frame);
             return 5;
         }
 
-        // @TODO(james) handle error
-        entity = (entity_t *)list_alloc(entities);
-        entity->name = strdup(name);
-        entity->x = 0;
-        entity->y = 0;
-        entity->width = width;
-        entity->height = height;
-        entity->start_frame = start_frame;
-        entity->nb_frames = nb_frames;
-        entity->current_frame = current_frame;
-        entity->sprite = sprite_new(0, 0, width, height, texture, frame);
+        if (NULL == template_new(name, width, height, start_frame, nb_frames, current_frame, texture))
+        {
+            printf("Template not created\n");
+            return 6;
+        }
     }
     return 0;
 }
@@ -299,7 +276,7 @@ void json_delete(json_wrapper_t * o)
     delete static_cast<Json *>(o);
 }
 
-int parse_base(json_wrapper_t * o, list_t * entities, texture_t * spritesheet)
+int parse_base(json_wrapper_t * o, texture_t * spritesheet)
 {
     auto json = static_cast<Json *>(o);
 
@@ -337,7 +314,7 @@ int parse_base(json_wrapper_t * o, list_t * entities, texture_t * spritesheet)
     {
         return 3;
     }
-    else if (0 != process_base_entities(entities_node->value, entities, spritesheet))
+    else if (0 != process_base_entities(entities_node->value, spritesheet))
     {
         return 4;
     }

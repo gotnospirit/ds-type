@@ -43,6 +43,16 @@ typedef struct
 typedef struct
 {
     char * name;
+    uint16_t width, height;
+    uint8_t start_frame;
+    uint8_t nb_frames;
+    uint8_t current_frame;
+    texture_t const * texture;
+} template_t;
+
+typedef struct
+{
+    const char * type;
     int x, y;
     uint16_t width, height;
     uint8_t start_frame;

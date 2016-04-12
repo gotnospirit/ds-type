@@ -57,13 +57,6 @@ static void keep_inside(entity_t * entity, rectangle_t const * camera)
     }
 }
 
-static void update_sprite_position(entity_t * entity, rectangle_t const * camera)
-{
-    sprite_t * sprite = entity->sprite;
-    sprite->x = entity->x - camera->left;
-    sprite->y = entity->y - camera->top;
-}
-
 static void game_update(level_t * level)
 {
     u64 current_time = osGetTime();
@@ -80,7 +73,7 @@ static void game_update(level_t * level)
     keep_inside(ship, &level->camera);
 
     // global to local
-    update_sprite_position(ship, &level->camera);
+    update_sprites(&level->camera);
 
     last_time = current_time;
 }
@@ -105,7 +98,7 @@ void initialize(game_state_t * state)
         return ;
     }
 
-    ship = entity_get("ship");
+    ship = entity_get_ship();
     if (NULL == ship)
     {
         state->next = loading_error;

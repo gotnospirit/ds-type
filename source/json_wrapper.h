@@ -4,7 +4,6 @@
 typedef void json_wrapper_t;
 
 #include "structs.h"
-#include "list.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,7 +12,7 @@ extern "C" {
 json_wrapper_t * json_new(const char *);
 void json_delete(json_wrapper_t *);
 
-int parse_base(json_wrapper_t *, list_t *, texture_t *);
+int parse_base(json_wrapper_t *, texture_t *);
 int parse_level(json_wrapper_t *, level_t *, texture_t *);
 
 #ifdef __cplusplus
