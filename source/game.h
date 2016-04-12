@@ -1,5 +1,5 @@
-#ifndef _GAME_STATES_H_
-#define _GAME_STATES_H_
+#ifndef _GAME_H_
+#define _GAME_H_
 
 #include "structs.h"
 

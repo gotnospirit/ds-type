@@ -1,5 +1,5 @@
-#ifndef _TEXTURES_H_
-#define _TEXTURES_H_
+#ifndef _TEXTURE_H_
+#define _TEXTURE_H_
 
 #include "structs.h"
 
