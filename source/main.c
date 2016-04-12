@@ -5,7 +5,7 @@
 
 int main(int argc, char ** argv)
 {
-    GameState state;
+    game_state_t state;
     state.next = initialize;
     state.data = NULL;
 

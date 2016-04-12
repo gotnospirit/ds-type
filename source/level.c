@@ -9,10 +9,10 @@
 #include "render.h"
 #include "texture.h"
 
-static void update_level_tiles(List * container, uint16_t camera_left, uint16_t camera_right, uint16_t offset_y)
+static void update_level_tiles(list_t * container, uint16_t camera_left, uint16_t camera_right, uint16_t offset_y)
 {
-    Tile * tile = NULL;
-    Sprite * sprite = NULL;
+    tile_t * tile = NULL;
+    sprite_t * sprite = NULL;
     int x = 0;
     while (list_next(container, (void **)&tile))
     {
@@ -44,10 +44,10 @@ static void update_level_tiles(List * container, uint16_t camera_left, uint16_t 
     }
 }
 
-static void clear_level_tiles(List ** list)
+static void clear_level_tiles(list_t ** list)
 {
-    List * container = *list;
-    Tile * tile = NULL;
+    list_t * container = *list;
+    tile_t * tile = NULL;
     while (list_next(container, (void **)&tile))
     {
         if (tile->visible)
@@ -59,26 +59,26 @@ static void clear_level_tiles(List ** list)
     list_delete(list);
 }
 
-Level * level_new()
+level_t * level_new()
 {
-    Rectangle camera;
+    rectangle_t camera;
     camera.top = 0;
     camera.left = 0;
     camera.right = 0;
     camera.bottom = 0;
 
-    Level * level = malloc(sizeof(Level));
+    level_t * level = malloc(sizeof(level_t));
     level->camera = camera;
     level->incr = 1;
     level->max_camera_left = 0;
     // level->elapsed = 0;
     level->texture = NULL;
-    level->top_tiles = list_new(sizeof(Tile), 1);
-    level->bottom_tiles = list_new(sizeof(Tile), 1);
+    level->top_tiles = list_new(sizeof(tile_t), 1);
+    level->bottom_tiles = list_new(sizeof(tile_t), 1);
     return level;
 }
 
-void level_delete(Level * level)
+void level_delete(level_t * level)
 {
     clear_level_tiles(&level->top_tiles);
     clear_level_tiles(&level->bottom_tiles);
@@ -88,7 +88,7 @@ void level_delete(Level * level)
     free(level);
 }
 
-void level_update(Level * level, Surface const * screen, uint64_t dt)
+void level_update(level_t * level, surface_t const * screen, uint64_t dt)
 {
     int incr = 0;
     if (keypressed(KEY_DRIGHT))

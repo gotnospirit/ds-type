@@ -3,12 +3,12 @@
 
 #include "structs.h"
 
-int init_rendering(Surface *);
+int init_rendering(surface_t *);
 void shutdown_rendering();
 
 void process_rendering();
 
-int add_to_rendering(Sprite *);
-int remove_from_rendering(Sprite *);
+int add_to_rendering(sprite_t *);
+int remove_from_rendering(sprite_t *);
 
 #endif

@@ -15,15 +15,15 @@ typedef struct
     void ** items;
     size_t nb_items;
     size_t max_items;
-} List;
+} list_t;
 
-List * list_new(size_t, size_t);
-void list_delete(List **);
+list_t * list_new(size_t, size_t);
+void list_delete(list_t **);
 
-void * list_alloc(List *);
-void * list_dealloc(List *, void *);
+void * list_alloc(list_t *);
+void * list_dealloc(list_t *, void *);
 
-int list_next(List const *, void **);
+int list_next(list_t const *, void **);
 
 #ifdef __cplusplus
 } //end extern "C"

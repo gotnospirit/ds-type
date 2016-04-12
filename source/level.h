@@ -5,9 +5,9 @@
 
 #include "structs.h"
 
-Level * level_new();
-void level_delete(Level *);
+level_t * level_new();
+void level_delete(level_t *);
 
-void level_update(Level *, Surface const *, uint64_t);
+void level_update(level_t *, surface_t const *, uint64_t);
 
 #endif

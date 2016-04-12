@@ -6,53 +6,41 @@
 
 #include "list.h"
 
-typedef struct Rectangle Rectangle;
-typedef struct Surface Surface;
-typedef struct Frame Frame;
-typedef struct Texture Texture;
-typedef struct Sprite Sprite;
-typedef struct Entity Entity;
-typedef struct Tile Tile;
-typedef struct Level Level;
-typedef struct GameState GameState;
-
-typedef void StateFunction(GameState *);
-
-struct Rectangle
+typedef struct
 {
     int top, left, right, bottom;
-};
+} rectangle_t;
 
-struct Surface
+typedef struct
 {
     uint16_t width, height;
-};
+} surface_t;
 
-struct Frame
+typedef struct
 {
     float left, top, right, bottom;
-};
+} frame_t;
 
-struct Texture
+typedef struct
 {
     uint16_t width, height, real_width, real_height;
     uint8_t bpp;
     C3D_Tex ptr;
     char * name;
-    Frame const * frames;
-};
+    frame_t const * frames;
+} texture_t;
 
-struct Sprite
+typedef struct
 {
     int x, y;
     int width, height;
-    Texture const * texture;
-    Frame const * frame;
+    texture_t const * texture;
+    frame_t const * frame;
     // uint8_t depth
     uint8_t flip_x, flip_y;
-};
+} sprite_t;
 
-struct Entity
+typedef struct
 {
     char * name;
     int x, y;
@@ -61,31 +49,34 @@ struct Entity
     uint8_t nb_frames;
     uint8_t current_frame;
     uint16_t elapsed;
-    Sprite * sprite;
-};
+    sprite_t * sprite;
+} entity_t;
 
-struct Tile
+typedef struct
 {
     int x;
     uint16_t width, height;
     uint8_t visible;
-    Sprite * sprite;
-};
+    sprite_t * sprite;
+} tile_t;
 
-struct Level
+typedef struct
 {
-    Rectangle camera;
+    rectangle_t camera;
     // uint16_t elapsed;
     int incr;
     uint16_t max_camera_left;
-    Texture const * texture;
-    List * top_tiles;
-    List * bottom_tiles;
-};
+    texture_t const * texture;
+    list_t * top_tiles;
+    list_t * bottom_tiles;
+} level_t;
+
+typedef struct GameState game_state_t;
+typedef void game_state_processor_t(game_state_t *);
 
 struct GameState
 {
-    StateFunction * next;
+    game_state_processor_t * next;
     void * data;
 };
 

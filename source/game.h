@@ -3,11 +3,11 @@
 
 #include "structs.h"
 
-void initialize(GameState *);
-void loading_error(GameState *);
-void start_level(GameState *);
-void run_level(GameState *);
-void stop_level(GameState *);
-void shutdown(GameState *);
+void initialize(game_state_t *);
+void loading_error(game_state_t *);
+void start_level(game_state_t *);
+void run_level(game_state_t *);
+void stop_level(game_state_t *);
+void shutdown(game_state_t *);
 
 #endif

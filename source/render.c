@@ -31,7 +31,7 @@ static C3D_Mtx projection;
 static C3D_RenderTarget * top_left;
 static C3D_RenderTarget * top_right;
 
-static List * render_pipe = NULL;
+static list_t * render_pipe = NULL;
 static uint8_t render_pipe_size = 0;
 
 static void draw_quad(float x1, float y1, float x2, float y2, float tx1, float ty1, float tx2, float ty2, uint8_t flip_x, uint8_t flip_y)
@@ -98,18 +98,18 @@ static void draw_quad(float x1, float y1, float x2, float y2, float tx1, float t
     C3D_ImmDrawEnd();
 }
 
-static void render_sprite(Sprite const * sprite, Texture const ** gpu_texture, float offset3d)
+static void render_sprite(sprite_t const * sprite, texture_t const ** gpu_texture, float offset3d)
 {
-    Texture const * texture = sprite->texture;
+    texture_t const * texture = sprite->texture;
     if (NULL != texture)
     {
         if (texture != *gpu_texture)
         {
             *gpu_texture = texture;
-            C3D_TexBind(0, &((Texture *)texture)->ptr);
+            C3D_TexBind(0, &((texture_t *)texture)->ptr);
         }
 
-        Frame const * frame = sprite->frame;
+        frame_t const * frame = sprite->frame;
         if (NULL != frame)
         {
             float left = sprite->x + offset3d;
@@ -126,7 +126,7 @@ static void render_sprite(Sprite const * sprite, Texture const ** gpu_texture, f
     }
 }
 
-int init_rendering(Surface * screen)
+int init_rendering(surface_t * screen)
 {
     // Initialize graphics
     gfxInitDefault();
@@ -136,7 +136,7 @@ int init_rendering(Surface * screen)
 
     consoleInit(GFX_BOTTOM, NULL);
 
-    render_pipe = list_new(sizeof(Sprite *), 1);
+    render_pipe = list_new(sizeof(sprite_t *), 1);
     if (NULL == render_pipe)
     {
         return 1;
@@ -216,8 +216,8 @@ void shutdown_rendering()
 
 void process_rendering()
 {
-    Texture const * gpu_texture = NULL;
-    Sprite const ** sprite = NULL;
+    texture_t const * gpu_texture = NULL;
+    sprite_t const ** sprite = NULL;
     float iod = osGet3DSliderState() * 15;
 
     // Render the scene
@@ -259,14 +259,14 @@ void process_rendering()
     gpu_texture = NULL;
 }
 
-int add_to_rendering(Sprite * sprite)
+int add_to_rendering(sprite_t * sprite)
 {
     if (NULL == sprite)
     {
         return 0;
     }
 
-    Sprite ** ptr = (Sprite **)list_alloc(render_pipe);
+    sprite_t ** ptr = (sprite_t **)list_alloc(render_pipe);
     if (NULL == ptr)
     {
         return 0;
@@ -276,14 +276,14 @@ int add_to_rendering(Sprite * sprite)
     return 1;
 }
 
-int remove_from_rendering(Sprite * sprite)
+int remove_from_rendering(sprite_t * sprite)
 {
     if (NULL == sprite)
     {
         return 0;
     }
 
-    Sprite ** ptr = NULL;
+    sprite_t ** ptr = NULL;
     while (list_next(render_pipe, (void **)&ptr))
     {
         if (*ptr == sprite)

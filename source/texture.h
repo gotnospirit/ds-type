@@ -6,10 +6,10 @@
 int init_textures();
 void shutdown_textures();
 
-Texture * texture_new(const char *);
-int texture_delete(Texture const **);
+texture_t * texture_new(const char *);
+int texture_delete(texture_t const **);
 
-Texture const * get_texture(const char *);
-Frame const * get_frame(Texture const *, int);
+texture_t const * get_texture(const char *);
+frame_t const * get_frame(texture_t const *, int);
 
 #endif

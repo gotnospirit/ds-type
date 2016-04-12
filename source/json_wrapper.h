@@ -1,7 +1,7 @@
 #ifndef _JSON_WRAPPER_H_
 #define _JSON_WRAPPER_H_
 
-typedef void JsonWrapper;
+typedef void json_wrapper_t;
 
 #include "structs.h"
 #include "list.h"
@@ -10,11 +10,11 @@ typedef void JsonWrapper;
 extern "C" {
 #endif
 
-JsonWrapper * json_new(const char *);
-void json_delete(JsonWrapper *);
+json_wrapper_t * json_new(const char *);
+void json_delete(json_wrapper_t *);
 
-int parse_base(JsonWrapper *, List *, Texture *);
-int parse_level(JsonWrapper *, Level *, Texture *);
+int parse_base(json_wrapper_t *, list_t *, texture_t *);
+int parse_level(json_wrapper_t *, level_t *, texture_t *);
 
 #ifdef __cplusplus
 } //end extern "C"

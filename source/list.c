@@ -3,7 +3,7 @@
 
 #include "list.h"
 
-List * list_new(size_t item_size, size_t nb_items)
+list_t * list_new(size_t item_size, size_t nb_items)
 {
     void ** items = malloc(sizeof(void *) * nb_items);
     if (!items)
@@ -18,7 +18,7 @@ List * list_new(size_t item_size, size_t nb_items)
         return NULL;
     }
 
-    List * result = malloc(sizeof(List));
+    list_t * result = malloc(sizeof(list_t));
     result->storage = storage;
     result->items = items;
     result->nb_items = 0;
@@ -26,7 +26,7 @@ List * list_new(size_t item_size, size_t nb_items)
     return result;
 }
 
-void list_delete(List ** list)
+void list_delete(list_t ** list)
 {
     if (NULL == *list)
     {
@@ -43,7 +43,7 @@ void list_delete(List ** list)
     *list = NULL;
 }
 
-void * list_alloc(List * list)
+void * list_alloc(list_t * list)
 {
     if (NULL == list)
     {
@@ -74,7 +74,7 @@ void * list_alloc(List * list)
     return result;
 }
 
-void * list_dealloc(List * list, void * data)
+void * list_dealloc(list_t * list, void * data)
 {
     if (NULL == list)
     {
@@ -102,7 +102,7 @@ void * list_dealloc(List * list, void * data)
         ? NULL : list->items[n - 1];
 }
 
-int list_next(List const * list, void ** ptr)
+int list_next(list_t const * list, void ** ptr)
 {
     if (NULL == list)
     {

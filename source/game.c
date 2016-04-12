@@ -13,10 +13,10 @@
 #include "level.h"
 #include "update.h"
 
-static Surface screen;
+static surface_t screen;
 
-static List * entities = NULL;
-static Entity * ship = NULL;
+static list_t * entities = NULL;
+static entity_t * ship = NULL;
 
 static uint64_t last_time = 0;
 
@@ -26,9 +26,9 @@ static int basic_events()
         ? 0 : 1;
 }
 
-static Entity * get_entity(const char * name)
+static entity_t * get_entity(const char * name)
 {
-    Entity * entity = NULL;
+    entity_t * entity = NULL;
     while (list_next(entities, (void **)&entity))
     {
         if (0 == strcmp(entity->name, name))
@@ -41,13 +41,13 @@ static Entity * get_entity(const char * name)
 
 static int load_base()
 {
-    Texture * texture = texture_new("base");
+    texture_t * texture = texture_new("base");
     if (NULL == texture)
     {
         return 1;
     }
 
-    JsonWrapper * json = json_new("base");
+    json_wrapper_t * json = json_new("base");
     if (NULL == json)
     {
         return 2;
@@ -68,7 +68,7 @@ static int load_base()
         ? 5 : 0;
 }
 
-static void keep_inside(Entity * entity, Rectangle const * camera)
+static void keep_inside(entity_t * entity, rectangle_t const * camera)
 {
     int y = entity->y;
     int height = entity->height;
@@ -99,14 +99,14 @@ static void keep_inside(Entity * entity, Rectangle const * camera)
     }
 }
 
-static void update_sprite_position(Entity * entity, Rectangle const * camera)
+static void update_sprite_position(entity_t * entity, rectangle_t const * camera)
 {
-    Sprite * sprite = entity->sprite;
+    sprite_t * sprite = entity->sprite;
     sprite->x = entity->x - camera->left;
     sprite->y = entity->y - camera->top;
 }
 
-static void game_update(Level * level)
+static void game_update(level_t * level)
 {
     u64 current_time = osGetTime();
     u64 dt = current_time - last_time;
@@ -125,7 +125,7 @@ static void game_update(Level * level)
     last_time = current_time;
 }
 
-void initialize(GameState * state)
+void initialize(game_state_t * state)
 {
     if (0 != init_rendering(&screen))
     {
@@ -133,7 +133,7 @@ void initialize(GameState * state)
         return ;
     }
 
-    entities = list_new(sizeof(Entity), 1);
+    entities = list_new(sizeof(entity_t), 1);
     if (NULL == entities)
     {
         state->next = loading_error;
@@ -151,7 +151,7 @@ void initialize(GameState * state)
     state->data = "level_one";
 }
 
-void loading_error(GameState * state)
+void loading_error(game_state_t * state)
 {
     if (0 != basic_events())
     {
@@ -181,7 +181,7 @@ void loading_error(GameState * state)
     printf("\x1b[15;10HPress Start to exit.");
 }
 
-void start_level(GameState * state)
+void start_level(game_state_t * state)
 {
     const char * level_name = state->data;
 
@@ -192,7 +192,7 @@ void start_level(GameState * state)
         return ;
     }
 
-    Texture * texture = texture_new(level_name);
+    texture_t * texture = texture_new(level_name);
     if (NULL == texture)
     {
         state->next = loading_error;
@@ -200,7 +200,7 @@ void start_level(GameState * state)
         return ;
     }
 
-    Level * level = level_new();
+    level_t * level = level_new();
     if (NULL == level)
     {
         state->next = loading_error;
@@ -210,7 +210,7 @@ void start_level(GameState * state)
 
     level->texture = texture;
 
-    JsonWrapper * json = json_new(level_name);
+    json_wrapper_t * json = json_new(level_name);
     if (NULL == json)
     {
         level_delete(level);
@@ -234,7 +234,7 @@ void start_level(GameState * state)
     json_delete(json);
 }
 
-void run_level(GameState * state)
+void run_level(game_state_t * state)
 {
     if (0 != basic_events())
     {
@@ -242,13 +242,13 @@ void run_level(GameState * state)
     }
     else
     {
-        game_update((Level *)state->data);
+        game_update((level_t *)state->data);
 
         process_rendering();
     }
 }
 
-void stop_level(GameState * state)
+void stop_level(game_state_t * state)
 {
     level_delete(state->data);
     state->data = NULL;
@@ -257,13 +257,13 @@ void stop_level(GameState * state)
     state->next = shutdown;
 }
 
-void shutdown(GameState * state)
+void shutdown(game_state_t * state)
 {
     state->next = NULL;
 
     shutdown_rendering();
 
-    Entity * entity = NULL;
+    entity_t * entity = NULL;
     while (list_next(entities, (void **)&entity))
     {
         remove_from_rendering(entity->sprite);

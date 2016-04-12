@@ -11,10 +11,10 @@ extern "C" {
 #include "texture.h"
 #include "utils.h"
 
-static Sprite * sprite_new(int x, int y, uint16_t width, uint16_t height, Texture const * texture, Frame const * frame)
+static sprite_t * sprite_new(int x, int y, uint16_t width, uint16_t height, texture_t const * texture, frame_t const * frame)
 {
     // @TODO(james) handle error
-    Sprite * result = (Sprite *)malloc(sizeof(Sprite));
+    sprite_t * result = (sprite_t *)malloc(sizeof(sprite_t));
     result->x = x;
     result->y = y;
     result->width = width;
@@ -39,11 +39,11 @@ static char * get_json_data(const char * name)
     return NULL;
 }
 
-static int process_frames(JsonValue const &root, Texture * spritesheet)
+static int process_frames(JsonValue const &root, texture_t * spritesheet)
 {
     int nb_frames = Json::Size(root);
 
-    Frame * frames = (Frame *)malloc(sizeof(Frame) * nb_frames);
+    frame_t * frames = (frame_t *)malloc(sizeof(frame_t) * nb_frames);
     if (NULL == frames)
     {
         printf("Failed to init frames\n");
@@ -51,7 +51,7 @@ static int process_frames(JsonValue const &root, Texture * spritesheet)
     }
     spritesheet->frames = frames;
 
-    Frame * frame = NULL;
+    frame_t * frame = NULL;
 
     float const texture_width = (float)spritesheet->width;
     float const texture_height = (float)spritesheet->height;
@@ -123,7 +123,7 @@ static int get_frame_index(JsonValue const &root, JsonNode const * target)
     return -1;
 }
 
-static int create_tile(const char * name, int x, bool flip_x, bool flip_y, List * container, JsonValue const &frames_node, Texture const * texture)
+static int create_tile(const char * name, int x, bool flip_x, bool flip_y, list_t * container, JsonValue const &frames_node, texture_t const * texture)
 {
     if (NULL == name)
     {
@@ -148,18 +148,18 @@ static int create_tile(const char * name, int x, bool flip_x, bool flip_y, List 
         return 0;
     }
 
-    Frame const * frame = get_frame(texture, get_frame_index(frames_node, frame_node));
+    frame_t const * frame = get_frame(texture, get_frame_index(frames_node, frame_node));
     if (NULL == frame)
     {
         return 0;
     }
 
-    Sprite * sprite = sprite_new(0, 0, width, height, texture, frame);
+    sprite_t * sprite = sprite_new(0, 0, width, height, texture, frame);
     sprite->flip_x = flip_x ? 1 : 0;
     sprite->flip_y = flip_y ? 1 : 0;
 
     // @TODO(james) handle error
-    Tile * tile = (Tile *)list_alloc(container);
+    tile_t * tile = (tile_t *)list_alloc(container);
     tile->x = x;
     tile->width = width;
     tile->height = height;
@@ -168,7 +168,7 @@ static int create_tile(const char * name, int x, bool flip_x, bool flip_y, List 
     return 1;
 }
 
-static int process_level_tiles(JsonValue const &root, Level * level, JsonValue const &frames_node, Texture const * texture)
+static int process_level_tiles(JsonValue const &root, level_t * level, JsonValue const &frames_node, texture_t const * texture)
 {
     int x = -1;
     const char * top_name = NULL;
@@ -210,13 +210,13 @@ static int process_level_tiles(JsonValue const &root, Level * level, JsonValue c
     return 0;
 }
 
-static int process_base_entities(JsonValue const &root, List * entities, Texture const * texture)
+static int process_base_entities(JsonValue const &root, list_t * entities, texture_t const * texture)
 {
     const char * name = NULL;
     int width = 0, height = 0, start_frame = 0, current_frame = 0, nb_frames = 0;
 
-    Entity * entity = NULL;
-    Frame const * frame = NULL;
+    entity_t * entity = NULL;
+    frame_t const * frame = NULL;
     for (auto const &node : root)
     {
         auto const &value = node->value;
@@ -261,7 +261,7 @@ static int process_base_entities(JsonValue const &root, List * entities, Texture
         }
 
         // @TODO(james) handle error
-        entity = (Entity *)list_alloc(entities);
+        entity = (entity_t *)list_alloc(entities);
         entity->name = strdup(name);
         entity->x = 0;
         entity->y = 0;
@@ -276,7 +276,7 @@ static int process_base_entities(JsonValue const &root, List * entities, Texture
     return 0;
 }
 
-JsonWrapper * json_new(const char * name)
+json_wrapper_t * json_new(const char * name)
 {
     char * data = get_json_data(name);
     if (NULL == data)
@@ -293,15 +293,15 @@ JsonWrapper * json_new(const char * name)
         return NULL;
     }
     free(data);
-    return (JsonWrapper *)json;
+    return (json_wrapper_t *)json;
 }
 
-void json_delete(JsonWrapper * o)
+void json_delete(json_wrapper_t * o)
 {
     delete static_cast<Json *>(o);
 }
 
-int parse_base(JsonWrapper * o, List * entities, Texture * spritesheet)
+int parse_base(json_wrapper_t * o, list_t * entities, texture_t * spritesheet)
 {
     auto json = static_cast<Json *>(o);
 
@@ -346,7 +346,7 @@ int parse_base(JsonWrapper * o, List * entities, Texture * spritesheet)
     return 0;
 }
 
-int parse_level(JsonWrapper * o, Level * level, Texture * spritesheet)
+int parse_level(json_wrapper_t * o, level_t * level, texture_t * spritesheet)
 {
     auto json = static_cast<Json *>(o);
 

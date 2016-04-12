@@ -21,7 +21,7 @@
     GX_TRANSFER_IN_FORMAT(format_in) | GX_TRANSFER_OUT_FORMAT(format_out) | \
     GX_TRANSFER_SCALING(GX_TRANSFER_SCALE_NO))
 
-static List * textures = NULL;
+static list_t * textures = NULL;
 
 static uint8_t is_pow_2(uint32_t i)
 {
@@ -43,7 +43,7 @@ static u32 next_pow_2(int i)
         ? 64 : i;
 }
 
-static int load_image(Texture * texture, const char * filepath)
+static int load_image(texture_t * texture, const char * filepath)
 {
     // Configure buffers
     // C3D_BufInfo * bufInfo = C3D_GetBufInfo();
@@ -123,16 +123,16 @@ static int load_image(Texture * texture, const char * filepath)
     return 0;
 }
 
-static void free_texture(Texture * texture)
+static void free_texture(texture_t * texture)
 {
     C3D_TexDelete(&texture->ptr);
     free(texture->name);
-    free((Frame *)texture->frames);
+    free((frame_t *)texture->frames);
 }
 
 int init_textures()
 {
-    textures = list_new(sizeof(Texture), 3);
+    textures = list_new(sizeof(texture_t), 3);
 
     return NULL != textures
         ? 1 : 0;
@@ -140,7 +140,7 @@ int init_textures()
 
 void shutdown_textures()
 {
-    Texture * texture = NULL;
+    texture_t * texture = NULL;
     while (list_next(textures, (void **)&texture))
     {
         free_texture(texture);
@@ -148,7 +148,7 @@ void shutdown_textures()
     list_delete(&textures);
 }
 
-Texture * texture_new(const char * name)
+texture_t * texture_new(const char * name)
 {
     const char * filepath = NULL;
     if (0 == strncmp(name, "base", 4))
@@ -165,7 +165,7 @@ Texture * texture_new(const char * name)
         return NULL;
     }
 
-    Texture * addr = (Texture *)list_alloc(textures);
+    texture_t * addr = (texture_t *)list_alloc(textures);
     if (0 != load_image(addr, filepath))
     {
         list_dealloc(textures, addr);
@@ -175,9 +175,9 @@ Texture * texture_new(const char * name)
     return addr;
 }
 
-int texture_delete(Texture const ** texture)
+int texture_delete(texture_t const ** texture)
 {
-    Texture * ptr = NULL;
+    texture_t * ptr = NULL;
     while (list_next(textures, (void **)&ptr))
     {
         if (ptr == *texture)
@@ -191,14 +191,14 @@ int texture_delete(Texture const ** texture)
     return 0;
 }
 
-Texture const * get_texture(const char * name)
+texture_t const * get_texture(const char * name)
 {
     if (NULL == name)
     {
         return NULL;
     }
 
-    Texture const * texture = NULL;
+    texture_t const * texture = NULL;
     while (list_next(textures, (void **)&texture))
     {
         if (NULL != texture->name && 0 == strcmp(texture->name, name))
@@ -209,7 +209,7 @@ Texture const * get_texture(const char * name)
     return NULL;
 }
 
-Frame const * get_frame(Texture const * texture, int index)
+frame_t const * get_frame(texture_t const * texture, int index)
 {
     if (NULL != texture && NULL != texture->frames && index >= 0)
     {
