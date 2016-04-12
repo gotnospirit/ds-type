@@ -91,11 +91,11 @@ void level_delete(level_t * level)
 void level_update(level_t * level, surface_t const * screen, uint64_t dt)
 {
     int incr = 0;
-    if (keypressed(KEY_DRIGHT))
+    if (keyheld(KEY_DRIGHT))
     {
         incr = level->incr;
     }
-    else if (keypressed(KEY_DLEFT))
+    else if (keyheld(KEY_DLEFT))
     {
         incr = level->incr * -1;
     }

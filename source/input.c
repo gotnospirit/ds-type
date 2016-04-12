@@ -24,7 +24,13 @@ int read_inputs()
 
 int keypressed(uint32_t key_code)
 {
-    return ((kDown & key_code) || (kHeld & key_code))
+    return (kDown & key_code)
+        ? 1 : 0;
+}
+
+int keyheld(uint32_t key_code)
+{
+    return (kHeld & key_code)
         ? 1 : 0;
 }
 
