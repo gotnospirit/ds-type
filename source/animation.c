@@ -119,12 +119,16 @@ void animation_rollup(entity_t * entity)
     animation_t * o = find(entity, SHIP_ROLL_UP, SHIP_ROLL_DOWN, SHIP_ROLL_BACK);
     if (NULL == o)
     {
-        o = animation_new(SHIP_ROLL_UP, 500, entity);
+        o = animation_new(SHIP_ROLL_UP, 300, entity);
+    }
+    else if (SHIP_ROLL_UP != o->type)
+    {
+        o->type = SHIP_ROLL_UP;
+        o->elapsed = 0;
     }
 
     o->start = entity->current_frame;
     o->end = entity->nb_frames - 1;
-    o->elapsed = 0;
 }
 
 void animation_rolldown(entity_t * entity)
@@ -132,12 +136,16 @@ void animation_rolldown(entity_t * entity)
     animation_t * o = find(entity, SHIP_ROLL_DOWN, SHIP_ROLL_UP, SHIP_ROLL_BACK);
     if (NULL == o)
     {
-        o = animation_new(SHIP_ROLL_DOWN, 500, entity);
+        o = animation_new(SHIP_ROLL_DOWN, 300, entity);
+    }
+    else if (SHIP_ROLL_DOWN != o->type)
+    {
+        o->type = SHIP_ROLL_DOWN;
+        o->elapsed = 0;
     }
 
     o->start = entity->current_frame;
     o->end = 0;
-    o->elapsed = 0;
 }
 
 void animation_rollback(entity_t * entity)
@@ -145,10 +153,14 @@ void animation_rollback(entity_t * entity)
     animation_t * o = find(entity, SHIP_ROLL_BACK, SHIP_ROLL_UP, SHIP_ROLL_DOWN);
     if (NULL == o)
     {
-        o = animation_new(SHIP_ROLL_BACK, 500, entity);
+        o = animation_new(SHIP_ROLL_BACK, 300, entity);
+    }
+    else if (SHIP_ROLL_BACK != o->type)
+    {
+        o->type = SHIP_ROLL_BACK;
+        o->elapsed = 0;
     }
 
     o->start = entity->current_frame;
     o->end = entity->nb_frames / 2;
-    o->elapsed = 0;
 }
