@@ -5,17 +5,17 @@
 
 #include "game.h"
 #include "json_wrapper.h"
-#include "list.h"
 #include "structs.h"
 #include "input.h"
 #include "texture.h"
 #include "render.h"
 #include "level.h"
-#include "update.h"
+#include "entity.h"
+#include "animation.h"
+#include "logic.h"
 
 static surface_t screen;
 
-static list_t * entities = NULL;
 static entity_t * ship = NULL;
 
 static uint64_t last_time = 0;
@@ -24,48 +24,6 @@ static int basic_events()
 {
     return (aptMainLoop() && read_inputs())
         ? 0 : 1;
-}
-
-static entity_t * get_entity(const char * name)
-{
-    entity_t * entity = NULL;
-    while (list_next(entities, (void **)&entity))
-    {
-        if (0 == strcmp(entity->name, name))
-        {
-            return entity;
-        }
-    }
-    return NULL;
-}
-
-static int load_base()
-{
-    texture_t * texture = texture_new("base");
-    if (NULL == texture)
-    {
-        return 1;
-    }
-
-    json_wrapper_t * json = json_new("base");
-    if (NULL == json)
-    {
-        return 2;
-    }
-    else if (0 != parse_base(json, entities, texture))
-    {
-        json_delete(json);
-        return 3;
-    }
-    json_delete(json);
-
-    ship = get_entity("ship");
-    if (NULL == ship)
-    {
-        return 4;
-    }
-    return !add_to_rendering(ship->sprite)
-        ? 5 : 0;
 }
 
 static void keep_inside(entity_t * entity, rectangle_t const * camera)
@@ -112,11 +70,13 @@ static void game_update(level_t * level)
     u64 dt = current_time - last_time;
 
     // logic
-    level_update(level, &screen, dt);
+    level_logic(level, &screen, dt);
 
-    update_hero(level, ship, dt);
+    logic_hero(ship);
 
-    // collisions
+    process_animations(dt);
+
+    // collision
     keep_inside(ship, &level->camera);
 
     // global to local
@@ -133,14 +93,25 @@ void initialize(game_state_t * state)
         return ;
     }
 
-    entities = list_new(sizeof(entity_t), 1);
-    if (NULL == entities)
+    if (0 != init_entities())
     {
         state->next = loading_error;
         return ;
     }
 
-    if (0 != load_base())
+    if (0 != init_animations())
+    {
+        state->next = loading_error;
+        return ;
+    }
+
+    ship = entity_get("ship");
+    if (NULL == ship)
+    {
+        state->next = loading_error;
+        return ;
+    }
+    else if (!add_to_rendering(ship->sprite))
     {
         state->next = loading_error;
         return ;
@@ -262,13 +233,6 @@ void shutdown(game_state_t * state)
     state->next = NULL;
 
     shutdown_rendering();
-
-    entity_t * entity = NULL;
-    while (list_next(entities, (void **)&entity))
-    {
-        remove_from_rendering(entity->sprite);
-        free(entity->name);
-        free(entity->sprite);
-    }
-    list_delete(&entities);
+    shutdown_animations();
+    shutdown_entities();
 }

@@ -88,18 +88,18 @@ void level_delete(level_t * level)
     free(level);
 }
 
-void level_update(level_t * level, surface_t const * screen, uint64_t dt)
+void level_logic(level_t * level, surface_t const * screen, uint64_t dt)
 {
     int incr = 0;
-    if (keyheld(KEY_DRIGHT))
+    if (held(KEY_DRIGHT))
     {
         incr = level->incr;
     }
-    else if (keyheld(KEY_DLEFT))
+    else if (held(KEY_DLEFT))
     {
         incr = level->incr * -1;
     }
-    else if (keypressed(KEY_R))
+    else if (pressed(KEY_R))
     {
         ++level->incr;
         if (level->incr > 255)
@@ -107,7 +107,7 @@ void level_update(level_t * level, surface_t const * screen, uint64_t dt)
             level->incr = 255;
         }
     }
-    else if (keypressed(KEY_L))
+    else if (pressed(KEY_L))
     {
         --level->incr;
         if (level->incr < 1)

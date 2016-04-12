@@ -48,9 +48,23 @@ typedef struct
     uint8_t start_frame;
     uint8_t nb_frames;
     uint8_t current_frame;
-    uint16_t elapsed;
     sprite_t * sprite;
 } entity_t;
+
+typedef enum {
+    SHIP_ROLL_UP,
+    SHIP_ROLL_DOWN,
+    SHIP_ROLL_BACK
+} animation_type_t;
+
+typedef struct
+{
+    animation_type_t type;
+    int start, end;
+    uint16_t duration;
+    uint16_t elapsed;
+    entity_t * entity;
+} animation_t;
 
 typedef struct
 {

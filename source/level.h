@@ -8,6 +8,6 @@
 level_t * level_new();
 void level_delete(level_t *);
 
-void level_update(level_t *, surface_t const *, uint64_t);
+void level_logic(level_t *, surface_t const *, uint64_t);
 
 #endif

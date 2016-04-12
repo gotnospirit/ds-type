@@ -4,6 +4,7 @@
 
 static circlePosition circle_pad;
 static u32 kDown;
+static u32 kUp;
 static u32 kHeld;
 
 int read_inputs()
@@ -17,20 +18,27 @@ int read_inputs()
     }
 
     kHeld = hidKeysHeld();
+    kUp = hidKeysUp();
 
     hidCircleRead(&circle_pad);
     return 1;
 }
 
-int keypressed(uint32_t key_code)
+int pressed(uint32_t key_code)
 {
     return (kDown & key_code)
         ? 1 : 0;
 }
 
-int keyheld(uint32_t key_code)
+int held(uint32_t key_code)
 {
     return (kHeld & key_code)
+        ? 1 : 0;
+}
+
+int released(uint32_t key_code)
+{
+    return (kUp & key_code)
         ? 1 : 0;
 }
 

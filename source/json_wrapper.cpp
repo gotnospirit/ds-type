@@ -7,7 +7,6 @@
 extern "C" {
 
 #include "structs.h"
-#include "update.h"
 #include "texture.h"
 #include "utils.h"
 
@@ -270,7 +269,6 @@ static int process_base_entities(JsonValue const &root, list_t * entities, textu
         entity->start_frame = start_frame;
         entity->nb_frames = nb_frames;
         entity->current_frame = current_frame;
-        entity->elapsed = 0;
         entity->sprite = sprite_new(0, 0, width, height, texture, frame);
     }
     return 0;
