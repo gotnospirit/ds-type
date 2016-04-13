@@ -78,14 +78,20 @@ level_t * level_new()
     return level;
 }
 
-void level_delete(level_t * level)
+void level_delete(level_t ** level)
 {
-    clear_level_tiles(&level->top_tiles);
-    clear_level_tiles(&level->bottom_tiles);
+    level_t * ptr = *level;
 
-    texture_delete(&level->texture);
+    if (NULL != ptr)
+    {
+        clear_level_tiles(&ptr->top_tiles);
+        clear_level_tiles(&ptr->bottom_tiles);
 
-    free(level);
+        texture_delete(&ptr->texture);
+
+        free(ptr);
+        *level = NULL;
+    }
 }
 
 void level_logic(level_t * level, surface_t const * screen, uint64_t dt)

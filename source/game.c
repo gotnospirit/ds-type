@@ -177,7 +177,7 @@ void start_level(game_state_t * state)
     json_wrapper_t * json = json_new(level_name);
     if (NULL == json)
     {
-        level_delete(level);
+        level_delete(&level);
 
         state->next = loading_error;
         state->data = "Level data not found...";
@@ -185,7 +185,7 @@ void start_level(game_state_t * state)
     }
     else if (0 != parse_level(json, level, texture))
     {
-        level_delete(level);
+        level_delete(&level);
 
         state->next = loading_error;
         state->data = "Level init failed...";
@@ -206,7 +206,7 @@ void run_level(game_state_t * state)
     }
     else
     {
-        game_update((level_t *)state->data);
+        game_update(state->data);
 
         process_rendering();
     }
@@ -215,7 +215,6 @@ void run_level(game_state_t * state)
 void stop_level(game_state_t * state)
 {
     level_delete(state->data);
-    state->data = NULL;
 
     // move to next level or credits
     state->next = shutdown;
@@ -225,7 +224,7 @@ void shutdown(game_state_t * state)
 {
     state->next = NULL;
 
-    shutdown_rendering();
     shutdown_animations();
     shutdown_entities();
+    shutdown_rendering();
 }
