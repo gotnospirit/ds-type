@@ -11,7 +11,9 @@
 static list_t * templates = NULL;
 static list_t * sprites = NULL;
 static list_t * entities = NULL;
-static uint16_t entities_size = 0;
+
+static uint8_t templates_size = 0;
+static uint8_t entities_size = 0;
 
 static entity_t * entity_get(const char * type)
 {
@@ -28,6 +30,7 @@ static entity_t * entity_get(const char * type)
 
 static entity_t * entity_free(entity_t * entity)
 {
+    remove_from_animations(entity);
     sprite_t * sprite = entity->sprite;
     remove_from_rendering(sprite);
     list_dealloc(sprites, sprite);
@@ -80,6 +83,7 @@ void shutdown_entities()
     shutdown_animations();
 
     list_delete(&entities);
+    entities_size = 0;
 
     sprite_t * sprite = NULL;
     while (list_next(sprites, (void **)&sprite))
@@ -94,21 +98,41 @@ void shutdown_entities()
         free(template->name);
     }
     list_delete(&templates);
+    templates_size = 0;
 }
 
-sprite_t * sprite_new(int x, int y, uint16_t width, uint16_t height, texture_t const * texture, frame_t const * frame)
+void entities_logic(rectangle_t const * camera, uint64_t dt)
 {
-    // @TODO(james) handle error
-    sprite_t * result = (sprite_t *)list_alloc(sprites);
-    result->x = x;
-    result->y = y;
-    result->width = width;
-    result->height = height;
-    result->texture = texture;
-    result->frame = frame;
-    result->flip_x = 0;
-    result->flip_y = 0;
-    return result;
+    printf("\x1b[3;0Hentities: %3d, templates: %3d", entities_size, templates_size);
+
+    logic_method_t * logic = NULL;
+    entity_t * entity = NULL;
+    while (list_next(entities, (void **)&entity))
+    {
+        logic = entity->logic;
+
+        if (NULL != logic && !logic(entity, camera))
+        {
+            entity = entity_free(entity);
+        }
+    }
+
+    process_animations(dt);
+}
+
+void sprites_update(rectangle_t const * camera)
+{
+    int camera_left = camera->left;
+    int camera_top = camera->top;
+
+    sprite_t * sprite = NULL;
+    entity_t * entity = NULL;
+    while (list_next(entities, (void **)&entity))
+    {
+        sprite = entity->sprite;
+        sprite->x = entity->x - camera_left;
+        sprite->y = entity->y - camera_top;
+    }
 }
 
 template_t * template_new(const char * name, uint16_t width, uint16_t height, uint8_t start_frame, uint8_t nb_frames, uint8_t current_frame, texture_t const * texture, const char * logic_method)
@@ -133,7 +157,18 @@ template_t * template_new(const char * name, uint16_t width, uint16_t height, ui
         {
             result->logic = logic_shot;
         }
+        else if (0 == strncmp(logic_method, "logic_charge", 12))
+        {
+            result->logic = logic_charge;
+        }
+        else
+        {
+            printf("Unsupported '%s'\n", logic_method);
+            list_dealloc(templates, result);
+            return NULL;
+        }
     }
+    ++templates_size;
     return result;
 }
 
@@ -199,21 +234,6 @@ entity_t * entity_new(const char * type)
     return NULL;
 }
 
-void update_sprites(rectangle_t const * camera)
-{
-    int camera_left = camera->left;
-    int camera_top = camera->top;
-
-    sprite_t * sprite = NULL;
-    entity_t * entity = NULL;
-    while (list_next(entities, (void **)&entity))
-    {
-        sprite = entity->sprite;
-        sprite->x = entity->x - camera_left;
-        sprite->y = entity->y - camera_top;
-    }
-}
-
 entity_t * entity_get_ship()
 {
     entity_t * result = entity_get("ship");
@@ -235,23 +255,4 @@ entity_t * entity_spawn_shot(int x, int y)
         add_to_rendering(result->sprite);
     }
     return result;
-}
-
-void entities_logic(rectangle_t const * camera, uint64_t dt)
-{
-    printf("\x1b[3;0Hentities: %4d", entities_size);
-
-    logic_method_t * logic = NULL;
-    entity_t * entity = NULL;
-    while (list_next(entities, (void **)&entity))
-    {
-        logic = entity->logic;
-
-        if (NULL != logic && !logic(entity, camera))
-        {
-            entity = entity_free(entity);
-        }
-    }
-
-    process_animations(dt);
 }

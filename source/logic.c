@@ -80,3 +80,8 @@ int logic_shot(entity_t * entity, rectangle_t const * camera)
     entity->x += 15;
     return 1;
 }
+
+int logic_charge(entity_t * entity, rectangle_t const * camera)
+{
+    return 1;
+}

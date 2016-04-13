@@ -8,6 +8,8 @@
 int init_animations();
 void shutdown_animations();
 
+void remove_from_animations(void *);
+
 void process_animations(uint64_t);
 
 void animation_rollup(entity_t *);

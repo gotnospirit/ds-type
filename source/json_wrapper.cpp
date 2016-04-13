@@ -110,37 +110,36 @@ static int get_frame_index(JsonValue const &root, JsonNode const * target)
 
 static int create_tile(const char * name, int x, bool flip_x, bool flip_y, list_t * container, JsonValue const &frames_node, texture_t const * texture)
 {
-    if (NULL == name)
-    {
-        return 1;
-    }
-
     auto const &frame_node = get_frame_node(frames_node, name);
     if (NULL == frame_node)
     {
-        return 0;
+        return 1;
     }
 
     int width = Json::GetNumber(frame_node->value, "width");
     if (-1 == width)
     {
-        return 0;
+        return 2;
     }
 
     int height = Json::GetNumber(frame_node->value, "height");
     if (-1 == height)
     {
-        return 0;
+        return 3;
     }
 
     frame_t const * frame = get_frame(texture, get_frame_index(frames_node, frame_node));
     if (NULL == frame)
     {
-        return 0;
+        return 4;
     }
 
-    // @TODO(james) handle error
     sprite_t * sprite = (sprite_t *)malloc(sizeof(sprite_t));
+    if (NULL == sprite)
+    {
+        return 5;
+    }
+
     sprite->x = x;
     sprite->y = 0;
     sprite->width = width;
@@ -150,14 +149,19 @@ static int create_tile(const char * name, int x, bool flip_x, bool flip_y, list_
     sprite->flip_x = flip_x ? 1 : 0;
     sprite->flip_y = flip_y ? 1 : 0;
 
-    // @TODO(james) handle error
     tile_t * tile = (tile_t *)list_alloc(container);
+    if (NULL == tile)
+    {
+        free(sprite);
+        return 6;
+    }
+
     tile->x = x;
     tile->width = width;
     tile->height = height;
     tile->visible = 0;
     tile->sprite = sprite;
-    return 1;
+    return 0;
 }
 
 static int process_level_tiles(JsonValue const &root, level_t * level, JsonValue const &frames_node, texture_t const * texture)
@@ -187,13 +191,13 @@ static int process_level_tiles(JsonValue const &root, level_t * level, JsonValue
             return 2;
         }
 
-        if (!create_tile(top_name, x, true, flip_y, level->top_tiles, frames_node, texture))
+        if (NULL != top_name && 0 != create_tile(top_name, x, true, flip_y, level->top_tiles, frames_node, texture))
         {
             printf("'%s' failed\n", top_name);
             return 3;
         }
 
-        if (!create_tile(bottom_name, x, false, flip_y, level->bottom_tiles, frames_node, texture))
+        if (NULL != bottom_name && 0 != create_tile(bottom_name, x, false, flip_y, level->bottom_tiles, frames_node, texture))
         {
             printf("'%s' failed\n", bottom_name);
             return 4;

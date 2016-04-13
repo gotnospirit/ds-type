@@ -66,10 +66,10 @@ typedef enum {
 typedef struct
 {
     animation_type_t type;
-    int start, end;
+    int start, end, current;
     uint16_t duration;
     uint16_t elapsed;
-    entity_t * entity;
+    void * target;
 } animation_t;
 
 typedef struct

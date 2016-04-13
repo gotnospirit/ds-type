@@ -14,7 +14,6 @@
 #include "logic.h"
 
 static surface_t screen;
-
 static uint64_t last_time = 0;
 
 static int basic_events()
@@ -36,7 +35,7 @@ static void game_update(level_t * level)
     // collision
 
     // update entities' sprite's coordinates
-    update_sprites(&level->camera);
+    sprites_update(&level->camera);
 
     last_time = current_time;
 }
