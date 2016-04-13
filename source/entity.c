@@ -5,6 +5,7 @@
 #include "list.h"
 
 static list_t * templates = NULL;
+static list_t * sprites = NULL;
 static list_t * entities = NULL;
 
 static entity_t * entity_get(const char * type)
@@ -28,27 +29,33 @@ int init_entities()
         return 1;
     }
 
+    sprites = list_new(sizeof(sprite_t), 1);
+    if (NULL == sprites)
+    {
+        return 2;
+    }
+
     entities = list_new(sizeof(entity_t), 1);
     if (NULL == entities)
     {
-        return 2;
+        return 3;
     }
 
     texture_t * texture = texture_new("base");
     if (NULL == texture)
     {
-        return 3;
+        return 4;
     }
 
     json_wrapper_t * json = json_new("base");
     if (NULL == json)
     {
-        return 4;
+        return 5;
     }
     else if (0 != parse_base(json, texture))
     {
         json_delete(json);
-        return 5;
+        return 6;
     }
     json_delete(json);
     return 0;
@@ -56,15 +63,14 @@ int init_entities()
 
 void shutdown_entities()
 {
-    sprite_t * sprite = NULL;
-    entity_t * entity = NULL;
-    while (list_next(entities, (void **)&entity))
-    {
-        sprite = entity->sprite;
-        remove_from_rendering(sprite);
-        free(sprite);
-    }
     list_delete(&entities);
+
+    sprite_t * sprite = NULL;
+    while (list_next(sprites, (void **)&sprite))
+    {
+        remove_from_rendering(sprite);
+    }
+    list_delete(&sprites);
 
     template_t * template = NULL;
     while (list_next(templates, (void **)&template))
@@ -77,7 +83,7 @@ void shutdown_entities()
 sprite_t * sprite_new(int x, int y, uint16_t width, uint16_t height, texture_t const * texture, frame_t const * frame)
 {
     // @TODO(james) handle error
-    sprite_t * result = (sprite_t *)malloc(sizeof(sprite_t));
+    sprite_t * result = (sprite_t *)list_alloc(sprites);
     result->x = x;
     result->y = y;
     result->width = width;
