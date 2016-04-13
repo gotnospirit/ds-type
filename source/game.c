@@ -15,45 +15,12 @@
 
 static surface_t screen;
 
-static entity_t * ship = NULL;
-
 static uint64_t last_time = 0;
 
 static int basic_events()
 {
     return (aptMainLoop() && read_inputs())
         ? 1 : 0;
-}
-
-static void keep_inside(entity_t * entity, rectangle_t const * camera)
-{
-    int y = entity->y;
-    int height = entity->height;
-    int camera_top = camera->top;
-    int camera_bottom = camera->bottom;
-
-    if (y < camera_top)
-    {
-        entity->y = camera_top;
-    }
-    else if ((y + height) > camera_bottom)
-    {
-        entity->y = camera_bottom - height;
-    }
-
-    int x = entity->x;
-    int width = entity->width;
-    int camera_left = camera->left;
-    int camera_right = camera->right;
-
-    if (x < camera_left)
-    {
-        entity->x = camera_left;
-    }
-    else if ((x + width) > camera_right)
-    {
-        entity->x = camera_right - width;
-    }
 }
 
 static void game_update(level_t * level)
@@ -67,9 +34,6 @@ static void game_update(level_t * level)
     entities_logic(&level->camera, dt);
 
     // collision
-
-    // keep ship inside the camera's scope
-    keep_inside(ship, &level->camera);
 
     // update entities' sprite's coordinates
     update_sprites(&level->camera);
@@ -91,7 +55,7 @@ void initialize(game_state_t * state)
         return ;
     }
 
-    ship = entity_get_ship();
+    entity_t * ship = entity_get_ship();
     if (NULL == ship)
     {
         state->next = loading_error;

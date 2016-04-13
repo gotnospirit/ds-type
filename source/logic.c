@@ -3,7 +3,38 @@
 #include "entity.h"
 #include "animation.h"
 
-int logic_hero(entity_t * entity, rectangle_t const * camera, uint16_t dt)
+static void keep_inside(entity_t * entity, rectangle_t const * camera)
+{
+    int y = entity->y;
+    int height = entity->height;
+    int camera_top = camera->top;
+    int camera_bottom = camera->bottom;
+
+    if (y < camera_top)
+    {
+        entity->y = camera_top;
+    }
+    else if ((y + height) > camera_bottom)
+    {
+        entity->y = camera_bottom - height;
+    }
+
+    int x = entity->x;
+    int width = entity->width;
+    int camera_left = camera->left;
+    int camera_right = camera->right;
+
+    if (x < camera_left)
+    {
+        entity->x = camera_left;
+    }
+    else if ((x + width) > camera_right)
+    {
+        entity->x = camera_right - width;
+    }
+}
+
+int logic_hero(entity_t * entity, rectangle_t const * camera)
 {
     int const incr = 5;
 
@@ -32,10 +63,13 @@ int logic_hero(entity_t * entity, rectangle_t const * camera, uint16_t dt)
             shot->y += (entity->height + shot->height) / 2;
         }
     }
+
+    // keep ship inside the camera's scope
+    keep_inside(entity, camera);
     return 1;
 }
 
-int logic_shot(entity_t * entity, rectangle_t const * camera, uint16_t dt)
+int logic_shot(entity_t * entity, rectangle_t const * camera)
 {
     // if outside camera -> delete entity
     if (entity->x > camera->right)

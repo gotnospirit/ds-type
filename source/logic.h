@@ -3,7 +3,7 @@
 
 #include "structs.h"
 
-int logic_hero(entity_t *, rectangle_t const *, uint16_t);
-int logic_shot(entity_t *, rectangle_t const *, uint16_t);
+int logic_hero(entity_t *, rectangle_t const *);
+int logic_shot(entity_t *, rectangle_t const *);
 
 #endif

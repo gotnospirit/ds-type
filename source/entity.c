@@ -238,7 +238,7 @@ void entities_logic(rectangle_t const * camera, uint64_t dt)
     {
         logic = entity->logic;
 
-        if (NULL != logic && !logic(entity, camera, dt))
+        if (NULL != logic && !logic(entity, camera))
         {
             entity = entity_free(entity);
         }

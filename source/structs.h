@@ -12,7 +12,7 @@ typedef struct
 } rectangle_t;
 
 typedef struct Entity entity_t;
-typedef int logic_method_t(entity_t *, rectangle_t const *, uint16_t);
+typedef int logic_method_t(entity_t *, rectangle_t const *);
 
 typedef struct GameState game_state_t;
 typedef void game_state_processor_t(game_state_t *);
