@@ -228,9 +228,9 @@ void process_rendering()
         iod = 0;
     }
 
-    printf("\x1b[3;0Hrender: %4d", render_pipe_size);
+    printf("\x1b[4;0Hrender: %4d", render_pipe_size);
 
-    int i = 5;
+    int i = 6;
     C3D_FrameDrawOn(top_left);
     while (list_next(render_pipe, (void **)&sprite))
     {

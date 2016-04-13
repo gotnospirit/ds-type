@@ -1,12 +1,17 @@
+#include <stdio.h>
+
 #include "entity.h"
 #include "render.h"
 #include "texture.h"
 #include "json_wrapper.h"
+#include "logic.h"
+#include "animation.h"
 #include "list.h"
 
 static list_t * templates = NULL;
 static list_t * sprites = NULL;
 static list_t * entities = NULL;
+static uint16_t entities_size = 0;
 
 static entity_t * entity_get(const char * type)
 {
@@ -19,6 +24,15 @@ static entity_t * entity_get(const char * type)
         }
     }
     return NULL;
+}
+
+static entity_t * entity_free(entity_t * entity)
+{
+    sprite_t * sprite = entity->sprite;
+    remove_from_rendering(sprite);
+    list_dealloc(sprites, sprite);
+    --entities_size;
+    return list_dealloc(entities, entity);
 }
 
 int init_entities()
@@ -58,11 +72,13 @@ int init_entities()
         return 6;
     }
     json_delete(json);
-    return 0;
+    return init_animations();
 }
 
 void shutdown_entities()
 {
+    shutdown_animations();
+
     list_delete(&entities);
 
     sprite_t * sprite = NULL;
@@ -95,7 +111,7 @@ sprite_t * sprite_new(int x, int y, uint16_t width, uint16_t height, texture_t c
     return result;
 }
 
-template_t * template_new(const char * name, uint16_t width, uint16_t height, uint8_t start_frame, uint8_t nb_frames, uint8_t current_frame, texture_t const * texture)
+template_t * template_new(const char * name, uint16_t width, uint16_t height, uint8_t start_frame, uint8_t nb_frames, uint8_t current_frame, texture_t const * texture, const char * logic_method)
 {
     template_t * result = (template_t *)list_alloc(templates);
     result->name = strdup(name);
@@ -105,6 +121,19 @@ template_t * template_new(const char * name, uint16_t width, uint16_t height, ui
     result->nb_frames = nb_frames;
     result->current_frame = current_frame;
     result->texture = texture;
+    result->logic = NULL;
+
+    if (NULL != logic_method)
+    {
+        if (0 == strncmp(logic_method, "logic_hero", 10))
+        {
+            result->logic = logic_hero;
+        }
+        else if (0 == strncmp(logic_method, "logic_shot", 10))
+        {
+            result->logic = logic_shot;
+        }
+    }
     return result;
 }
 
@@ -143,6 +172,7 @@ entity_t * entity_new(const char * type)
                 free(sprite);
                 return NULL;
             }
+            ++entities_size;
 
             result->type = template->name;
             result->x = 0;
@@ -153,28 +183,11 @@ entity_t * entity_new(const char * type)
             result->nb_frames = template->nb_frames;
             result->current_frame = current_frame;
             result->sprite = sprite;
+            result->logic = template->logic;
             return result;
         }
     }
     return NULL;
-}
-
-int entity_delete(entity_t const ** entity)
-{
-    entity_t * ptr = NULL;
-    while (list_next(entities, (void **)&ptr))
-    {
-        if (*entity == ptr)
-        {
-            sprite_t * sprite = ptr->sprite;
-            remove_from_rendering(sprite);
-            free(sprite);
-            list_dealloc(entities, ptr);
-            *entity = NULL;
-            return 1;
-        }
-    }
-    return 0;
 }
 
 void update_sprites(rectangle_t const * camera)
@@ -213,4 +226,23 @@ entity_t * entity_spawn_shot(int x, int y)
         add_to_rendering(result->sprite);
     }
     return result;
+}
+
+void entities_logic(rectangle_t const * camera, uint64_t dt)
+{
+    printf("\x1b[3;0Hentities: %4d", entities_size);
+
+    logic_method_t * logic = NULL;
+    entity_t * entity = NULL;
+    while (list_next(entities, (void **)&entity))
+    {
+        logic = entity->logic;
+
+        if (NULL != logic && !logic(entity, camera, dt))
+        {
+            entity = entity_free(entity);
+        }
+    }
+
+    process_animations(dt);
 }

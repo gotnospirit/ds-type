@@ -198,6 +198,7 @@ static int process_level_tiles(JsonValue const &root, level_t * level, JsonValue
 static int process_base_entities(JsonValue const &root, texture_t const * texture)
 {
     const char * name = NULL;
+    const char * logic_method = NULL;
     int width = 0, height = 0, start_frame = 0, current_frame = 0, nb_frames = 0;
 
     for (auto const &node : root)
@@ -210,6 +211,7 @@ static int process_base_entities(JsonValue const &root, texture_t const * textur
         start_frame = Json::GetNumber(value, "start_frame");
         current_frame = Json::GetNumber(value, "current_frame");
         nb_frames = Json::GetNumber(value, "nb_frames");
+        logic_method = Json::GetString(value, "logic");
 
         if (NULL == name)
         {
@@ -242,7 +244,7 @@ static int process_base_entities(JsonValue const &root, texture_t const * textur
             return 5;
         }
 
-        if (NULL == template_new(name, width, height, start_frame, nb_frames, current_frame, texture))
+        if (NULL == template_new(name, width, height, start_frame, nb_frames, current_frame, texture, logic_method))
         {
             printf("Template not created\n");
             return 6;

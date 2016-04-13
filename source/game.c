@@ -11,7 +11,6 @@
 #include "render.h"
 #include "level.h"
 #include "entity.h"
-#include "animation.h"
 #include "logic.h"
 
 static surface_t screen;
@@ -23,7 +22,7 @@ static uint64_t last_time = 0;
 static int basic_events()
 {
     return (aptMainLoop() && read_inputs())
-        ? 0 : 1;
+        ? 1 : 0;
 }
 
 static void keep_inside(entity_t * entity, rectangle_t const * camera)
@@ -62,17 +61,17 @@ static void game_update(level_t * level)
     u64 current_time = osGetTime();
     u64 dt = current_time - last_time;
 
-    // logic
+    // apply game logic
     level_logic(level, &screen, dt);
 
-    logic_hero(ship);
-
-    process_animations(dt);
+    entities_logic(&level->camera, dt);
 
     // collision
+
+    // keep ship inside the camera's scope
     keep_inside(ship, &level->camera);
 
-    // global to local
+    // update entities' sprite's coordinates
     update_sprites(&level->camera);
 
     last_time = current_time;
@@ -87,12 +86,6 @@ void initialize(game_state_t * state)
     }
 
     if (0 != init_entities())
-    {
-        state->next = loading_error;
-        return ;
-    }
-
-    if (0 != init_animations())
     {
         state->next = loading_error;
         return ;
@@ -117,7 +110,7 @@ void initialize(game_state_t * state)
 
 void loading_error(game_state_t * state)
 {
-    if (0 != basic_events())
+    if (!basic_events())
     {
         state->next = shutdown;
         state->data = NULL;
@@ -200,7 +193,7 @@ void start_level(game_state_t * state)
 
 void run_level(game_state_t * state)
 {
-    if (0 != basic_events())
+    if (!basic_events())
     {
         state->next = stop_level;
     }
@@ -224,7 +217,6 @@ void shutdown(game_state_t * state)
 {
     state->next = NULL;
 
-    shutdown_animations();
     shutdown_entities();
     shutdown_rendering();
 }

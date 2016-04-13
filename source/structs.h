@@ -11,6 +11,12 @@ typedef struct
     int top, left, right, bottom;
 } rectangle_t;
 
+typedef struct Entity entity_t;
+typedef int logic_method_t(entity_t *, rectangle_t const *, uint16_t);
+
+typedef struct GameState game_state_t;
+typedef void game_state_processor_t(game_state_t *);
+
 typedef struct
 {
     uint16_t width, height;
@@ -48,18 +54,8 @@ typedef struct
     uint8_t nb_frames;
     uint8_t current_frame;
     texture_t const * texture;
+    logic_method_t * logic;
 } template_t;
-
-typedef struct
-{
-    const char * type;
-    int x, y;
-    uint16_t width, height;
-    uint8_t start_frame;
-    uint8_t nb_frames;
-    uint8_t current_frame;
-    sprite_t * sprite;
-} entity_t;
 
 typedef enum {
     SHIP_ROLL_UP,
@@ -95,8 +91,17 @@ typedef struct
     list_t * bottom_tiles;
 } level_t;
 
-typedef struct GameState game_state_t;
-typedef void game_state_processor_t(game_state_t *);
+struct Entity
+{
+    const char * type;
+    int x, y;
+    uint16_t width, height;
+    uint8_t start_frame;
+    uint8_t nb_frames;
+    uint8_t current_frame;
+    sprite_t * sprite;
+    logic_method_t * logic;
+};
 
 struct GameState
 {
