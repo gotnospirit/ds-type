@@ -160,11 +160,20 @@ entity_t * entity_new(const char * type)
                 return NULL;
             }
 
-            sprite_t * sprite = sprite_new(0, 0, width, height, texture, frame);
+            sprite_t * sprite = (sprite_t *)list_alloc(sprites);
             if (NULL == sprite)
             {
                 return NULL;
             }
+
+            sprite->x = 0;
+            sprite->y = 0;
+            sprite->width = width;
+            sprite->height = height;
+            sprite->texture = texture;
+            sprite->frame = frame;
+            sprite->flip_x = 0;
+            sprite->flip_y = 0;
 
             entity_t * result = (entity_t *)list_alloc(entities);
             if (NULL == result)

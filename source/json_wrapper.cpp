@@ -139,7 +139,14 @@ static int create_tile(const char * name, int x, bool flip_x, bool flip_y, list_
         return 0;
     }
 
-    sprite_t * sprite = sprite_new(0, 0, width, height, texture, frame);
+    // @TODO(james) handle error
+    sprite_t * sprite = (sprite_t *)malloc(sizeof(sprite_t));
+    sprite->x = x;
+    sprite->y = 0;
+    sprite->width = width;
+    sprite->height = height;
+    sprite->texture = texture;
+    sprite->frame = frame;
     sprite->flip_x = flip_x ? 1 : 0;
     sprite->flip_y = flip_y ? 1 : 0;
 
