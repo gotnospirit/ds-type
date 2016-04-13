@@ -9,6 +9,10 @@ endif
 TOPDIR ?= $(CURDIR)
 include $(DEVKITARM)/3ds_rules
 
+APP_TITLE := ds-type
+APP_DESCRIPTION := R-type clone for 3DS
+APP_AUTHOR := James
+
 CITRA_SDMC := C:/Users/James/Desktop/citra-3ds/user/sdmc
 
 #---------------------------------------------------------------------------------
