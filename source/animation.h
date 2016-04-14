@@ -15,5 +15,6 @@ void process_animations(uint16_t);
 void animation_rollup(entity_t *);
 void animation_rolldown(entity_t *);
 void animation_rollback(entity_t *);
+void animation_charge(entity_t *);
 
 #endif

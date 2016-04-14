@@ -12,7 +12,7 @@ static list_t * templates = NULL;
 static list_t * sprites = NULL;
 static list_t * entities = NULL;
 
-static ship_t * ship = NULL;
+static entity_t * charge = NULL;
 
 static uint8_t templates_size = 0;
 static uint8_t entities_size = 0;
@@ -36,6 +36,7 @@ static entity_t * entity_free(entity_t * entity)
     sprite_t * sprite = entity->sprite;
     remove_from_rendering(sprite);
     list_dealloc(sprites, sprite);
+    free(entity->data);
     --entities_size;
     return list_dealloc(entities, entity);
 }
@@ -91,7 +92,7 @@ static entity_t * spawn_entity(template_t const * template)
     return result;
 }
 
-static int init_ship()
+static int init_ship_entity()
 {
     template_t * template = template_get("ship");
     if (NULL != template)
@@ -102,19 +103,50 @@ static int init_ship()
             return 1;
         }
 
-        ship = malloc(sizeof(ship_t));
-        if (NULL == ship)
+        frame_info_t * info = malloc(sizeof(frame_info_t));
+        if (NULL == info)
         {
+            entity_free(entity);
             return 2;
         }
 
-        ship->start_frame = template->start_frame;
-        ship->nb_frames = template->nb_frames;
-        ship->current_frame = template->current_frame;
+        info->start_frame = template->start_frame;
+        info->nb_frames = template->nb_frames;
+        info->current_frame = template->current_frame;
 
-        entity->data = ship;
+        entity->data = info;
 
         add_to_rendering(entity->sprite);
+    }
+    return 0;
+}
+
+static int init_charge_entity()
+{
+    template_t * template = template_get("charge");
+    if (NULL != template)
+    {
+        entity_t * entity = spawn_entity(template);
+        if (NULL == entity)
+        {
+            return 1;
+        }
+
+        charge_t * info = malloc(sizeof(charge_t));
+        if (NULL == info)
+        {
+            entity_free(entity);
+            return 2;
+        }
+
+        info->start_frame = template->start_frame;
+        info->nb_frames = template->nb_frames;
+        info->current_frame = template->current_frame;
+        info->strength = 0;
+
+        entity->data = info;
+
+        charge = entity;
     }
     return 0;
 }
@@ -157,25 +189,22 @@ int init_entities()
     }
     json_delete(json);
 
-    if (0 != init_animations())
-    {
-        return 7;
-    }
-    return init_ship();
+    return (0 != init_animations() || 0 != init_ship_entity() || 0 != init_charge_entity())
+        ? 7 : 0;
 }
 
 void shutdown_entities()
 {
     shutdown_animations();
 
+    entity_t * entity = NULL;
+    while (list_next(entities, (void **)&entity))
+    {
+        entity = entity_free(entity);
+    }
     list_delete(&entities);
     entities_size = 0;
 
-    sprite_t * sprite = NULL;
-    while (list_next(sprites, (void **)&sprite))
-    {
-        remove_from_rendering(sprite);
-    }
     list_delete(&sprites);
 
     template_t * template = NULL;
@@ -243,10 +272,6 @@ template_t * template_new(const char * name, uint16_t width, uint16_t height, ui
         {
             result->logic = logic_shot;
         }
-        else if (0 == strncmp(logic_method, "logic_charge", 12))
-        {
-            result->logic = logic_charge;
-        }
         else
         {
             printf("Unsupported '%s'\n", logic_method);
@@ -258,7 +283,7 @@ template_t * template_new(const char * name, uint16_t width, uint16_t height, ui
     return result;
 }
 
-entity_t * entity_spawn_shot(int x, int y)
+entity_t * entity_spawn_shot()
 {
     template_t * template = template_get("shot");
     if (NULL != template)
@@ -266,12 +291,31 @@ entity_t * entity_spawn_shot(int x, int y)
         entity_t * result = spawn_entity(template);
         if (NULL != result)
         {
-            result->x = x;
-            result->y = y;
-
             add_to_rendering(result->sprite);
+            return result;
         }
-        return result;
     }
     return NULL;
+}
+
+entity_t * entity_get_charge()
+{
+    add_to_rendering(charge->sprite);
+    return charge;
+}
+
+void entity_stop_charge()
+{
+    sprite_t * sprite = charge->sprite;
+
+    remove_from_animations(charge);
+    remove_from_rendering(sprite);
+
+    // reset for next charge
+    frame_info_t * info = (frame_info_t *)charge->data;
+    if (0 != info->current_frame)
+    {
+        info->current_frame = 0;
+        sprite->frame = get_frame(sprite->texture, info->start_frame);
+    }
 }

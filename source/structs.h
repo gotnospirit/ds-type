@@ -60,7 +60,8 @@ typedef struct
 typedef enum {
     SHIP_ROLL_UP,
     SHIP_ROLL_DOWN,
-    SHIP_ROLL_BACK
+    SHIP_ROLL_BACK,
+    SHOT_CHARGE
 } animation_type_t;
 
 typedef struct
@@ -91,12 +92,18 @@ typedef struct
     list_t * bottom_tiles;
 } level_t;
 
-typedef struct
+typedef struct FrameInfo
 {
     uint8_t start_frame;
     uint8_t nb_frames;
     uint8_t current_frame;
-} ship_t;
+} frame_info_t;
+
+typedef struct
+{
+    struct FrameInfo;
+    uint8_t strength;
+} charge_t;
 
 struct Entity
 {
@@ -104,13 +111,13 @@ struct Entity
     uint16_t width, height;
     sprite_t * sprite;
     logic_method_t * logic;
-    void * data;
+    void * data; // frame_info_t, charge_t, ...
 };
 
 struct GameState
 {
     game_state_processor_t * next;
-    void * data;
+    void * data; // const char *, level_t, ...
 };
 
 #endif

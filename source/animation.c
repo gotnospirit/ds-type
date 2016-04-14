@@ -5,6 +5,8 @@
 #include "structs.h"
 #include "texture.h"
 
+typedef int animation_find_t(animation_type_t);
+
 static list_t * container = NULL;
 
 static float linear_ease_in(int t, int d)
@@ -19,28 +21,53 @@ static float linear_ease_in(int t, int d)
     return result;
 }
 
-static void add_animation(entity_t * entity, animation_type_t type, int start, int end, uint16_t duration)
+static int is_roll(animation_type_t type)
+{
+    return (type == SHIP_ROLL_BACK || type == SHIP_ROLL_DOWN || type == SHIP_ROLL_UP)
+        ? 1 : 0;
+}
+
+static int is_charge(animation_type_t type)
+{
+    return (type == SHOT_CHARGE)
+        ? 1 : 0;
+}
+
+static animation_t * find(entity_t * entity, animation_find_t * fn)
+{
+    animation_t * animation = NULL;
+    while (list_next(container, (void **)&animation))
+    {
+        if (entity == animation->entity && fn(animation->type))
+        {
+            return animation;
+        }
+    }
+    return NULL;
+}
+
+static void add(entity_t * entity, animation_type_t type, int start, int end, uint16_t duration)
 {
     animation_t * animation = NULL;
 
-    // Il ne peut y avoir qu'une seul animation pour le déplacement du vaisseau
-    if (type == SHIP_ROLL_BACK || type == SHIP_ROLL_DOWN || type == SHIP_ROLL_UP)
+    if (is_roll(type))
     {
-        animation_t * ptr = NULL;
-        while (list_next(container, (void **)&ptr))
-        {
-            if (entity == ptr->entity)
-            {
-                animation = ptr;
-                break;
-            }
-        }
+        // Il ne peut y avoir qu'une seul animation pour le déplacement du vaisseau
+        animation = find(entity, is_roll);
+    }
+    else if (is_charge(type))
+    {
+        // Il ne peut y avoir qu'une seul animation de charge
+        animation = find(entity, is_charge);
     }
 
     if (NULL == animation)
     {
         animation = (animation_t *)list_alloc(container);
-        animation->entity = entity;
+        if (NULL != animation)
+        {
+            animation->entity = entity;
+        }
     }
 
     animation->type = type;
@@ -53,19 +80,28 @@ static void add_animation(entity_t * entity, animation_type_t type, int start, i
 
 static void apply_to_target(animation_t const * animation)
 {
-    animation_type_t type = animation->type;
+    int new_frame = animation->current;
+    entity_t * entity = (entity_t *)animation->entity;
 
-    if (type == SHIP_ROLL_BACK || type == SHIP_ROLL_DOWN || type == SHIP_ROLL_UP)
+    frame_info_t * info = (frame_info_t *)entity->data;
+    info->current_frame = new_frame;
+    uint8_t start_frame = info->start_frame;
+
+    sprite_t * sprite = entity->sprite;
+    sprite->frame = get_frame(sprite->texture, start_frame + new_frame);
+
+}
+
+static int on_animation_end(animation_t * animation)
+{
+    if (SHOT_CHARGE == animation->type)
     {
-        int new_frame = animation->current;
-
-        entity_t * entity = (entity_t *)animation->entity;
-        ship_t * ship = (ship_t *)entity->data;
-        ship->current_frame = new_frame;
-
-        sprite_t * sprite = entity->sprite;
-        sprite->frame = get_frame(sprite->texture, ship->start_frame + new_frame);
+        // infinite charge
+        animation->current = animation->start;
+        animation->elapsed = 0;
+        return 1;
     }
+    return 0;
 }
 
 static int process_animation(animation_t * animation, uint16_t dt)
@@ -106,7 +142,7 @@ static int process_animation(animation_t * animation, uint16_t dt)
             return 1;
         }
     }
-    return 0;
+    return on_animation_end(animation);
 }
 
 int init_animations()
@@ -147,25 +183,25 @@ void process_animations(uint16_t dt)
 
 void animation_rollup(entity_t * entity)
 {
-    ship_t * ship = (ship_t *)entity->data;
+    frame_info_t * info = (frame_info_t *)entity->data;
 
-    add_animation(
+    add(
         entity,
         SHIP_ROLL_UP,
-        ship->current_frame,
-        ship->nb_frames - 1,
+        info->current_frame,
+        info->nb_frames - 1,
         300
     );
 }
 
 void animation_rolldown(entity_t * entity)
 {
-    ship_t * ship = (ship_t *)entity->data;
+    frame_info_t * info = (frame_info_t *)entity->data;
 
-    add_animation(
+    add(
         entity,
         SHIP_ROLL_DOWN,
-        ship->current_frame,
+        info->current_frame,
         0,
         300
     );
@@ -173,13 +209,26 @@ void animation_rolldown(entity_t * entity)
 
 void animation_rollback(entity_t * entity)
 {
-    ship_t * ship = (ship_t *)entity->data;
+    frame_info_t * info = (frame_info_t *)entity->data;
 
-    add_animation(
+    add(
         entity,
         SHIP_ROLL_BACK,
-        ship->current_frame,
-        ship->nb_frames / 2,
+        info->current_frame,
+        info->nb_frames / 2,
         300
+    );
+}
+
+void animation_charge(entity_t * entity)
+{
+    frame_info_t * info = (frame_info_t *)entity->data;
+
+    add(
+        entity,
+        SHOT_CHARGE,
+        info->current_frame,
+        info->nb_frames - 1,
+        600
     );
 }

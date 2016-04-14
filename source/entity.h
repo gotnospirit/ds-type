@@ -13,6 +13,9 @@ void sprites_update(rectangle_t const *);
 
 template_t * template_new(const char *, uint16_t, uint16_t, uint8_t, uint8_t, uint8_t, texture_t const *, const char *);
 
-entity_t * entity_spawn_shot(int, int);
+entity_t * entity_spawn_shot();
+
+entity_t * entity_get_charge();
+void entity_stop_charge();
 
 #endif

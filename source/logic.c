@@ -3,6 +3,10 @@
 #include "entity.h"
 #include "animation.h"
 
+#define STICK_TO_SHIP_NOSE(entity, ship) \
+entity->x = ship->x + ship->width; \
+entity->y = ship->y + (ship->height - entity->height) / 2;
+
 static void keep_inside(entity_t * entity, rectangle_t const * camera)
 {
     int y = entity->y;
@@ -41,6 +45,9 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
     entity->x += stick_dx() * incr;
     entity->y += stick_dy() * incr;
 
+    // keep ship inside the camera's scope
+    keep_inside(entity, camera);
+
     if (pressed(KEY_UP))
     {
         animation_rollup(entity);
@@ -56,16 +63,31 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
 
     if (pressed(KEY_A))
     {
-        entity_t * shot = entity_spawn_shot(entity->x, entity->y);
-        if (NULL != shot)
+        entity_t * charge = entity_get_charge();
+        if (NULL != charge)
         {
-            shot->x += entity->width;
-            shot->y += (entity->height + shot->height) / 2;
+            STICK_TO_SHIP_NOSE(charge, entity)
+            animation_charge(charge);
         }
     }
+    else if (held(KEY_A))
+    {
+        entity_t * charge = entity_get_charge();
+        if (NULL != charge)
+        {
+            STICK_TO_SHIP_NOSE(charge, entity)
+        }
+    }
+    else if (released(KEY_A))
+    {
+        entity_stop_charge();
 
-    // keep ship inside the camera's scope
-    keep_inside(entity, camera);
+        entity_t * shot = entity_spawn_shot();
+        if (NULL != shot)
+        {
+            STICK_TO_SHIP_NOSE(shot, entity)
+        }
+    }
     return 1;
 }
 
@@ -81,7 +103,4 @@ int logic_shot(entity_t * entity, rectangle_t const * camera)
     return 1;
 }
 
-int logic_charge(entity_t * entity, rectangle_t const * camera)
-{
-    return 1;
-}
+#undef STICK_TO_SHIP_NOSE
