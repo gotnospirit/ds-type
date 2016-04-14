@@ -114,8 +114,8 @@ static void render_sprite(sprite_t const * sprite, texture_t const ** gpu_textur
         {
             float left = sprite->x + offset3d;
             float top = sprite->y;
-            float right = left + sprite->width;
-            float bottom = top + sprite->height;
+            float right = left + frame->width;
+            float bottom = top + frame->height;
 
             draw_quad(
                 left, top, right, bottom,

@@ -25,6 +25,7 @@ typedef struct
 typedef struct
 {
     float left, top, right, bottom;
+    int width, height;
 } frame_t;
 
 typedef struct
@@ -39,7 +40,6 @@ typedef struct
 typedef struct
 {
     int x, y;
-    int width, height;
     texture_t const * texture;
     frame_t const * frame;
     // uint8_t depth

@@ -74,6 +74,8 @@ static int process_frames(JsonValue const &root, texture_t * spritesheet)
         frame->top = top;
         frame->right = left + frame_width_ratio;
         frame->bottom = top + frame_height_ratio;
+        frame->width = width;
+        frame->height = height;
 
         ++nb_frames;
     }
@@ -142,8 +144,6 @@ static int create_tile(const char * name, int x, bool flip_x, bool flip_y, list_
 
     sprite->x = x;
     sprite->y = 0;
-    sprite->width = width;
-    sprite->height = height;
     sprite->texture = texture;
     sprite->frame = frame;
     sprite->flip_x = flip_x ? 1 : 0;

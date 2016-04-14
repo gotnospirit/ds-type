@@ -43,8 +43,6 @@ static entity_t * entity_free(entity_t * entity)
 
 static entity_t * spawn_entity(template_t const * template)
 {
-    uint16_t width = template->width;
-    uint16_t height = template->height;
     uint8_t start_frame = template->start_frame;
     uint8_t current_frame = template->current_frame;
     texture_t const * texture = template->texture;
@@ -67,8 +65,6 @@ static entity_t * spawn_entity(template_t const * template)
 
     sprite->x = 0;
     sprite->y = 0;
-    sprite->width = width;
-    sprite->height = height;
     sprite->texture = texture;
     sprite->frame = frame;
     sprite->flip_x = 0;
@@ -84,8 +80,8 @@ static entity_t * spawn_entity(template_t const * template)
 
     result->x = 0;
     result->y = 0;
-    result->width = width;
-    result->height = height;
+    result->width = template->width;
+    result->height = template->height;
     result->sprite = sprite;
     result->logic = template->logic;
     result->data = NULL;
