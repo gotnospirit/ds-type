@@ -266,7 +266,16 @@ int add_to_rendering(sprite_t * sprite)
         return 0;
     }
 
-    sprite_t ** ptr = (sprite_t **)list_alloc(render_pipe);
+    sprite_t ** ptr = NULL;
+    while (list_next(render_pipe, (void **)&ptr))
+    {
+        if (*ptr == sprite)
+        {
+            return 0;
+        }
+    }
+
+    ptr = (sprite_t **)list_alloc(render_pipe);
     if (NULL == ptr)
     {
         return 0;
