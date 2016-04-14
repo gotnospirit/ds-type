@@ -54,18 +54,6 @@ void initialize(game_state_t * state)
         return ;
     }
 
-    entity_t * ship = entity_get_ship();
-    if (NULL == ship)
-    {
-        state->next = loading_error;
-        return ;
-    }
-    else if (!add_to_rendering(ship->sprite))
-    {
-        state->next = loading_error;
-        return ;
-    }
-
     printf("\x1b[28;10HPress Start to exit.");
     state->next = start_level;
     state->data = "level_one";

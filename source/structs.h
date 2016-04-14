@@ -69,7 +69,7 @@ typedef struct
     int start, end, current;
     uint16_t duration;
     uint16_t elapsed;
-    void * target;
+    entity_t * entity;
 } animation_t;
 
 typedef struct
@@ -91,16 +91,20 @@ typedef struct
     list_t * bottom_tiles;
 } level_t;
 
-struct Entity
+typedef struct
 {
-    const char * type;
-    int x, y;
-    uint16_t width, height;
     uint8_t start_frame;
     uint8_t nb_frames;
     uint8_t current_frame;
+} ship_t;
+
+struct Entity
+{
+    int x, y;
+    uint16_t width, height;
     sprite_t * sprite;
     logic_method_t * logic;
+    void * data;
 };
 
 struct GameState

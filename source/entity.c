@@ -12,17 +12,19 @@ static list_t * templates = NULL;
 static list_t * sprites = NULL;
 static list_t * entities = NULL;
 
+static ship_t * ship = NULL;
+
 static uint8_t templates_size = 0;
 static uint8_t entities_size = 0;
 
-static entity_t * entity_get(const char * type)
+static template_t * template_get(const char * name)
 {
-    entity_t * entity = NULL;
-    while (list_next(entities, (void **)&entity))
+    template_t * template = NULL;
+    while (list_next(templates, (void **)&template))
     {
-        if (0 == strcmp(entity->type, type))
+        if (0 == strcmp(template->name, name))
         {
-            return entity;
+            return template;
         }
     }
     return NULL;
@@ -36,6 +38,85 @@ static entity_t * entity_free(entity_t * entity)
     list_dealloc(sprites, sprite);
     --entities_size;
     return list_dealloc(entities, entity);
+}
+
+static entity_t * spawn_entity(template_t const * template)
+{
+    uint16_t width = template->width;
+    uint16_t height = template->height;
+    uint8_t start_frame = template->start_frame;
+    uint8_t current_frame = template->current_frame;
+    texture_t const * texture = template->texture;
+    if (NULL == texture)
+    {
+        return NULL;
+    }
+
+    frame_t const * frame = get_frame(texture, start_frame + current_frame);
+    if (NULL == frame)
+    {
+        return NULL;
+    }
+
+    sprite_t * sprite = (sprite_t *)list_alloc(sprites);
+    if (NULL == sprite)
+    {
+        return NULL;
+    }
+
+    sprite->x = 0;
+    sprite->y = 0;
+    sprite->width = width;
+    sprite->height = height;
+    sprite->texture = texture;
+    sprite->frame = frame;
+    sprite->flip_x = 0;
+    sprite->flip_y = 0;
+
+    entity_t * result = (entity_t *)list_alloc(entities);
+    if (NULL == result)
+    {
+        free(sprite);
+        return NULL;
+    }
+    ++entities_size;
+
+    result->x = 0;
+    result->y = 0;
+    result->width = width;
+    result->height = height;
+    result->sprite = sprite;
+    result->logic = template->logic;
+    result->data = NULL;
+    return result;
+}
+
+static int init_ship()
+{
+    template_t * template = template_get("ship");
+    if (NULL != template)
+    {
+        entity_t * entity = spawn_entity(template);
+        if (NULL == entity)
+        {
+            return 1;
+        }
+
+        ship = malloc(sizeof(ship_t));
+        if (NULL == ship)
+        {
+            return 2;
+        }
+
+        ship->start_frame = template->start_frame;
+        ship->nb_frames = template->nb_frames;
+        ship->current_frame = template->current_frame;
+
+        entity->data = ship;
+
+        add_to_rendering(entity->sprite);
+    }
+    return 0;
 }
 
 int init_entities()
@@ -75,7 +156,12 @@ int init_entities()
         return 6;
     }
     json_delete(json);
-    return init_animations();
+
+    if (0 != init_animations())
+    {
+        return 7;
+    }
+    return init_ship();
 }
 
 void shutdown_entities()
@@ -172,87 +258,20 @@ template_t * template_new(const char * name, uint16_t width, uint16_t height, ui
     return result;
 }
 
-entity_t * entity_new(const char * type)
-{
-    template_t * template = NULL;
-    while (list_next(templates, (void **)&template))
-    {
-        if (0 == strcmp(template->name, type))
-        {
-            uint16_t width = template->width;
-            uint16_t height = template->height;
-            uint8_t start_frame = template->start_frame;
-            uint8_t current_frame = template->current_frame;
-            texture_t const * texture = template->texture;
-            if (NULL == texture)
-            {
-                return NULL;
-            }
-
-            frame_t const * frame = get_frame(texture, start_frame + current_frame);
-            if (NULL == frame)
-            {
-                return NULL;
-            }
-
-            sprite_t * sprite = (sprite_t *)list_alloc(sprites);
-            if (NULL == sprite)
-            {
-                return NULL;
-            }
-
-            sprite->x = 0;
-            sprite->y = 0;
-            sprite->width = width;
-            sprite->height = height;
-            sprite->texture = texture;
-            sprite->frame = frame;
-            sprite->flip_x = 0;
-            sprite->flip_y = 0;
-
-            entity_t * result = (entity_t *)list_alloc(entities);
-            if (NULL == result)
-            {
-                free(sprite);
-                return NULL;
-            }
-            ++entities_size;
-
-            result->type = template->name;
-            result->x = 0;
-            result->y = 0;
-            result->width = width;
-            result->height = height;
-            result->start_frame = start_frame;
-            result->nb_frames = template->nb_frames;
-            result->current_frame = current_frame;
-            result->sprite = sprite;
-            result->logic = template->logic;
-            return result;
-        }
-    }
-    return NULL;
-}
-
-entity_t * entity_get_ship()
-{
-    entity_t * result = entity_get("ship");
-    if (NULL == result)
-    {
-        result = entity_new("ship");
-    }
-    return result;
-}
-
 entity_t * entity_spawn_shot(int x, int y)
 {
-    entity_t * result = entity_new("shot");
-    if (NULL != result)
+    template_t * template = template_get("shot");
+    if (NULL != template)
     {
-        result->x = x;
-        result->y = y;
+        entity_t * result = spawn_entity(template);
+        if (NULL != result)
+        {
+            result->x = x;
+            result->y = y;
 
-        add_to_rendering(result->sprite);
+            add_to_rendering(result->sprite);
+        }
+        return result;
     }
-    return result;
+    return NULL;
 }

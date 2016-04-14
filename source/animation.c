@@ -2,6 +2,7 @@
 
 #include "animation.h"
 #include "list.h"
+#include "structs.h"
 #include "texture.h"
 
 static list_t * container = NULL;
@@ -18,9 +19,9 @@ static float linear_ease_in(int t, int d)
     return result;
 }
 
-static void add_animation(void * target, animation_type_t type, int start, int end, uint16_t duration)
+static void add_animation(entity_t * entity, animation_type_t type, int start, int end, uint16_t duration)
 {
-    animation_t * o = NULL;
+    animation_t * animation = NULL;
 
     // Il ne peut y avoir qu'une seul animation pour le déplacement du vaisseau
     if (type == SHIP_ROLL_BACK || type == SHIP_ROLL_DOWN || type == SHIP_ROLL_UP)
@@ -28,26 +29,26 @@ static void add_animation(void * target, animation_type_t type, int start, int e
         animation_t * ptr = NULL;
         while (list_next(container, (void **)&ptr))
         {
-            if (target == ptr->target)
+            if (entity == ptr->entity)
             {
-                o = ptr;
+                animation = ptr;
                 break;
             }
         }
     }
 
-    if (NULL == o)
+    if (NULL == animation)
     {
-        o = (animation_t *)list_alloc(container);
-        o->target = target;
+        animation = (animation_t *)list_alloc(container);
+        animation->entity = entity;
     }
 
-    o->type = type;
-    o->start = start;
-    o->current = start;
-    o->end = end;
-    o->duration = duration;
-    o->elapsed = 0;
+    animation->type = type;
+    animation->start = start;
+    animation->current = start;
+    animation->end = end;
+    animation->duration = duration;
+    animation->elapsed = 0;
 }
 
 static void apply_to_target(animation_t const * animation)
@@ -56,12 +57,14 @@ static void apply_to_target(animation_t const * animation)
 
     if (type == SHIP_ROLL_BACK || type == SHIP_ROLL_DOWN || type == SHIP_ROLL_UP)
     {
-        entity_t * entity = (entity_t *)animation->target;
-        sprite_t * sprite = entity->sprite;
         int new_frame = animation->current;
 
-        entity->current_frame = new_frame;
-        sprite->frame = get_frame(sprite->texture, entity->start_frame + new_frame);
+        entity_t * entity = (entity_t *)animation->entity;
+        ship_t * ship = (ship_t *)entity->data;
+        ship->current_frame = new_frame;
+
+        sprite_t * sprite = entity->sprite;
+        sprite->frame = get_frame(sprite->texture, ship->start_frame + new_frame);
     }
 }
 
@@ -118,12 +121,12 @@ void shutdown_animations()
     list_delete(&container);
 }
 
-void remove_from_animations(void * target)
+void remove_from_animations(entity_t * entity)
 {
     animation_t * animation = NULL;
     while (list_next(container, (void **)&animation))
     {
-        if (target == animation->target)
+        if (entity == animation->entity)
         {
             animation = list_dealloc(container, animation);
         }
@@ -144,21 +147,25 @@ void process_animations(uint64_t dt)
 
 void animation_rollup(entity_t * entity)
 {
+    ship_t * ship = (ship_t *)entity->data;
+
     add_animation(
         entity,
         SHIP_ROLL_UP,
-        entity->current_frame,
-        entity->nb_frames - 1,
+        ship->current_frame,
+        ship->nb_frames - 1,
         300
     );
 }
 
 void animation_rolldown(entity_t * entity)
 {
+    ship_t * ship = (ship_t *)entity->data;
+
     add_animation(
         entity,
         SHIP_ROLL_DOWN,
-        entity->current_frame,
+        ship->current_frame,
         0,
         300
     );
@@ -166,11 +173,13 @@ void animation_rolldown(entity_t * entity)
 
 void animation_rollback(entity_t * entity)
 {
+    ship_t * ship = (ship_t *)entity->data;
+
     add_animation(
         entity,
         SHIP_ROLL_BACK,
-        entity->current_frame,
-        entity->nb_frames / 2,
+        ship->current_frame,
+        ship->nb_frames / 2,
         300
     );
 }

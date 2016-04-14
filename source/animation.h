@@ -8,7 +8,7 @@
 int init_animations();
 void shutdown_animations();
 
-void remove_from_animations(void *);
+void remove_from_animations(entity_t *);
 
 void process_animations(uint64_t);
 
