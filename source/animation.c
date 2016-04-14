@@ -78,18 +78,29 @@ static void add(entity_t * entity, animation_type_t type, int start, int end, ui
     animation->elapsed = 0;
 }
 
-static void apply_to_target(animation_t const * animation)
+static void apply_to_target(animation_t const * animation, int new_value)
 {
-    int new_frame = animation->current;
+    int old_value = animation->current;
     entity_t * entity = (entity_t *)animation->entity;
 
-    frame_info_t * info = (frame_info_t *)entity->data;
-    info->current_frame = new_frame;
-    uint8_t start_frame = info->start_frame;
+    if (old_value != new_value)
+    {
+        frame_info_t * info = (frame_info_t *)entity->data;
+        info->current_frame = new_value;
+        uint8_t start_frame = info->start_frame;
 
-    sprite_t * sprite = entity->sprite;
-    sprite->frame = get_frame(sprite->texture, start_frame + new_frame);
+        sprite_t * sprite = entity->sprite;
+        sprite->frame = get_frame(sprite->texture, start_frame + new_value);
+    }
 
+    if (SHOT_CHARGE == animation->type)
+    {
+        charge_t * info = (charge_t *)entity->data;
+
+        uint8_t strength = info->strength;
+        info->strength = (strength + 2 < 100)
+            ? strength + 2 : 100;
+    }
 }
 
 static int on_animation_end(animation_t * animation)
@@ -106,11 +117,11 @@ static int on_animation_end(animation_t * animation)
 
 static int process_animation(animation_t * animation, uint16_t dt)
 {
-    int old_value = animation->current, new_value = 0;
+    int new_value = 0;
     int start_at = 0, end_at = animation->end;
     uint16_t elapsed = 0, duration = 0;
 
-    if (old_value != end_at)
+    if (animation->current != end_at)
     {
         elapsed = animation->elapsed;
         duration = animation->duration;
@@ -130,11 +141,7 @@ static int process_animation(animation_t * animation, uint16_t dt)
                 : end_at + (1 - progress) * (start_at - end_at);
         }
 
-        if (old_value != new_value)
-        {
-            animation->current = new_value;
-            apply_to_target(animation);
-        }
+        apply_to_target(animation, new_value);
 
         if (new_value != end_at)
         {
@@ -230,5 +237,18 @@ void animation_charge(entity_t * entity)
         info->current_frame,
         info->nb_frames - 1,
         600
+    );
+}
+
+void animation_shot(entity_t * entity)
+{
+    frame_info_t * info = (frame_info_t *)entity->data;
+
+    add(
+        entity,
+        SHOT_FIRED,
+        info->current_frame,
+        info->nb_frames - 1,
+        500
     );
 }

@@ -16,5 +16,6 @@ void animation_rollup(entity_t *);
 void animation_rolldown(entity_t *);
 void animation_rollback(entity_t *);
 void animation_charge(entity_t *);
+void animation_shot(entity_t *);
 
 #endif

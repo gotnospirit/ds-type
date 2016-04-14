@@ -61,7 +61,8 @@ typedef enum {
     SHIP_ROLL_UP,
     SHIP_ROLL_DOWN,
     SHIP_ROLL_BACK,
-    SHOT_CHARGE
+    SHOT_CHARGE,
+    SHOT_FIRED
 } animation_type_t;
 
 typedef struct

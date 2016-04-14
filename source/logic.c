@@ -80,12 +80,11 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
     }
     else if (released(KEY_A))
     {
-        entity_stop_charge();
-
-        entity_t * shot = entity_spawn_shot();
+        entity_t * shot = entity_stop_charge();
         if (NULL != shot)
         {
             STICK_TO_SHIP_NOSE(shot, entity)
+            animation_shot(shot);
         }
     }
     return 1;

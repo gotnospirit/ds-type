@@ -41,6 +41,21 @@ static entity_t * entity_free(entity_t * entity)
     return list_dealloc(entities, entity);
 }
 
+static int configure_frame_info(frame_info_t ** ptr, template_t const * template, entity_t * entity)
+{
+    frame_info_t * info = *ptr;
+    if (NULL != info)
+    {
+        info->start_frame = template->start_frame;
+        info->nb_frames = template->nb_frames;
+        info->current_frame = template->current_frame;
+
+        entity->data = info;
+        return 1;
+    }
+    return 0;
+}
+
 static entity_t * spawn_entity(template_t const * template)
 {
     uint8_t start_frame = template->start_frame;
@@ -88,6 +103,37 @@ static entity_t * spawn_entity(template_t const * template)
     return result;
 }
 
+static const char * get_shot_type(uint8_t strength)
+{
+    if (strength <= 40)
+    {
+        return "shot";
+    }
+    return "powershot";
+}
+
+static entity_t * spawn_shot(charge_t * info)
+{
+    uint8_t strength = info->strength;
+    template_t * template = template_get(get_shot_type(strength));
+    if (NULL != template)
+    {
+        entity_t * result = spawn_entity(template);
+        if (NULL != result)
+        {
+            charge_t * info = malloc(sizeof(charge_t));
+            if (1 == configure_frame_info((frame_info_t **)&info, template, result))
+            {
+                info->strength = strength;
+                add_to_rendering(result->sprite);
+                return result;
+            }
+            entity_free(result);
+        }
+    }
+    return NULL;
+}
+
 static int init_ship_entity()
 {
     template_t * template = template_get("ship");
@@ -100,18 +146,11 @@ static int init_ship_entity()
         }
 
         frame_info_t * info = malloc(sizeof(frame_info_t));
-        if (NULL == info)
+        if (1 != configure_frame_info(&info, template, entity))
         {
             entity_free(entity);
             return 2;
         }
-
-        info->start_frame = template->start_frame;
-        info->nb_frames = template->nb_frames;
-        info->current_frame = template->current_frame;
-
-        entity->data = info;
-
         add_to_rendering(entity->sprite);
     }
     return 0;
@@ -129,19 +168,12 @@ static int init_charge_entity()
         }
 
         charge_t * info = malloc(sizeof(charge_t));
-        if (NULL == info)
+        if (1 != configure_frame_info((frame_info_t **)&info, template, entity))
         {
             entity_free(entity);
             return 2;
         }
-
-        info->start_frame = template->start_frame;
-        info->nb_frames = template->nb_frames;
-        info->current_frame = template->current_frame;
         info->strength = 0;
-
-        entity->data = info;
-
         charge = entity;
     }
     return 0;
@@ -214,7 +246,7 @@ void shutdown_entities()
 
 void entities_logic(rectangle_t const * camera, uint16_t dt)
 {
-    printf("\x1b[3;0Hentities: %3d, templates: %3d", entities_size, templates_size);
+    printf("\x1b[3;0H%3d entities, %3d templates, %3d beam", entities_size, templates_size, ((charge_t *)charge->data)->strength);
 
     logic_method_t * logic = NULL;
     entity_t * entity = NULL;
@@ -279,39 +311,28 @@ template_t * template_new(const char * name, uint16_t width, uint16_t height, ui
     return result;
 }
 
-entity_t * entity_spawn_shot()
-{
-    template_t * template = template_get("shot");
-    if (NULL != template)
-    {
-        entity_t * result = spawn_entity(template);
-        if (NULL != result)
-        {
-            add_to_rendering(result->sprite);
-            return result;
-        }
-    }
-    return NULL;
-}
-
 entity_t * entity_get_charge()
 {
     add_to_rendering(charge->sprite);
     return charge;
 }
 
-void entity_stop_charge()
+entity_t * entity_stop_charge()
 {
     sprite_t * sprite = charge->sprite;
 
     remove_from_animations(charge);
     remove_from_rendering(sprite);
 
+    charge_t * info = (charge_t *)charge->data;
+    entity_t * result = spawn_shot(info);
+
     // reset for next charge
-    frame_info_t * info = (frame_info_t *)charge->data;
+    info->strength = 0;
     if (0 != info->current_frame)
     {
         info->current_frame = 0;
         sprite->frame = get_frame(sprite->texture, info->start_frame);
     }
+    return result;
 }
