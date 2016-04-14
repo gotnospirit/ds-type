@@ -88,7 +88,7 @@ void level_delete(level_t * level)
     free(level);
 }
 
-void level_logic(level_t * level, surface_t const * screen, uint64_t dt)
+void level_logic(level_t * level, surface_t const * screen, uint16_t dt)
 {
     int incr = 0;
     if (held(KEY_DRIGHT))

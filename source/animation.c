@@ -68,7 +68,7 @@ static void apply_to_target(animation_t const * animation)
     }
 }
 
-static int process_animation(animation_t * animation, uint64_t dt)
+static int process_animation(animation_t * animation, uint16_t dt)
 {
     int old_value = animation->current, new_value = 0;
     int start_at = 0, end_at = animation->end;
@@ -133,7 +133,7 @@ void remove_from_animations(entity_t * entity)
     }
 }
 
-void process_animations(uint64_t dt)
+void process_animations(uint16_t dt)
 {
     animation_t * animation = NULL;
     while (list_next(container, (void **)&animation))

@@ -187,7 +187,7 @@ void shutdown_entities()
     templates_size = 0;
 }
 
-void entities_logic(rectangle_t const * camera, uint64_t dt)
+void entities_logic(rectangle_t const * camera, uint16_t dt)
 {
     printf("\x1b[3;0Hentities: %3d, templates: %3d", entities_size, templates_size);
 

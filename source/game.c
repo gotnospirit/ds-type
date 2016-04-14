@@ -25,7 +25,12 @@ static int basic_events()
 static void game_update(level_t * level)
 {
     u64 current_time = osGetTime();
-    u64 dt = current_time - last_time;
+    if (0 == last_time)
+    {
+        last_time = current_time;
+    }
+
+    u16 dt = current_time - last_time;
 
     // apply game logic
     level_logic(level, &screen, dt);
