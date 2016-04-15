@@ -8,14 +8,11 @@
 int init_animations();
 void shutdown_animations();
 
-void remove_from_animations(entity_t *);
+void remove_from_animations(void *);
 
 void process_animations(uint16_t);
 
-void animation_rollup(entity_t *);
-void animation_rolldown(entity_t *);
-void animation_rollback(entity_t *);
-void animation_charge(entity_t *);
-void animation_shot(entity_t *);
+void add_simple_animation(void *, animation_type_t, int, int, uint16_t, animation_step_t *);
+void add_loop_animation(void *, animation_type_t, int, int, uint16_t, uint8_t, animation_step_t *);
 
 #endif

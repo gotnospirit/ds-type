@@ -39,7 +39,7 @@ static void game_update(level_t * level)
 
     // collision
 
-    // update entities' sprite's coordinates
+    // reflect entities' updates to their sprite
     sprites_update(&level->camera);
 
     last_time = current_time;

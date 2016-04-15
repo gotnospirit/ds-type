@@ -210,15 +210,13 @@ static int process_base_entities(JsonValue const &root, texture_t const * textur
 {
     const char * name = NULL;
     const char * logic_method = NULL;
-    int width = 0, height = 0, start_frame = 0, current_frame = 0, nb_frames = 0;
+    int start_frame = 0, current_frame = 0, nb_frames = 0;
 
     for (auto const &node : root)
     {
         auto const &value = node->value;
 
         name = Json::GetString(value, "id");
-        width = Json::GetNumber(value, "width");
-        height = Json::GetNumber(value, "height");
         start_frame = Json::GetNumber(value, "start_frame");
         current_frame = Json::GetNumber(value, "current_frame");
         nb_frames = Json::GetNumber(value, "nb_frames");
@@ -228,11 +226,6 @@ static int process_base_entities(JsonValue const &root, texture_t const * textur
         {
             printf("Missing entity id\n");
             return 1;
-        }
-        else if (width < 0 || height < 0)
-        {
-            printf("Missing dimension for %s\n", name);
-            return 3;
         }
         else if (start_frame < 0 || nb_frames < 0)
         {
@@ -255,7 +248,7 @@ static int process_base_entities(JsonValue const &root, texture_t const * textur
             return 5;
         }
 
-        if (NULL == template_new(name, width, height, start_frame, nb_frames, current_frame, texture, logic_method))
+        if (NULL == template_new(name, start_frame, nb_frames, current_frame, texture, logic_method))
         {
             printf("Template not created\n");
             return 6;

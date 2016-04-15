@@ -32,18 +32,24 @@ static template_t * template_get(const char * name)
 
 static entity_t * entity_free(entity_t * entity)
 {
-    remove_from_animations(entity);
+    animation_info_t * info = (animation_info_t *)entity->data;
+    if (NULL != info)
+    {
+        remove_from_animations(entity);
+        free(info);
+    }
+
     sprite_t * sprite = entity->sprite;
     remove_from_rendering(sprite);
     list_dealloc(sprites, sprite);
-    free(entity->data);
+
     --entities_size;
     return list_dealloc(entities, entity);
 }
 
-static int configure_frame_info(frame_info_t ** ptr, template_t const * template, entity_t * entity)
+static int configure_animation_info(animation_info_t ** ptr, template_t const * template, entity_t * entity)
 {
-    frame_info_t * info = *ptr;
+    animation_info_t * info = *ptr;
     if (NULL != info)
     {
         info->start_frame = template->start_frame;
@@ -95,36 +101,48 @@ static entity_t * spawn_entity(template_t const * template)
 
     result->x = 0;
     result->y = 0;
-    result->width = template->width;
-    result->height = template->height;
+    result->width = frame->width;
+    result->height = frame->height;
     result->sprite = sprite;
     result->logic = template->logic;
     result->data = NULL;
     return result;
 }
 
-static const char * get_shot_type(uint8_t strength)
+static const char * get_shot_type(int strength)
 {
-    if (strength <= 40)
+    const char * result = "shot";
+
+    if (strength > 90)
     {
-        return "shot";
+        result = "fullshot";
     }
-    return "powershot";
+    else if (strength >= 60)
+    {
+        result = "highshot";
+    }
+    else if (strength >= 40)
+    {
+        result = "midshot";
+    }
+    else if (strength > 10)
+    {
+        result = "lowshot";
+    }
+    return result;
 }
 
-static entity_t * spawn_shot(charge_t * info)
+static entity_t * spawn_shot(const char * type)
 {
-    uint8_t strength = info->strength;
-    template_t * template = template_get(get_shot_type(strength));
+    template_t * template = template_get(type);
     if (NULL != template)
     {
         entity_t * result = spawn_entity(template);
         if (NULL != result)
         {
-            charge_t * info = malloc(sizeof(charge_t));
-            if (1 == configure_frame_info((frame_info_t **)&info, template, result))
+            animation_info_t * info = malloc(sizeof(animation_info_t));
+            if (1 == configure_animation_info(&info, template, result))
             {
-                info->strength = strength;
                 add_to_rendering(result->sprite);
                 return result;
             }
@@ -145,8 +163,8 @@ static int init_ship_entity()
             return 1;
         }
 
-        frame_info_t * info = malloc(sizeof(frame_info_t));
-        if (1 != configure_frame_info(&info, template, entity))
+        animation_info_t * info = malloc(sizeof(animation_info_t));
+        if (1 != configure_animation_info(&info, template, entity))
         {
             entity_free(entity);
             return 2;
@@ -168,7 +186,7 @@ static int init_charge_entity()
         }
 
         charge_t * info = malloc(sizeof(charge_t));
-        if (1 != configure_frame_info((frame_info_t **)&info, template, entity))
+        if (1 != configure_animation_info((animation_info_t **)&info, template, entity))
         {
             entity_free(entity);
             return 2;
@@ -246,9 +264,9 @@ void shutdown_entities()
 
 void entities_logic(rectangle_t const * camera, uint16_t dt)
 {
-    printf("\x1b[3;0H%3d entities, %3d templates, %3d beam", entities_size, templates_size, ((charge_t *)charge->data)->strength);
+    printf("\x1b[3;0H%3d entities, %3d templates, beam %3d%%", entities_size, templates_size, ((charge_t *)charge->data)->strength);
 
-    logic_method_t * logic = NULL;
+    logic_t * logic = NULL;
     entity_t * entity = NULL;
     while (list_next(entities, (void **)&entity))
     {
@@ -278,12 +296,10 @@ void sprites_update(rectangle_t const * camera)
     }
 }
 
-template_t * template_new(const char * name, uint16_t width, uint16_t height, uint8_t start_frame, uint8_t nb_frames, uint8_t current_frame, texture_t const * texture, const char * logic_method)
+template_t * template_new(const char * name, uint8_t start_frame, uint8_t nb_frames, uint8_t current_frame, texture_t const * texture, const char * logic_method)
 {
     template_t * result = (template_t *)list_alloc(templates);
     result->name = strdup(name);
-    result->width = width;
-    result->height = height;
     result->start_frame = start_frame;
     result->nb_frames = nb_frames;
     result->current_frame = current_frame;
@@ -311,28 +327,50 @@ template_t * template_new(const char * name, uint16_t width, uint16_t height, ui
     return result;
 }
 
-entity_t * entity_get_charge()
+entity_t * entity_start_charge()
 {
     add_to_rendering(charge->sprite);
     return charge;
 }
 
+entity_t * entity_get_charge()
+{
+    return charge;
+}
+
 entity_t * entity_stop_charge()
 {
-    sprite_t * sprite = charge->sprite;
-
-    remove_from_animations(charge);
-    remove_from_rendering(sprite);
+    remove_from_rendering(charge->sprite);
 
     charge_t * info = (charge_t *)charge->data;
-    entity_t * result = spawn_shot(info);
+    const char * type = get_shot_type(info->strength);
+    entity_t * result = spawn_shot(type);
+
+    remove_from_animations(charge);
 
     // reset for next charge
     info->strength = 0;
-    if (0 != info->current_frame)
-    {
-        info->current_frame = 0;
-        sprite->frame = get_frame(sprite->texture, info->start_frame);
-    }
+    entity_update_frame(charge, 0);
     return result;
+}
+
+void entity_update_frame(entity_t * entity, uint8_t value)
+{
+    animation_info_t * info = (animation_info_t *)entity->data;
+
+    if (value != info->current_frame)
+    {
+        sprite_t * sprite = entity->sprite;
+        if (NULL != sprite)
+        {
+            frame_t const * frame = get_frame(sprite->texture, info->start_frame + value);
+            if (NULL != frame)
+            {
+                info->current_frame = value;
+                sprite->frame = frame;
+                entity->width = frame->width;
+                entity->height = frame->height;
+            }
+        }
+    }
 }
