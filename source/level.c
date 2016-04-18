@@ -4,6 +4,7 @@
 #include <3ds.h>
 
 #include "level.h"
+#include "json_wrapper.h"
 #include "list.h"
 #include "input.h"
 #include "render.h"
@@ -59,8 +60,14 @@ static void clear_level_tiles(list_t ** list)
     list_delete(list);
 }
 
-level_t * level_new()
+level_t * level_new(const char * name)
 {
+    texture_t * texture = texture_new(name);
+    if (NULL == texture)
+    {
+        return NULL;
+    }
+
     rectangle_t camera;
     camera.top = 0;
     camera.left = 0;
@@ -68,13 +75,27 @@ level_t * level_new()
     camera.bottom = 0;
 
     level_t * level = malloc(sizeof(level_t));
+    if (NULL == level)
+    {
+        texture_delete((texture_t const **)&texture);
+        return NULL;
+    }
+
     level->camera = camera;
     level->incr = 1;
     level->max_camera_left = 0;
-    // level->elapsed = 0;
-    level->texture = NULL;
+    level->texture = texture;
     level->top_tiles = list_new(sizeof(tile_t), 1);
     level->bottom_tiles = list_new(sizeof(tile_t), 1);
+
+    json_wrapper_t * json = json_new(name);
+    if (NULL == json || 0 != parse_level(json, level, texture))
+    {
+        level_delete(level);
+        return NULL;
+    }
+    json_delete(json);
+
     return level;
 }
 
@@ -139,6 +160,4 @@ void level_logic(level_t * level, surface_t const * screen, uint16_t dt)
 
     printf("\x1b[0;0Hcamera: %5d %5d %5d %5d", level->camera.top, level->camera.right, level->camera.bottom, level->camera.left);
     printf("\x1b[1;0Hincr: %3d, scroll end: %5d", level->incr, max_camera_left);
-
-    // level->elapsed += dt;
 }

@@ -8,11 +8,15 @@
 int init_animations();
 void shutdown_animations();
 
-void remove_from_animations(void *);
+animation_template_t * animation_template_new(const char *, int, int, uint16_t, int, const char *);
+
+void remove_from_animations(entity_t *);
 
 void process_animations(uint16_t);
 
-void add_simple_animation(void *, animation_type_t, int, int, uint16_t, animation_step_t *);
-void add_loop_animation(void *, animation_type_t, int, int, uint16_t, uint8_t, animation_step_t *);
+void frame_step(animation_t *, int);
+void value_step(animation_t *, int);
+
+void add_animation(const char *, entity_t *);
 
 #endif

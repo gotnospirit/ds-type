@@ -1,26 +1,39 @@
 #include <stdint.h>
 
 #include "animation.h"
+#include "texture.h"
 #include "list.h"
 #include "structs.h"
 #include "easing.h"
 
-typedef int animation_find_t(animation_type_t);
+static list_t * templates = NULL;
+static list_t * animations = NULL;
 
-static list_t * container = NULL;
-
-static int is_roll(animation_type_t type)
+static animation_template_t * template_get(const char * name)
 {
-    return (type == SHIP_ROLL_BACK || type == SHIP_ROLL_DOWN || type == SHIP_ROLL_UP)
+    animation_template_t * template = NULL;
+    while (list_next(templates, (void **)&template))
+    {
+        if (0 == strcmp(template->name, name))
+        {
+            return template;
+        }
+    }
+    return NULL;
+}
+
+static int is_roll(const char * type)
+{
+    return (0 == strncmp(type, "rollback", 8) || 0 == strncmp(type, "rolldown", 8) || 0 == strncmp(type, "rollup", 6))
         ? 1 : 0;
 }
 
-static animation_t * find(void * ptr, animation_find_t * fn)
+static animation_t * find_roll(entity_t * entity)
 {
     animation_t * animation = NULL;
-    while (list_next(container, (void **)&animation))
+    while (list_next(animations, (void **)&animation))
     {
-        if (ptr == animation->data && fn(animation->type))
+        if (entity == animation->entity && is_roll(animation->tpl->name))
         {
             return animation;
         }
@@ -32,15 +45,24 @@ static int process_animation(animation_t * animation, uint16_t dt)
 {
     int new_value = 0;
     uint16_t elapsed = animation->elapsed;
+    animation_template_t const * template = animation->tpl;
     uint16_t duration = animation->duration;
     int start_at = animation->start;
-    int end_at = animation->end;
+    int end_at = template->end;
+    int loop_at = template->loop;
+    int diff = end_at - start_at;
 
     elapsed += dt;
 
-    if (elapsed >= duration)
+    if (elapsed > duration)
     {
-        new_value = end_at;
+        elapsed = duration;
+    }
+
+    if (1 == diff)
+    {
+        new_value = (elapsed > (duration / 2))
+            ? start_at : end_at;
     }
     else
     {
@@ -50,77 +72,92 @@ static int process_animation(animation_t * animation, uint16_t dt)
             : end_at + (1 - progress) * (start_at - end_at);
     }
 
-    animation->update(animation->data, new_value);
+    template->update(animation, new_value);
 
-    if (new_value != end_at)
+    if (elapsed < duration)
     {
         animation->elapsed = elapsed;
         return 1;
     }
 
-    if (animation->loop > 0)
+    if (loop_at > 0)
     {
-        animation->update(animation->data, animation->start);
+        animation->start = loop_at;
         animation->elapsed = 0;
+        // animation->duration = template->duration / (end_at - template->start + 1) * (end_at - loop_at);
         return 1;
     }
     return 0;
 }
 
-animation_t * add(void * ptr, animation_type_t type, int start, int end, uint16_t duration, animation_step_t * callback)
-{
-    if (start == end)
-    {
-        return NULL;
-    }
-
-    animation_t * animation = NULL;
-
-    // Une animation de déplacement du vaisseau doit remplacer la précédente
-    if (is_roll(type))
-    {
-        animation = find(ptr, is_roll);
-    }
-
-    if (NULL == animation)
-    {
-        animation = (animation_t *)list_alloc(container);
-        if (NULL != animation)
-        {
-            animation->data = ptr;
-        }
-    }
-
-    animation->type = type;
-    animation->start = start;
-    animation->end = end;
-    animation->duration = duration;
-    animation->elapsed = 0;
-    animation->loop = 0;
-    animation->update = callback;
-    return animation;
-}
-
 int init_animations()
 {
-    container = list_new(sizeof(animation_t), 1);
-    return (NULL == container)
-        ? 1 : 0;
+    templates = list_new(sizeof(animation_template_t), 1);
+    if (NULL == templates)
+    {
+        return 1;
+    }
+
+    animations = list_new(sizeof(animation_t), 1);
+    return (NULL == animations)
+        ? 2 : 0;
 }
 
 void shutdown_animations()
 {
-    list_delete(&container);
+    list_delete(&animations);
+
+    animation_template_t * template = NULL;
+    while (list_next(templates, (void **)&template))
+    {
+        free(template->name);
+    }
+    list_delete(&templates);
 }
 
-void remove_from_animations(void * ptr)
+animation_template_t * animation_template_new(const char * name, int start, int end, uint16_t duration, int loop, const char * update_method)
+{
+    if (-1 != loop && (loop < start || loop >= end))
+    {
+        return NULL;
+    }
+
+    animation_step_t * callback = NULL;
+
+    if (0 == strncmp(update_method, "frame", 5))
+    {
+        callback = frame_step;
+    }
+    else if (0 == strncmp(update_method, "value", 5))
+    {
+        callback = value_step;
+    }
+    else
+    {
+        return NULL;
+    }
+
+    animation_template_t * result = (animation_template_t *)list_alloc(templates);
+    if (NULL != result)
+    {
+        result->name = strdup(name);
+        result->start = start;
+        result->end = end;
+        result->duration = duration;
+        result->loop = loop;
+        result->update = callback;
+    }
+    return result;
+}
+
+void remove_from_animations(entity_t * entity)
 {
     animation_t * animation = NULL;
-    while (list_next(container, (void **)&animation))
+    while (list_next(animations, (void **)&animation))
     {
-        if (ptr == animation->data)
+        if (entity == animation->entity)
         {
-            animation = list_dealloc(container, animation);
+            animation = list_dealloc(animations, animation);
         }
     }
 }
@@ -128,25 +165,87 @@ void remove_from_animations(void * ptr)
 void process_animations(uint16_t dt)
 {
     animation_t * animation = NULL;
-    while (list_next(container, (void **)&animation))
+    while (list_next(animations, (void **)&animation))
     {
         if (!process_animation(animation, dt))
         {
-            animation = list_dealloc(container, animation);
+            animation = list_dealloc(animations, animation);
         }
     }
 }
 
-void add_simple_animation(void * ptr, animation_type_t type, int start, int end, uint16_t duration, animation_step_t * callback)
+void frame_step(animation_t * animation, int value)
 {
-    add(ptr, type, start, end, duration, callback);
+    if (value != animation->current)
+    {
+        animation->current = value;
+
+        entity_t * entity = (entity_t *)animation->entity;
+        sprite_t * sprite = entity->sprite;
+        if (NULL != sprite)
+        {
+            frame_t const * frame = get_frame(sprite->texture, value);
+            if (NULL != frame)
+            {
+                sprite->frame = frame;
+
+                entity->width = frame->width;
+                entity->height = frame->height;
+            }
+        }
+    }
 }
 
-void add_loop_animation(void * ptr, animation_type_t type, int start, int end, uint16_t duration, uint8_t loop, animation_step_t * callback)
+void value_step(animation_t * animation, int value)
 {
-    animation_t * animation = add(ptr, type, start, end, duration, callback);
-    if (NULL != animation)
+    if (value != animation->current)
     {
-        animation->loop = loop;
+        animation->current = value;
+
+        entity_t * entity = (entity_t *)animation->entity;
+        charge_t * info = (charge_t *)entity->data;
+        if (NULL != info)
+        {
+            info->strength = value;
+        }
     }
+}
+
+void add_animation(const char * type, entity_t * entity)
+{
+    animation_template_t * template = template_get(type);
+    if (NULL == template)
+    {
+        return ;
+    }
+
+    animation_t * animation = NULL;
+    int start = -1;
+
+    // Une animation de déplacement du vaisseau doit remplacer la précédente
+    if (is_roll(type))
+    {
+        animation = find_roll(entity);
+        if (NULL != animation)
+        {
+            start = animation->current;
+        }
+    }
+
+    if (NULL == animation)
+    {
+        animation = (animation_t *)list_alloc(animations);
+        if (NULL == animation)
+        {
+            return ;
+        }
+        start = template->start;
+    }
+
+    animation->start = -1 != start ? start : 0;
+    animation->current = -1;
+    animation->elapsed = 0;
+    animation->duration = template->duration;
+    animation->entity = entity;
+    animation->tpl = template;
 }

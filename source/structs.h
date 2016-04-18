@@ -14,7 +14,8 @@ typedef struct
 typedef struct Entity entity_t;
 typedef int logic_t(entity_t *, rectangle_t const *);
 
-typedef void animation_step_t(void *, int);
+typedef struct Animation animation_t;
+typedef void animation_step_t(animation_t *, int);
 
 typedef struct GameState game_state_t;
 typedef void game_state_processor_t(game_state_t *);
@@ -48,25 +49,13 @@ typedef struct
     uint8_t flip_x, flip_y;
 } sprite_t;
 
-typedef enum {
-    SHIP_ROLL_UP,
-    SHIP_ROLL_DOWN,
-    SHIP_ROLL_BACK,
-    CHARGING,
-    BEAM,
-    SHOT
-} animation_type_t;
-
 typedef struct
 {
-    animation_type_t type;
-    int start, end;
+    char * name;
+    int start, end, loop;
     uint16_t duration;
-    uint16_t elapsed;
-    uint8_t loop;
-    void * data;
     animation_step_t * update;
-} animation_t;
+} animation_template_t;
 
 typedef struct
 {
@@ -79,7 +68,6 @@ typedef struct
 typedef struct
 {
     rectangle_t camera;
-    // uint16_t elapsed;
     int incr;
     uint16_t max_camera_left;
     texture_t const * texture;
@@ -87,26 +75,26 @@ typedef struct
     list_t * bottom_tiles;
 } level_t;
 
-typedef struct FrameInfo
-{
-    uint8_t start_frame;
-    uint8_t nb_frames;
-    uint8_t current_frame;
-} animation_info_t;
-
 typedef struct
 {
-    struct FrameInfo;
     int strength;
 } charge_t;
 
 typedef struct
 {
-    struct FrameInfo;
     char * name;
     texture_t const * texture;
+    frame_t const * frame;
     logic_t * logic;
-} template_t;
+} entity_template_t;
+
+struct Animation
+{
+    int start, current;
+    uint16_t elapsed, duration;
+    entity_t * entity;
+    animation_template_t const * tpl;
+};
 
 struct Entity
 {
@@ -114,7 +102,7 @@ struct Entity
     uint16_t width, height;
     sprite_t * sprite;
     logic_t * logic;
-    void * data; // animation_info_t, charge_t, ...
+    void * data; // charge_t, ...
 };
 
 struct GameState

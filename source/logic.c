@@ -40,51 +40,27 @@ static void keep_inside(entity_t * entity, rectangle_t const * camera)
     }
 }
 
-static void entity_frame_step(void * entity, int value)
+static const char * get_shot_animation_type(int strength)
 {
-    entity_update_frame((entity_t *)entity, value);
-}
+    const char * result = "shot";
 
-static void beam_step(void * entity, int value)
-{
-    charge_t * info = (charge_t *)((entity_t *)entity)->data;
-    info->strength = value;
-}
-
-static void rollup(entity_t * entity)
-{
-    animation_info_t * info = (animation_info_t *)entity->data;
-
-    add_simple_animation(entity, SHIP_ROLL_UP, info->current_frame, info->nb_frames - 1, 300, entity_frame_step);
-}
-
-static void rolldown(entity_t * entity)
-{
-    animation_info_t * info = (animation_info_t *)entity->data;
-
-    add_simple_animation(entity, SHIP_ROLL_DOWN, info->current_frame, 0, 300, entity_frame_step);
-}
-
-static void rollback(entity_t * entity)
-{
-    animation_info_t * info = (animation_info_t *)entity->data;
-
-    add_simple_animation(entity, SHIP_ROLL_BACK, info->current_frame, info->nb_frames / 2, 300, entity_frame_step);
-}
-
-static void charging(entity_t * entity)
-{
-    charge_t * info = (charge_t *)entity->data;
-
-    add_loop_animation(entity, CHARGING, info->current_frame, info->nb_frames - 1, 600, 1, entity_frame_step);
-    add_simple_animation(entity, BEAM, 0, 100, 2000, beam_step);
-}
-
-static void fire(entity_t * entity)
-{
-    frame_info_t * info = (frame_info_t *)entity->data;
-
-    add_simple_animation(entity, SHOT, info->current_frame, info->nb_frames - 1, 500, entity_frame_step);
+    if (strength > 90)
+    {
+        result = "fullshot";
+    }
+    else if (strength >= 60)
+    {
+        result = "highshot";
+    }
+    else if (strength >= 40)
+    {
+        result = "midshot";
+    }
+    else if (strength > 10)
+    {
+        result = "lowshot";
+    }
+    return result;
 }
 
 int logic_hero(entity_t * entity, rectangle_t const * camera)
@@ -99,15 +75,20 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
 
     if (pressed(KEY_UP))
     {
-        rollup(entity);
+        add_animation("rollup", entity);
     }
     else if (pressed(KEY_DOWN))
     {
-        rolldown(entity);
+        add_animation("rolldown", entity);
     }
-    else if (released(KEY_UP) || released(KEY_DOWN))
+
+    if (released(KEY_UP))
     {
-        rollback(entity);
+        add_animation("rollupback", entity);
+    }
+    else if (released(KEY_DOWN))
+    {
+        add_animation("rolldownback", entity);
     }
 
     if (pressed(KEY_A))
@@ -116,7 +97,8 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
         if (NULL != charge)
         {
             STICK_TO_SHIP_NOSE(charge, entity)
-            charging(charge);
+            add_animation("charge", charge);
+            add_animation("beam", charge);
         }
     }
     else if (held(KEY_A))
@@ -127,13 +109,16 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
             STICK_TO_SHIP_NOSE(charge, entity)
         }
     }
-    else if (released(KEY_A))
+
+    if (released(KEY_A))
     {
-        entity_t * shot = entity_stop_charge();
+        uint8_t strength = entity_stop_charge();
+
+        entity_t * shot = entity_spawn_shot();
         if (NULL != shot)
         {
             STICK_TO_SHIP_NOSE(shot, entity)
-            fire(shot);
+            add_animation(get_shot_animation_type(strength), shot);
         }
     }
     return 1;

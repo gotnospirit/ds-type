@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #include "json_wrapper.h"
 #include "json.h"
@@ -9,6 +10,7 @@ extern "C" {
 #include "structs.h"
 #include "texture.h"
 #include "entity.h"
+#include "animation.h"
 #include "utils.h"
 
 static char * get_json_data(const char * name)
@@ -206,52 +208,83 @@ static int process_level_tiles(JsonValue const &root, level_t * level, JsonValue
     return 0;
 }
 
-static int process_base_entities(JsonValue const &root, texture_t const * texture)
+static int process_base_animations(JsonValue const &root)
 {
     const char * name = NULL;
-    const char * logic_method = NULL;
-    int start_frame = 0, current_frame = 0, nb_frames = 0;
+    const char * type = NULL;
+    int start = 0, end = 0, loop = 0;
+    uint16_t duration = 0;
 
     for (auto const &node : root)
     {
         auto const &value = node->value;
 
         name = Json::GetString(value, "id");
-        start_frame = Json::GetNumber(value, "start_frame");
-        current_frame = Json::GetNumber(value, "current_frame");
-        nb_frames = Json::GetNumber(value, "nb_frames");
+        type = Json::GetString(value, "type");
+        start = Json::GetNumber(value, "start");
+        end = Json::GetNumber(value, "end");
+        loop = Json::GetNumber(value, "loop");
+        duration = Json::GetNumber(value, "duration");
+
+        if (NULL == name)
+        {
+            printf("Missing animation's id\n");
+            return 1;
+        }
+        else if (NULL == type)
+        {
+            printf("Missing animation's type\n");
+            return 2;
+        }
+        else if (start < 0 || end < 0 || duration < 0)
+        {
+            printf("Invalid animation parameters\n");
+            return 3;
+        }
+
+        if (NULL == animation_template_new(name, start, end, duration, loop, type))
+        {
+            printf("Template not created\n");
+            return 4;
+        }
+    }
+    return 0;
+}
+
+static int process_base_entities(JsonValue const &root, texture_t const * texture)
+{
+    const char * name = NULL;
+    const char * logic_method = NULL;
+    int current_frame = 0;
+
+    for (auto const &node : root)
+    {
+        auto const &value = node->value;
+
+        name = Json::GetString(value, "id");
+        current_frame = Json::GetNumber(value, "frame");
         logic_method = Json::GetString(value, "logic");
 
         if (NULL == name)
         {
-            printf("Missing entity id\n");
+            printf("Missing entity's id\n");
             return 1;
         }
-        else if (start_frame < 0 || nb_frames < 0)
+        else if (current_frame < 0)
         {
-            printf("Missing frames for %s\n", name);
-            return 4;
+            printf("Missing idle frame for %s\n", name);
+            return 2;
         }
 
-        if (-1 == current_frame)
-        {
-            current_frame = 0;
-        }
-        else if (current_frame > nb_frames)
-        {
-            current_frame = nb_frames;
-        }
-
-        if (NULL == get_frame(texture, start_frame + current_frame))
+        if (NULL == get_frame(texture, current_frame))
         {
             printf("Frame %d not found\n", current_frame);
-            return 5;
+            return 3;
         }
-
-        if (NULL == template_new(name, start_frame, nb_frames, current_frame, texture, logic_method))
+        else if (NULL == entity_template_new(name, current_frame, texture, logic_method))
         {
             printf("Template not created\n");
-            return 6;
+            return 4;
         }
     }
     return 0;
@@ -288,6 +321,7 @@ int parse_base(json_wrapper_t * o, texture_t * spritesheet)
 
     JsonNode const * frames_node = NULL;
     JsonNode const * entities_node = NULL;
+    JsonNode const * animations_node = NULL;
 
     const char * key = 0;
 
@@ -303,26 +337,39 @@ int parse_base(json_wrapper_t * o, texture_t * spritesheet)
         {
             entities_node = node;
         }
+        else if (0 == strncmp(key, "animations", 10))
+        {
+            animations_node = node;
+        }
     }
 
     if (NULL == frames_node)
     {
-        printf("No frames defined\n");
+        printf("No frame defined\n");
         return 1;
     }
     else if (NULL == entities_node)
     {
-        printf("No entities defined\n");
+        printf("No entity defined\n");
         return 2;
+    }
+    else if (NULL == animations_node)
+    {
+        printf("No animation defined\n");
+        return 3;
     }
 
     if (0 != process_frames(frames_node->value, spritesheet))
     {
-        return 3;
+        return 4;
     }
     else if (0 != process_base_entities(entities_node->value, spritesheet))
     {
-        return 4;
+        return 5;
+    }
+    else if (0 != process_base_animations(animations_node->value))
+    {
+        return 6;
     }
     return 0;
 }

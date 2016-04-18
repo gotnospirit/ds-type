@@ -4,7 +4,6 @@
 #include <3ds.h>
 
 #include "game.h"
-#include "json_wrapper.h"
 #include "structs.h"
 #include "input.h"
 #include "texture.h"
@@ -105,15 +104,7 @@ void start_level(game_state_t * state)
         return ;
     }
 
-    texture_t * texture = texture_new(level_name);
-    if (NULL == texture)
-    {
-        state->next = loading_error;
-        state->data = "Level texture failed...";
-        return ;
-    }
-
-    level_t * level = level_new();
+    level_t * level = level_new(level_name);
     if (NULL == level)
     {
         state->next = loading_error;
@@ -121,30 +112,8 @@ void start_level(game_state_t * state)
         return ;
     }
 
-    level->texture = texture;
-
-    json_wrapper_t * json = json_new(level_name);
-    if (NULL == json)
-    {
-        level_delete(level);
-
-        state->next = loading_error;
-        state->data = "Level data not found...";
-        return ;
-    }
-    else if (0 != parse_level(json, level, texture))
-    {
-        level_delete(level);
-
-        state->next = loading_error;
-        state->data = "Level init failed...";
-    }
-    else
-    {
-        state->next = run_level;
-        state->data = level;
-    }
-    json_delete(json);
+    state->next = run_level;
+    state->data = level;
 }
 
 void run_level(game_state_t * state)

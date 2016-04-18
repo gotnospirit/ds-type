@@ -1,1 +1,36 @@
-{"frames":[{"x":0,"y":0,"width":32,"height":16},{"x":32,"y":0,"width":32,"height":16},{"x":64,"y":0,"width":32,"height":16},{"x":96,"y":0,"width":32,"height":16},{"x":128,"y":0,"width":32,"height":16},{"x":160,"y":0,"width":14,"height":12},{"x":174,"y":0,"width":14,"height":12},{"x":188,"y":4,"width":16,"height":4},{"x":0,"y":16,"width":16,"height":16},{"x":16,"y":16,"width":16,"height":16},{"x":32,"y":16,"width":16,"height":16},{"x":48,"y":16,"width":16,"height":16},{"x":64,"y":16,"width":16,"height":16},{"x":76,"y":16,"width":16,"height":16},{"x":88,"y":16,"width":16,"height":16},{"x":104,"y":16,"width":16,"height":16},{"x":120,"y":16,"width":16,"height":16},{"x":136,"y":16,"width":16,"height":16},{"x":152,"y":16,"width":16,"height":16},{"x":168,"y":16,"width":16,"height":16},{"x":0,"y":32,"width":32,"height":32},{"x":32,"y":32,"width":32,"height":32},{"x":64,"y":32,"width":32,"height":32},{"x":96,"y":32,"width":32,"height":32},{"x":128,"y":32,"width":32,"height":32},{"x":160,"y":32,"width":32,"height":32},{"x":0,"y":64,"width":20,"height":20},{"x":20,"y":64,"width":20,"height":20},{"x":40,"y":64,"width":20,"height":20},{"x":60,"y":64,"width":20,"height":20},{"x":80,"y":64,"width":20,"height":20},{"x":100,"y":64,"width":20,"height":20},{"x":0,"y":84,"width":26,"height":22},{"x":26,"y":84,"width":26,"height":22},{"x":52,"y":84,"width":26,"height":22},{"x":78,"y":84,"width":26,"height":22},{"x":104,"y":84,"width":26,"height":22},{"x":130,"y":84,"width":26,"height":22},{"x":0,"y":106,"width":34,"height":32},{"x":34,"y":106,"width":34,"height":32},{"x":68,"y":106,"width":33,"height":32},{"x":101,"y":106,"width":33,"height":32},{"x":134,"y":106,"width":33,"height":32},{"x":167,"y":106,"width":32,"height":32},{"x":199,"y":106,"width":32,"height":32},{"x":231,"y":106,"width":25,"height":32},{"x":0,"y":138,"width":16,"height":16},{"x":16,"y":138,"width":16,"height":16},{"x":32,"y":138,"width":32,"height":16},{"x":64,"y":138,"width":32,"height":16},{"x":96,"y":138,"width":48,"height":16},{"x":144,"y":138,"width":48,"height":16},{"x":192,"y":138,"width":64,"height":16},{"x":0,"y":154,"width":64,"height":16},{"x":64,"y":154,"width":80,"height":16},{"x":144,"y":154,"width":80,"height":16}],"entities":[{"id":"ship","start_frame":0,"current_frame":2,"nb_frames":5,"logic":"logic_hero"},{"id":"spark","start_frame":5,"nb_frames":2},{"id":"orb","start_frame":8,"nb_frames":12},{"id":"explosion","start_frame":20,"nb_frames":6},{"id":"device1","start_frame":26,"nb_frames":6},{"id":"device2","start_frame":32,"nb_frames":6},{"id":"charge","start_frame":38,"nb_frames":8},{"id":"shot","start_frame":7,"nb_frames":1,"logic":"logic_shot"},{"id":"lowshot","start_frame":46,"nb_frames":2,"logic":"logic_shot"},{"id":"midshot","start_frame":46,"nb_frames":4,"logic":"logic_shot"},{"id":"highshot","start_frame":46,"nb_frames":7,"logic":"logic_shot"},{"id":"fullshot","start_frame":46,"nb_frames":10,"logic":"logic_shot"}]}
+{
+    "frames" : [
+        {"x":0,"y":0,"width":32,"height":16},{"x":32,"y":0,"width":32,"height":16},{"x":64,"y":0,"width":32,"height":16},{"x":96,"y":0,"width":32,"height":16},{"x":128,"y":0,"width":32,"height":16},
+        {"x":160,"y":0,"width":14,"height":12},{"x":174,"y":0,"width":14,"height":12},{"x":188,"y":4,"width":16,"height":4},
+        {"x":0,"y":16,"width":16,"height":16},{"x":16,"y":16,"width":16,"height":16},{"x":32,"y":16,"width":16,"height":16},{"x":48,"y":16,"width":16,"height":16},{"x":64,"y":16,"width":16,"height":16},{"x":76,"y":16,"width":16,"height":16},{"x":88,"y":16,"width":16,"height":16},{"x":104,"y":16,"width":16,"height":16},{"x":120,"y":16,"width":16,"height":16},{"x":136,"y":16,"width":16,"height":16},{"x":152,"y":16,"width":16,"height":16},{"x":168,"y":16,"width":16,"height":16},
+        {"x":0,"y":32,"width":32,"height":32},{"x":32,"y":32,"width":32,"height":32},{"x":64,"y":32,"width":32,"height":32},{"x":96,"y":32,"width":32,"height":32},{"x":128,"y":32,"width":32,"height":32},{"x":160,"y":32,"width":32,"height":32},
+        {"x":0,"y":64,"width":20,"height":20},{"x":20,"y":64,"width":20,"height":20},{"x":40,"y":64,"width":20,"height":20},{"x":60,"y":64,"width":20,"height":20},{"x":80,"y":64,"width":20,"height":20},{"x":100,"y":64,"width":20,"height":20},
+        {"x":0,"y":84,"width":26,"height":22},{"x":26,"y":84,"width":26,"height":22},{"x":52,"y":84,"width":26,"height":22},{"x":78,"y":84,"width":26,"height":22},{"x":104,"y":84,"width":26,"height":22},{"x":130,"y":84,"width":26,"height":22},
+        {"x":0,"y":106,"width":34,"height":32},{"x":34,"y":106,"width":34,"height":32},{"x":68,"y":106,"width":33,"height":32},{"x":101,"y":106,"width":33,"height":32},{"x":134,"y":106,"width":33,"height":32},{"x":167,"y":106,"width":32,"height":32},{"x":199,"y":106,"width":32,"height":32},{"x":231,"y":106,"width":25,"height":32},
+        {"x":0,"y":138,"width":16,"height":16},{"x":16,"y":138,"width":16,"height":16},{"x":32,"y":138,"width":32,"height":16},{"x":64,"y":138,"width":32,"height":16},{"x":96,"y":138,"width":48,"height":16},{"x":144,"y":138,"width":48,"height":16},{"x":192,"y":138,"width":64,"height":16},{"x":0,"y":154,"width":64,"height":16},{"x":64,"y":154,"width":80,"height":16},{"x":144,"y":154,"width":80,"height":16}
+    ],
+    "entities" : [
+        {"id":"ship","frame":2,"logic":"logic_hero"},
+        {"id":"orb","frame":8},
+        {"id":"device","frame":26},
+        {"id":"charge","frame":38},
+        {"id":"shot","frame":5,"logic":"logic_shot"}
+    ],
+    "animations" : [
+        {"id":"rollup","start":2,"end":4,"duration":300,"type":"frame"},
+        {"id":"rolldown","start":2,"end":0,"duration":300,"type":"frame"},
+        {"id":"rollupback","start":4,"end":2,"duration":300,"type":"frame"},
+        {"id":"rolldownback","start":0,"end":2,"duration":300,"type":"frame"},
+        {"id":"orb","start":8,"end":19,"duration":1000,"type":"frame"},
+        {"id":"explosion","start":20,"end":25,"duration":1000,"type":"frame"},
+        {"id":"device_level_1","start":26,"end":31,"duration":1000,"type":"frame"},
+        {"id":"device_level_2","start":32,"end":37,"duration":1000,"type":"frame"},
+        {"id":"charge","start":38,"end":45,"duration":600,"type":"frame","loop":38},
+        {"id":"shot","start":5,"end":7,"duration":200,"type":"frame"},
+        {"id":"lowshot","start":46,"end":47,"duration":200,"type":"frame","loop":46},
+        {"id":"midshot","start":46,"end":49,"duration":400,"type":"frame","loop":48},
+        {"id":"highshot","start":46,"end":51,"duration":500,"type":"frame","loop":50},
+        {"id":"fullshot","start":46,"end":55,"duration":600,"type":"frame","loop":54},
+        {"id":"beam","start":0,"end":100,"duration":2000,"type":"value"}
+    ]
+}

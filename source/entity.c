@@ -17,9 +17,9 @@ static entity_t * charge = NULL;
 static uint8_t templates_size = 0;
 static uint8_t entities_size = 0;
 
-static template_t * template_get(const char * name)
+static entity_template_t * template_get(const char * name)
 {
-    template_t * template = NULL;
+    entity_template_t * template = NULL;
     while (list_next(templates, (void **)&template))
     {
         if (0 == strcmp(template->name, name))
@@ -32,12 +32,9 @@ static template_t * template_get(const char * name)
 
 static entity_t * entity_free(entity_t * entity)
 {
-    animation_info_t * info = (animation_info_t *)entity->data;
-    if (NULL != info)
-    {
-        remove_from_animations(entity);
-        free(info);
-    }
+    remove_from_animations(entity);
+
+    free(entity->data);
 
     sprite_t * sprite = entity->sprite;
     remove_from_rendering(sprite);
@@ -47,33 +44,10 @@ static entity_t * entity_free(entity_t * entity)
     return list_dealloc(entities, entity);
 }
 
-static int configure_animation_info(animation_info_t ** ptr, template_t const * template, entity_t * entity)
+static entity_t * spawn_entity(entity_template_t const * template)
 {
-    animation_info_t * info = *ptr;
-    if (NULL != info)
-    {
-        info->start_frame = template->start_frame;
-        info->nb_frames = template->nb_frames;
-        info->current_frame = template->current_frame;
-
-        entity->data = info;
-        return 1;
-    }
-    return 0;
-}
-
-static entity_t * spawn_entity(template_t const * template)
-{
-    uint8_t start_frame = template->start_frame;
-    uint8_t current_frame = template->current_frame;
     texture_t const * texture = template->texture;
     if (NULL == texture)
-    {
-        return NULL;
-    }
-
-    frame_t const * frame = get_frame(texture, start_frame + current_frame);
-    if (NULL == frame)
     {
         return NULL;
     }
@@ -83,6 +57,8 @@ static entity_t * spawn_entity(template_t const * template)
     {
         return NULL;
     }
+
+    frame_t const * frame = template->frame;
 
     sprite->x = 0;
     sprite->y = 0;
@@ -109,52 +85,9 @@ static entity_t * spawn_entity(template_t const * template)
     return result;
 }
 
-static const char * get_shot_type(int strength)
-{
-    const char * result = "shot";
-
-    if (strength > 90)
-    {
-        result = "fullshot";
-    }
-    else if (strength >= 60)
-    {
-        result = "highshot";
-    }
-    else if (strength >= 40)
-    {
-        result = "midshot";
-    }
-    else if (strength > 10)
-    {
-        result = "lowshot";
-    }
-    return result;
-}
-
-static entity_t * spawn_shot(const char * type)
-{
-    template_t * template = template_get(type);
-    if (NULL != template)
-    {
-        entity_t * result = spawn_entity(template);
-        if (NULL != result)
-        {
-            animation_info_t * info = malloc(sizeof(animation_info_t));
-            if (1 == configure_animation_info(&info, template, result))
-            {
-                add_to_rendering(result->sprite);
-                return result;
-            }
-            entity_free(result);
-        }
-    }
-    return NULL;
-}
-
 static int init_ship_entity()
 {
-    template_t * template = template_get("ship");
+    entity_template_t * template = template_get("ship");
     if (NULL != template)
     {
         entity_t * entity = spawn_entity(template);
@@ -163,12 +96,6 @@ static int init_ship_entity()
             return 1;
         }
 
-        animation_info_t * info = malloc(sizeof(animation_info_t));
-        if (1 != configure_animation_info(&info, template, entity))
-        {
-            entity_free(entity);
-            return 2;
-        }
         add_to_rendering(entity->sprite);
     }
     return 0;
@@ -176,7 +103,7 @@ static int init_ship_entity()
 
 static int init_charge_entity()
 {
-    template_t * template = template_get("charge");
+    entity_template_t * template = template_get("charge");
     if (NULL != template)
     {
         entity_t * entity = spawn_entity(template);
@@ -186,12 +113,14 @@ static int init_charge_entity()
         }
 
         charge_t * info = malloc(sizeof(charge_t));
-        if (1 != configure_animation_info((animation_info_t **)&info, template, entity))
+        if (NULL == info)
         {
             entity_free(entity);
             return 2;
         }
         info->strength = 0;
+        entity->data = info;
+
         charge = entity;
     }
     return 0;
@@ -199,7 +128,7 @@ static int init_charge_entity()
 
 int init_entities()
 {
-    templates = list_new(sizeof(template_t), 1);
+    templates = list_new(sizeof(entity_template_t), 1);
     if (NULL == templates)
     {
         return 1;
@@ -217,26 +146,31 @@ int init_entities()
         return 3;
     }
 
+    if (0 != init_animations())
+    {
+        return 4;
+    }
+
     texture_t * texture = texture_new("base");
     if (NULL == texture)
     {
-        return 4;
+        return 5;
     }
 
     json_wrapper_t * json = json_new("base");
     if (NULL == json)
     {
-        return 5;
+        return 6;
     }
     else if (0 != parse_base(json, texture))
     {
         json_delete(json);
-        return 6;
+        return 7;
     }
     json_delete(json);
 
-    return (0 != init_animations() || 0 != init_ship_entity() || 0 != init_charge_entity())
-        ? 7 : 0;
+    return (0 != init_ship_entity() || 0 != init_charge_entity())
+        ? 8 : 0;
 }
 
 void shutdown_entities()
@@ -253,13 +187,53 @@ void shutdown_entities()
 
     list_delete(&sprites);
 
-    template_t * template = NULL;
+    entity_template_t * template = NULL;
     while (list_next(templates, (void **)&template))
     {
         free(template->name);
     }
     list_delete(&templates);
     templates_size = 0;
+}
+
+entity_template_t * entity_template_new(const char * name, uint8_t current_frame, texture_t const * texture, const char * logic_method)
+{
+    entity_template_t * result = (entity_template_t *)list_alloc(templates);
+    if (NULL == result)
+    {
+        return NULL;
+    }
+
+    frame_t const * frame = get_frame(texture, current_frame);
+    if (NULL == frame)
+    {
+        return NULL;
+    }
+
+    result->name = strdup(name);
+    result->texture = texture;
+    result->frame = frame;
+    result->logic = NULL;
+
+    if (NULL != logic_method)
+    {
+        if (0 == strncmp(logic_method, "logic_hero", 10))
+        {
+            result->logic = logic_hero;
+        }
+        else if (0 == strncmp(logic_method, "logic_shot", 10))
+        {
+            result->logic = logic_shot;
+        }
+        else
+        {
+            printf("Unsupported '%s'\n", logic_method);
+            list_dealloc(templates, result);
+            return NULL;
+        }
+    }
+    ++templates_size;
+    return result;
 }
 
 void entities_logic(rectangle_t const * camera, uint16_t dt)
@@ -296,37 +270,6 @@ void sprites_update(rectangle_t const * camera)
     }
 }
 
-template_t * template_new(const char * name, uint8_t start_frame, uint8_t nb_frames, uint8_t current_frame, texture_t const * texture, const char * logic_method)
-{
-    template_t * result = (template_t *)list_alloc(templates);
-    result->name = strdup(name);
-    result->start_frame = start_frame;
-    result->nb_frames = nb_frames;
-    result->current_frame = current_frame;
-    result->texture = texture;
-    result->logic = NULL;
-
-    if (NULL != logic_method)
-    {
-        if (0 == strncmp(logic_method, "logic_hero", 10))
-        {
-            result->logic = logic_hero;
-        }
-        else if (0 == strncmp(logic_method, "logic_shot", 10))
-        {
-            result->logic = logic_shot;
-        }
-        else
-        {
-            printf("Unsupported '%s'\n", logic_method);
-            list_dealloc(templates, result);
-            return NULL;
-        }
-    }
-    ++templates_size;
-    return result;
-}
-
 entity_t * entity_start_charge()
 {
     add_to_rendering(charge->sprite);
@@ -338,39 +281,29 @@ entity_t * entity_get_charge()
     return charge;
 }
 
-entity_t * entity_stop_charge()
+uint8_t entity_stop_charge()
 {
     remove_from_rendering(charge->sprite);
-
-    charge_t * info = (charge_t *)charge->data;
-    const char * type = get_shot_type(info->strength);
-    entity_t * result = spawn_shot(type);
-
     remove_from_animations(charge);
 
-    // reset for next charge
+    charge_t * info = (charge_t *)charge->data;
+    uint8_t result = info->strength;
     info->strength = 0;
-    entity_update_frame(charge, 0);
+
     return result;
 }
 
-void entity_update_frame(entity_t * entity, uint8_t value)
+entity_t * entity_spawn_shot()
 {
-    animation_info_t * info = (animation_info_t *)entity->data;
-
-    if (value != info->current_frame)
+    entity_template_t * template = template_get("shot");
+    if (NULL != template)
     {
-        sprite_t * sprite = entity->sprite;
-        if (NULL != sprite)
+        entity_t * result = spawn_entity(template);
+        if (NULL != result)
         {
-            frame_t const * frame = get_frame(sprite->texture, info->start_frame + value);
-            if (NULL != frame)
-            {
-                info->current_frame = value;
-                sprite->frame = frame;
-                entity->width = frame->width;
-                entity->height = frame->height;
-            }
+            add_to_rendering(result->sprite);
+            return result;
         }
     }
+    return NULL;
 }
