@@ -2,6 +2,7 @@
 
 #include "animation.h"
 #include "texture.h"
+#include "entity.h"
 #include "list.h"
 #include "structs.h"
 #include "easing.h"
@@ -188,9 +189,7 @@ void frame_step(animation_t * animation, int value)
             if (NULL != frame)
             {
                 sprite->frame = frame;
-
-                entity->width = frame->width;
-                entity->height = frame->height;
+                entity_update_surface(entity, frame->width, frame->height);
             }
         }
     }

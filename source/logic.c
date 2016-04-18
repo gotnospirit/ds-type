@@ -3,12 +3,6 @@
 #include "entity.h"
 #include "animation.h"
 
-#define ALIGN_RIGHT(target, ref) target->x = ref->x + ref->width;
-#define VALIGN_MIDDLE(target, ref) target->y = ref->y + (ref->height - target->height) / 2;
-#define STICK_TO_SHIP_NOSE(target, ref) \
-ALIGN_RIGHT(target, ref) \
-VALIGN_MIDDLE(target, ref)
-
 static void keep_inside(entity_t * entity, rectangle_t const * camera)
 {
     int y = entity->y;
@@ -96,7 +90,7 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
         entity_t * charge = entity_start_charge();
         if (NULL != charge)
         {
-            STICK_TO_SHIP_NOSE(charge, entity)
+            entity_anchor(charge, entity);
             add_animation("charge", charge);
             add_animation("beam", charge);
         }
@@ -106,7 +100,7 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
         entity_t * charge = entity_get_charge();
         if (NULL != charge)
         {
-            STICK_TO_SHIP_NOSE(charge, entity)
+            entity_anchor(charge, entity);
         }
     }
 
@@ -117,7 +111,7 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
         entity_t * shot = entity_spawn_shot();
         if (NULL != shot)
         {
-            STICK_TO_SHIP_NOSE(shot, entity)
+            entity_anchor(shot, entity);
             add_animation(get_shot_animation_type(strength), shot);
         }
     }
@@ -135,7 +129,3 @@ int logic_shot(entity_t * entity, rectangle_t const * camera)
     entity->x += 15;
     return 1;
 }
-
-#undef ALIGN_RIGHT
-#undef VALIGN_MIDDLE
-#undef STICK_TO_SHIP_NOSE

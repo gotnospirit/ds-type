@@ -28,7 +28,7 @@ typedef struct
 typedef struct
 {
     float left, top, right, bottom;
-    int width, height;
+    uint16_t width, height;
 } frame_t;
 
 typedef struct
@@ -80,12 +80,26 @@ typedef struct
     int strength;
 } charge_t;
 
+typedef enum
+{
+    TOP_LEFT,
+    TOP_CENTER,
+    TOP_RIGHT,
+    MIDDLE_LEFT,
+    MIDDLE_CENTER,
+    MIDDLE_RIGHT,
+    BOTTOM_LEFT,
+    BOTTOM_CENTER,
+    BOTTOM_RIGHT
+} anchor_t;
+
 typedef struct
 {
     char * name;
     texture_t const * texture;
     frame_t const * frame;
     logic_t * logic;
+    anchor_t anchor;
 } entity_template_t;
 
 struct Animation
@@ -103,6 +117,7 @@ struct Entity
     sprite_t * sprite;
     logic_t * logic;
     void * data; // charge_t, ...
+    anchor_t anchor;
 };
 
 struct GameState

@@ -64,6 +64,13 @@ static int process_frames(JsonValue const &root, texture_t * spritesheet)
         width = Json::GetNumber(value, "width");
         height = Json::GetNumber(value, "height");
 
+        if (width < 0 || height < 0)
+        {
+            printf("Invalid frame's width/height\n");
+            free(frames);
+            return 2;
+        }
+
         frame_width_ratio = width * texture_width_ratio / texture_width;
         frame_height_ratio = height * texture_height_ratio / texture_height;
 
@@ -255,14 +262,16 @@ static int process_base_entities(JsonValue const &root, texture_t const * textur
 {
     const char * name = NULL;
     const char * logic_method = NULL;
-    int current_frame = 0;
+    int frame = 0;
+    int anchor = 0;
 
     for (auto const &node : root)
     {
         auto const &value = node->value;
 
         name = Json::GetString(value, "id");
-        current_frame = Json::GetNumber(value, "frame");
+        frame = Json::GetNumber(value, "frame");
+        anchor = Json::GetNumber(value, "anchor");
         logic_method = Json::GetString(value, "logic");
 
         if (NULL == name)
@@ -270,18 +279,18 @@ static int process_base_entities(JsonValue const &root, texture_t const * textur
             printf("Missing entity's id\n");
             return 1;
         }
-        else if (current_frame < 0)
+        else if (frame < 0)
         {
             printf("Missing idle frame for %s\n", name);
             return 2;
         }
 
-        if (NULL == get_frame(texture, current_frame))
+        if (NULL == get_frame(texture, frame))
         {
-            printf("Frame %d not found\n", current_frame);
+            printf("Frame %d not found\n", frame);
             return 3;
         }
-        else if (NULL == entity_template_new(name, current_frame, texture, logic_method))
+        else if (NULL == entity_template_new(name, frame, texture, logic_method, anchor))
         {
             printf("Template not created\n");
             return 4;

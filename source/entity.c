@@ -82,6 +82,7 @@ static entity_t * spawn_entity(entity_template_t const * template)
     result->sprite = sprite;
     result->logic = template->logic;
     result->data = NULL;
+    result->anchor = template->anchor;
     return result;
 }
 
@@ -196,7 +197,7 @@ void shutdown_entities()
     templates_size = 0;
 }
 
-entity_template_t * entity_template_new(const char * name, uint8_t current_frame, texture_t const * texture, const char * logic_method)
+entity_template_t * entity_template_new(const char * name, uint8_t current_frame, texture_t const * texture, const char * logic_method, int anchor_value)
 {
     entity_template_t * result = (entity_template_t *)list_alloc(templates);
     if (NULL == result)
@@ -210,10 +211,17 @@ entity_template_t * entity_template_new(const char * name, uint8_t current_frame
         return NULL;
     }
 
+    anchor_t anchor = TOP_LEFT;
+    if (anchor >= 0 && anchor <= 9)
+    {
+        anchor = anchor_value;
+    }
+
     result->name = strdup(name);
     result->texture = texture;
     result->frame = frame;
     result->logic = NULL;
+    result->anchor = anchor;
 
     if (NULL != logic_method)
     {
@@ -306,4 +314,86 @@ entity_t * entity_spawn_shot()
         }
     }
     return NULL;
+}
+
+void entity_update_surface(entity_t * entity, uint16_t new_width, uint16_t new_height)
+{
+    uint16_t old_width = entity->width;
+    uint16_t old_height = entity->height;
+
+    switch (entity->anchor)
+    {
+        case TOP_CENTER:
+            entity->x += (old_width - new_width) / 2;
+            break;
+
+        case TOP_RIGHT:
+            entity->x += (old_width - new_width);
+            break;
+
+        case MIDDLE_LEFT:
+            entity->y += (old_height - new_height) / 2;
+            break;
+
+        case MIDDLE_CENTER:
+            entity->x += (old_width - new_width) / 2;
+            entity->y += (old_height - new_height) / 2;
+            break;
+
+        case MIDDLE_RIGHT:
+            entity->x += (old_width - new_width);
+            entity->y += (old_height - new_height) / 2;
+            break;
+
+        case BOTTOM_LEFT:
+            entity->y += (old_height - new_height);
+            break;
+
+        case BOTTOM_CENTER:
+            entity->x += (old_width - new_width) / 2;
+            entity->y += (old_height - new_height);
+            break;
+
+        case BOTTOM_RIGHT:
+            entity->x += (old_width - new_width);
+            entity->y += (old_height - new_height);
+            break;
+
+        default:
+            break;
+    }
+
+    entity->width = new_width;
+    entity->height = new_height;
+}
+
+void entity_anchor(entity_t * target, entity_t * base)
+{
+    anchor_t anchor = target->anchor;
+
+    if (TOP_LEFT == anchor || TOP_CENTER == anchor || TOP_RIGHT == anchor)
+    {
+        target->y = base->y;
+    }
+    else if (BOTTOM_LEFT == anchor || BOTTOM_CENTER == anchor || BOTTOM_RIGHT == anchor)
+    {
+        target->y = base->y + base->height;
+    }
+    else
+    {
+        target->y = base->y + (base->height - target->height) / 2;
+    }
+
+    if (TOP_LEFT == anchor || MIDDLE_LEFT == anchor || BOTTOM_LEFT == anchor)
+    {
+        target->x = base->x;
+    }
+    else if (TOP_RIGHT == anchor || MIDDLE_RIGHT == anchor || BOTTOM_RIGHT == anchor)
+    {
+        target->x = base->x + base->width;
+    }
+    else
+    {
+        target->x = base->x + (base->width - target->width) / 2;
+    }
 }
