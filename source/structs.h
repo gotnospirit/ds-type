@@ -126,6 +126,7 @@ struct Entity
     void * data; // charge_t, ...
     anchor_t anchor;
     uint8_t velocity;
+    uint8_t newly;
 };
 
 struct GameState

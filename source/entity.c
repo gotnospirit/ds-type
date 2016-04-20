@@ -85,6 +85,7 @@ static entity_t * spawn_entity(entity_template_t const * template)
     result->data = NULL;
     result->anchor = template->anchor;
     result->velocity = template->velocity;
+    result->newly = 1;
     return result;
 }
 
@@ -273,6 +274,12 @@ void entities_logic(rectangle_t const * camera, uint16_t dt)
     entity_t * entity = NULL;
     while (list_next(entities, (void **)&entity))
     {
+        if (entity->newly)
+        {
+            entity->newly = 0;
+            continue;
+        }
+
         logic = entity->logic;
 
         if (NULL != logic && !logic(entity, camera))
