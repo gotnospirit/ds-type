@@ -34,32 +34,9 @@ static void keep_inside(entity_t * entity, rectangle_t const * camera)
     }
 }
 
-static const char * get_shot_animation_type(int strength)
-{
-    const char * result = "shot";
-
-    if (strength > 90)
-    {
-        result = "fullshot";
-    }
-    else if (strength >= 60)
-    {
-        result = "highshot";
-    }
-    else if (strength >= 40)
-    {
-        result = "midshot";
-    }
-    else if (strength > 10)
-    {
-        result = "lowshot";
-    }
-    return result;
-}
-
 int logic_hero(entity_t * entity, rectangle_t const * camera)
 {
-    int const incr = 5;
+    int const incr = entity->velocity;
 
     entity->x += stick_dx() * incr;
     entity->y += stick_dy() * incr;
@@ -106,13 +83,13 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
 
     if (released(KEY_A))
     {
-        uint8_t strength = entity_stop_charge();
+        const char * type = entity_stop_charge();
 
         entity_t * shot = entity_spawn_shot();
         if (NULL != shot)
         {
             entity_anchor(shot, entity, MIDDLE_RIGHT);
-            add_animation(get_shot_animation_type(strength), shot);
+            add_animation(type, shot);
         }
     }
     return 1;
@@ -126,6 +103,6 @@ int logic_shot(entity_t * entity, rectangle_t const * camera)
         return 0;
     }
 
-    entity->x += 10;
+    entity->x += entity->velocity;
     return 1;
 }

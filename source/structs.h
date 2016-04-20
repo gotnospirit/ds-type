@@ -80,6 +80,12 @@ typedef struct
     int strength;
 } charge_t;
 
+typedef struct
+{
+    char * name;
+    uint8_t threshold;
+} shot_t;
+
 typedef enum
 {
     TOP_LEFT,
@@ -100,6 +106,7 @@ typedef struct
     frame_t const * frame;
     logic_t * logic;
     anchor_t anchor;
+    uint8_t velocity;
 } entity_template_t;
 
 struct Animation
@@ -118,6 +125,7 @@ struct Entity
     logic_t * logic;
     void * data; // charge_t, ...
     anchor_t anchor;
+    uint8_t velocity;
 };
 
 struct GameState

@@ -258,12 +258,43 @@ static int process_base_animations(JsonValue const &root)
     return 0;
 }
 
+static int process_base_shots(JsonValue const &root)
+{
+    const char * name = NULL;
+    int threshold = 0;
+
+    for (auto const &node : root)
+    {
+        auto const &value = node->value;
+
+        name = Json::GetString(value, "id");
+        threshold = Json::GetNumber(value, "threshold");
+
+        if (NULL == name)
+        {
+            printf("Missing shot's id\n");
+            return 1;
+        }
+        else if (threshold < 0 || threshold > 100)
+        {
+            printf("Invalid shot's threshold\n");
+            return 2;
+        }
+
+        if (NULL == entity_shot_new(name, threshold))
+        {
+            printf("Shot not created\n");
+            return 3;
+        }
+    }
+    return 0;
+}
+
 static int process_base_entities(JsonValue const &root, texture_t const * texture)
 {
     const char * name = NULL;
     const char * logic_method = NULL;
-    int frame = 0;
-    int anchor = 0;
+    int frame = 0, anchor = 0, velocity = 0;
 
     for (auto const &node : root)
     {
@@ -273,6 +304,7 @@ static int process_base_entities(JsonValue const &root, texture_t const * textur
         frame = Json::GetNumber(value, "frame");
         anchor = Json::GetNumber(value, "anchor");
         logic_method = Json::GetString(value, "logic");
+        velocity = Json::GetNumber(value, "velocity");
 
         if (NULL == name)
         {
@@ -284,16 +316,36 @@ static int process_base_entities(JsonValue const &root, texture_t const * textur
             printf("Missing idle frame for %s\n", name);
             return 2;
         }
+        else if (anchor >= 9)
+        {
+            printf("Invalid anchor value for %s (max 8)\n", name);
+            return 3;
+        }
+        else if (velocity > 255)
+        {
+            printf("Invalid velocity value for %s (max 255)\n", name);
+            return 4;
+        }
+
+        if (anchor < 0)
+        {
+            anchor = 0;
+        }
+
+        if (velocity < 0)
+        {
+            velocity = 0;
+        }
 
         if (NULL == get_frame(texture, frame))
         {
             printf("Frame %d not found\n", frame);
-            return 3;
+            return 5;
         }
-        else if (NULL == entity_template_new(name, frame, texture, logic_method, anchor))
+        else if (NULL == entity_template_new(name, frame, texture, logic_method, (anchor_t)anchor, velocity))
         {
             printf("Template not created\n");
-            return 4;
+            return 6;
         }
     }
     return 0;
@@ -331,6 +383,7 @@ int parse_base(json_wrapper_t * o, texture_t * spritesheet)
     JsonNode const * frames_node = NULL;
     JsonNode const * entities_node = NULL;
     JsonNode const * animations_node = NULL;
+    JsonNode const * shots_node = NULL;
 
     const char * key = 0;
 
@@ -350,6 +403,10 @@ int parse_base(json_wrapper_t * o, texture_t * spritesheet)
         {
             animations_node = node;
         }
+        else if (0 == strncmp(key, "shots", 5))
+        {
+            shots_node = node;
+        }
     }
 
     if (NULL == frames_node)
@@ -367,18 +424,27 @@ int parse_base(json_wrapper_t * o, texture_t * spritesheet)
         printf("No animation defined\n");
         return 3;
     }
+    else if (NULL == shots_node)
+    {
+        printf("No shot defined\n");
+        return 4;
+    }
 
     if (0 != process_frames(frames_node->value, spritesheet))
     {
-        return 4;
+        return 5;
     }
     else if (0 != process_base_entities(entities_node->value, spritesheet))
     {
-        return 5;
+        return 6;
     }
     else if (0 != process_base_animations(animations_node->value))
     {
-        return 6;
+        return 7;
+    }
+    else if (0 != process_base_shots(shots_node->value))
+    {
+        return 8;
     }
     return 0;
 }

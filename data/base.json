@@ -10,11 +10,17 @@
         {"x":0,"y":138,"width":16,"height":16},{"x":16,"y":138,"width":16,"height":16},{"x":32,"y":138,"width":32,"height":16},{"x":64,"y":138,"width":32,"height":16},{"x":96,"y":138,"width":48,"height":16},{"x":144,"y":138,"width":48,"height":16},{"x":192,"y":138,"width":64,"height":16},{"x":0,"y":154,"width":64,"height":16},{"x":64,"y":154,"width":80,"height":16},{"x":144,"y":154,"width":80,"height":16}
     ],
     "entities" : [
-        {"id":"ship","frame":2,"logic":"logic_hero"},
+        {"id":"ship","frame":2,"logic":"logic_hero","velocity":5},
         {"id":"orb","frame":8},
         {"id":"device","frame":26},
         {"id":"charge","frame":38,"anchor":3},
-        {"id":"shot","frame":5,"logic":"logic_shot","anchor":5}
+        {"id":"shot","frame":5,"logic":"logic_shot","anchor":5,"velocity":10}
+    ],
+    "shots" : [
+        {"id":"fullshot","threshold":90},
+        {"id":"highshot","threshold":59},
+        {"id":"midshot","threshold":39},
+        {"id":"lowshot","threshold":10}
     ],
     "animations" : [
         {"id":"rollup","start":2,"end":4,"duration":300,"type":"frame"},
