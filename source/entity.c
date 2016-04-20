@@ -367,10 +367,8 @@ void entity_update_surface(entity_t * entity, uint16_t new_width, uint16_t new_h
     entity->height = new_height;
 }
 
-void entity_anchor(entity_t * target, entity_t * base)
+void entity_anchor(entity_t * target, entity_t * base, anchor_t anchor)
 {
-    anchor_t anchor = target->anchor;
-
     if (TOP_LEFT == anchor || TOP_CENTER == anchor || TOP_RIGHT == anchor)
     {
         target->y = base->y;

@@ -90,7 +90,7 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
         entity_t * charge = entity_start_charge();
         if (NULL != charge)
         {
-            entity_anchor(charge, entity);
+            entity_anchor(charge, entity, MIDDLE_RIGHT);
             add_animation("charge", charge);
             add_animation("beam", charge);
         }
@@ -100,7 +100,7 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
         entity_t * charge = entity_get_charge();
         if (NULL != charge)
         {
-            entity_anchor(charge, entity);
+            entity_anchor(charge, entity, MIDDLE_RIGHT);
         }
     }
 
@@ -111,7 +111,7 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
         entity_t * shot = entity_spawn_shot();
         if (NULL != shot)
         {
-            entity_anchor(shot, entity);
+            entity_anchor(shot, entity, MIDDLE_RIGHT);
             add_animation(get_shot_animation_type(strength), shot);
         }
     }
@@ -126,6 +126,6 @@ int logic_shot(entity_t * entity, rectangle_t const * camera)
         return 0;
     }
 
-    entity->x += 15;
+    entity->x += 10;
     return 1;
 }

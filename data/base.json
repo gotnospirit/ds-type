@@ -13,7 +13,7 @@
         {"id":"ship","frame":2,"logic":"logic_hero"},
         {"id":"orb","frame":8},
         {"id":"device","frame":26},
-        {"id":"charge","frame":38,"anchor":5},
+        {"id":"charge","frame":38,"anchor":3},
         {"id":"shot","frame":5,"logic":"logic_shot","anchor":5}
     ],
     "animations" : [

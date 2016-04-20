@@ -20,6 +20,6 @@ uint8_t entity_stop_charge();
 entity_t * entity_spawn_shot();
 
 void entity_update_surface(entity_t *, uint16_t, uint16_t);
-void entity_anchor(entity_t *, entity_t *);
+void entity_anchor(entity_t *, entity_t *, anchor_t);
 
 #endif
