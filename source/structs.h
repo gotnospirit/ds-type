@@ -8,6 +8,11 @@
 
 typedef struct
 {
+    int x, y;
+} point_t;
+
+typedef struct
+{
     int top, left, right, bottom;
 } rectangle_t;
 
@@ -83,11 +88,19 @@ typedef struct
 
 typedef struct
 {
+    point_t * points;
+    uint8_t nb_points;
+    anchor_t anchor;
+} hitbox_t;
+
+typedef struct
+{
     rectangle_t camera;
     int incr;
     uint16_t max_camera_left;
     texture_t const * texture;
     list_t * tiles;
+    list_t * hitboxes;
 } level_t;
 
 typedef struct

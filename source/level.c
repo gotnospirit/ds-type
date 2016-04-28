@@ -72,6 +72,7 @@ level_t * level_new(const char * name)
     level->max_camera_left = 0;
     level->texture = texture;
     level->tiles = list_new(sizeof(tile_t), 1);
+    level->hitboxes = list_new(sizeof(hitbox_t), 1);
 
     json_wrapper_t * json = json_new(name);
     if (NULL == json || 0 != parse_level(json, level, texture))
@@ -96,6 +97,13 @@ void level_delete(level_t * level)
         free(tile->sprite);
     }
     list_delete(&level->tiles);
+
+    hitbox_t * hitbox = NULL;
+    while (list_next(level->hitboxes, (void **)&hitbox))
+    {
+        free(hitbox->points);
+    }
+    list_delete(&level->hitboxes);
 
     texture_delete(&level->texture);
 

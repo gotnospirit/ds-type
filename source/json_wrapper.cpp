@@ -216,6 +216,71 @@ static int process_level_tiles(JsonValue const &root, list_t * container, JsonVa
     return 0;
 }
 
+static int process_level_hitbox(const char * type, JsonValue const &root, hitbox_t * hitbox)
+{
+    int nb_points = Json::Size(root);
+
+    if (!nb_points)
+    {
+        return 0;
+    }
+    else if (0 != (nb_points % 2))
+    {
+        printf("Invalid hitbox\n");
+        return 1;
+    }
+
+    nb_points /= 2;
+
+    point_t * points = (point_t *)malloc(sizeof(point_t) * nb_points);
+    if (NULL == points)
+    {
+        printf("Failed to alloc points\n");
+        return 2;
+    }
+
+    int i = 0;
+    point_t * point = NULL;
+
+    for (auto const &node : root)
+    {
+        if (0 == i % 2)
+        {
+            point = &points[i / 2];
+
+            point->x = node->value.toNumber();
+        }
+        else
+        {
+            point->y = node->value.toNumber();
+        }
+        ++i;
+    }
+    return 0;
+}
+
+static int process_level_hitboxes(JsonValue const &root, list_t * container)
+{
+    for (auto const &node : root)
+    {
+        for (auto const &descr : node->value)
+        {
+            hitbox_t * hitbox = (hitbox_t *)list_alloc(container);
+            if (NULL == hitbox)
+            {
+                printf("failed to alloc new hitbox\n");
+                return 1;
+            }
+
+            if (0 != process_level_hitbox(node->key, descr->value, hitbox))
+            {
+                return 2;
+            }
+        }
+    }
+    return 0;
+}
+
 static int process_base_animations(JsonValue const &root)
 {
     const char * name = NULL;
@@ -456,6 +521,7 @@ int parse_level(json_wrapper_t * o, level_t * level, texture_t * spritesheet)
 
     JsonNode const * frames_node = NULL;
     JsonNode const * tiles_node = NULL;
+    JsonNode const * hitboxes_node = NULL;
 
     const char * key = 0;
 
@@ -470,6 +536,10 @@ int parse_level(json_wrapper_t * o, level_t * level, texture_t * spritesheet)
         else if (0 == strncmp(key, "tiles", 5))
         {
             tiles_node = node;
+        }
+        else if (0 == strncmp(key, "hitboxes", 8))
+        {
+            hitboxes_node = node;
         }
         else if (0 == strncmp(key, "stop_scroll_at", 14))
         {
@@ -495,6 +565,10 @@ int parse_level(json_wrapper_t * o, level_t * level, texture_t * spritesheet)
     else if (0 != process_level_tiles(tiles_node->value, level->tiles, frames_node->value, spritesheet))
     {
         return 4;
+    }
+    else if (0 != process_level_hitboxes(hitboxes_node->value, level->hitboxes))
+    {
+        return 5;
     }
     return 0;
 }
