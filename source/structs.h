@@ -11,6 +11,21 @@ typedef struct
     int top, left, right, bottom;
 } rectangle_t;
 
+typedef enum
+{
+    TOP_LEFT,
+    TOP_CENTER,
+    TOP_RIGHT,
+    MIDDLE_LEFT,
+    MIDDLE_CENTER,
+    MIDDLE_RIGHT,
+    BOTTOM_LEFT,
+    BOTTOM_CENTER,
+    BOTTOM_RIGHT,
+    TOP,
+    BOTTOM
+} anchor_t;
+
 typedef struct Entity entity_t;
 typedef int logic_t(entity_t *, rectangle_t const *);
 
@@ -62,6 +77,7 @@ typedef struct
     int x;
     uint16_t width, height;
     uint8_t visible;
+    anchor_t anchor;
     sprite_t * sprite;
 } tile_t;
 
@@ -71,8 +87,7 @@ typedef struct
     int incr;
     uint16_t max_camera_left;
     texture_t const * texture;
-    list_t * top_tiles;
-    list_t * bottom_tiles;
+    list_t * tiles;
 } level_t;
 
 typedef struct
@@ -85,19 +100,6 @@ typedef struct
     char * name;
     uint8_t threshold;
 } shot_t;
-
-typedef enum
-{
-    TOP_LEFT,
-    TOP_CENTER,
-    TOP_RIGHT,
-    MIDDLE_LEFT,
-    MIDDLE_CENTER,
-    MIDDLE_RIGHT,
-    BOTTOM_LEFT,
-    BOTTOM_CENTER,
-    BOTTOM_RIGHT
-} anchor_t;
 
 typedef struct
 {

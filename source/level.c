@@ -37,27 +37,13 @@ static void update_level_tiles(list_t * container, uint16_t camera_left, uint16_
         else
         {
             sprite->x = x - camera_left;
-            sprite->y = !offset_y ? 0 : offset_y - tile->height;
+            sprite->y = (TOP == tile->anchor)
+                ? 0 : offset_y - tile->height;
 
             add_to_rendering(sprite);
             tile->visible = 1;
         }
     }
-}
-
-static void clear_level_tiles(list_t ** list)
-{
-    list_t * container = *list;
-    tile_t * tile = NULL;
-    while (list_next(container, (void **)&tile))
-    {
-        if (tile->visible)
-        {
-            remove_from_rendering(tile->sprite);
-        }
-        free(tile->sprite);
-    }
-    list_delete(list);
 }
 
 level_t * level_new(const char * name)
@@ -85,8 +71,7 @@ level_t * level_new(const char * name)
     level->incr = 1;
     level->max_camera_left = 0;
     level->texture = texture;
-    level->top_tiles = list_new(sizeof(tile_t), 1);
-    level->bottom_tiles = list_new(sizeof(tile_t), 1);
+    level->tiles = list_new(sizeof(tile_t), 1);
 
     json_wrapper_t * json = json_new(name);
     if (NULL == json || 0 != parse_level(json, level, texture))
@@ -101,8 +86,16 @@ level_t * level_new(const char * name)
 
 void level_delete(level_t * level)
 {
-    clear_level_tiles(&level->top_tiles);
-    clear_level_tiles(&level->bottom_tiles);
+    tile_t * tile = NULL;
+    while (list_next(level->tiles, (void **)&tile))
+    {
+        if (tile->visible)
+        {
+            remove_from_rendering(tile->sprite);
+        }
+        free(tile->sprite);
+    }
+    list_delete(&level->tiles);
 
     texture_delete(&level->texture);
 
@@ -155,8 +148,7 @@ void level_logic(level_t * level, surface_t const * screen, uint16_t dt)
     level->camera.top = 0;
     level->camera.bottom = camera_bottom;
 
-    update_level_tiles(level->top_tiles, camera_left, camera_right, 0);
-    update_level_tiles(level->bottom_tiles, camera_left, camera_right, camera_bottom);
+    update_level_tiles(level->tiles, camera_left, camera_right, camera_bottom);
 
     printf("\x1b[0;0Hcamera: %5d %5d %5d %5d", level->camera.top, level->camera.right, level->camera.bottom, level->camera.left);
     printf("\x1b[1;0Hincr: %3d, scroll end: %5d", level->incr, max_camera_left);

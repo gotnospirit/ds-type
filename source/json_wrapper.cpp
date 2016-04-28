@@ -119,7 +119,7 @@ static int get_frame_index(JsonValue const &root, JsonNode const * target)
     return -1;
 }
 
-static int create_tile(const char * name, int x, bool flip_x, bool flip_y, list_t * container, JsonValue const &frames_node, texture_t const * texture)
+static int create_tile(const char * name, int x, bool is_top_tile, bool flip_y, list_t * container, JsonValue const &frames_node, texture_t const * texture)
 {
     auto const &frame_node = get_frame_node(frames_node, name);
     if (NULL == frame_node)
@@ -155,7 +155,7 @@ static int create_tile(const char * name, int x, bool flip_x, bool flip_y, list_
     sprite->y = 0;
     sprite->texture = texture;
     sprite->frame = frame;
-    sprite->flip_x = flip_x ? 1 : 0;
+    sprite->flip_x = is_top_tile ? 1 : 0;
     sprite->flip_y = flip_y ? 1 : 0;
 
     tile_t * tile = (tile_t *)list_alloc(container);
@@ -169,11 +169,12 @@ static int create_tile(const char * name, int x, bool flip_x, bool flip_y, list_
     tile->width = width;
     tile->height = height;
     tile->visible = 0;
+    tile->anchor = is_top_tile ? TOP : BOTTOM;
     tile->sprite = sprite;
     return 0;
 }
 
-static int process_level_tiles(JsonValue const &root, level_t * level, JsonValue const &frames_node, texture_t const * texture)
+static int process_level_tiles(JsonValue const &root, list_t * container, JsonValue const &frames_node, texture_t const * texture)
 {
     int x = -1;
     const char * top_name = NULL;
@@ -200,13 +201,13 @@ static int process_level_tiles(JsonValue const &root, level_t * level, JsonValue
             return 2;
         }
 
-        if (NULL != top_name && 0 != create_tile(top_name, x, true, flip_y, level->top_tiles, frames_node, texture))
+        if (NULL != top_name && 0 != create_tile(top_name, x, true, flip_y, container, frames_node, texture))
         {
             printf("'%s' failed\n", top_name);
             return 3;
         }
 
-        if (NULL != bottom_name && 0 != create_tile(bottom_name, x, false, flip_y, level->bottom_tiles, frames_node, texture))
+        if (NULL != bottom_name && 0 != create_tile(bottom_name, x, false, flip_y, container, frames_node, texture))
         {
             printf("'%s' failed\n", bottom_name);
             return 4;
@@ -491,7 +492,7 @@ int parse_level(json_wrapper_t * o, level_t * level, texture_t * spritesheet)
     {
         return 3;
     }
-    else if (0 != process_level_tiles(tiles_node->value, level, frames_node->value, spritesheet))
+    else if (0 != process_level_tiles(tiles_node->value, level->tiles, frames_node->value, spritesheet))
     {
         return 4;
     }
