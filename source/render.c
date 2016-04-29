@@ -34,7 +34,7 @@ static C3D_RenderTarget * top_right;
 static list_t * render_pipe = NULL;
 static uint8_t render_pipe_size = 0;
 
-static void draw_quad(float x1, float y1, float x2, float y2, float tx1, float ty1, float tx2, float ty2, uint8_t flip_x, uint8_t flip_y)
+static void draw_frame(float x1, float y1, float x2, float y2, float tx1, float ty1, float tx2, float ty2, uint8_t flip_x, uint8_t flip_y)
 {
     C3D_ImmDrawBegin(GPU_TRIANGLE_STRIP);
 
@@ -117,7 +117,7 @@ static void render_sprite(sprite_t const * sprite, texture_t const ** gpu_textur
             float right = left + frame->width;
             float bottom = top + frame->height;
 
-            draw_quad(
+            draw_frame(
                 left, top, right, bottom,
                 frame->left, frame->top, frame->right, frame->bottom,
                 sprite->flip_x, sprite->flip_y
@@ -170,18 +170,16 @@ int init_rendering(surface_t * screen)
     C3D_AttrInfo * attrInfo = C3D_GetAttrInfo();
     AttrInfo_Init(attrInfo);
     AttrInfo_AddLoader(attrInfo, 0, GPU_FLOAT, 3); // v0=position
-    AttrInfo_AddLoader(attrInfo, 1, GPU_FLOAT, 2); // v2=texcoord
+    AttrInfo_AddLoader(attrInfo, 1, GPU_FLOAT, 4); // v1=texcoord (w=0) or color (w!=0)
 
     // Compute the projection matrix
     // Note: we're setting top to 240 here so origin is at top left.
     Mtx_OrthoTilt(&projection, 0.0, (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT, 0.0, 0.0, 1.0);
 
-    // Configure the first fragment shading substage to just pass through the texture color
-    // See https://www.opengl.org/sdk/docs/man2/xhtml/glTexEnv.xml for more insight
     C3D_TexEnv * env = C3D_GetTexEnv(0);
-    C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, 0, 0);
+    C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_PRIMARY_COLOR, 0);
     C3D_TexEnvOp(env, C3D_Both, 0, 0, 0);
-    C3D_TexEnvFunc(env, C3D_Both, GPU_REPLACE);
+    C3D_TexEnvFunc(env, C3D_Both, GPU_ADD);
 
     // Configure depth test to overwrite pixels with the same depth (needed to draw overlapping sprites)
     C3D_DepthTest(true, GPU_GEQUAL, GPU_WRITE_ALL);
