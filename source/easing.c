@@ -11,3 +11,9 @@ float linear_ease_in(int t, int d)
     }
     return result;
 }
+
+float short_ease_in(int t, int d)
+{
+    return (t > (d / 2))
+        ? 0.0f : 1.0f;
+}

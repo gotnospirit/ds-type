@@ -44,14 +44,12 @@ static animation_t * find_roll(entity_t * entity)
 
 static int process_animation(animation_t * animation, uint16_t dt)
 {
-    int new_value = 0;
     uint16_t elapsed = animation->elapsed;
     animation_template_t const * template = animation->tpl;
     uint16_t duration = animation->duration;
     int start_at = animation->start;
     int end_at = template->end;
     int loop_at = template->loop;
-    int diff = end_at - start_at;
 
     elapsed += dt;
 
@@ -60,18 +58,10 @@ static int process_animation(animation_t * animation, uint16_t dt)
         elapsed = duration;
     }
 
-    if (1 == diff)
-    {
-        new_value = (elapsed > (duration / 2))
-            ? start_at : end_at;
-    }
-    else
-    {
-        float progress = linear_ease_in(elapsed, duration);
-        new_value = (start_at < end_at)
-            ? start_at + progress * (end_at - start_at)
-            : end_at + (1 - progress) * (start_at - end_at);
-    }
+    float progress = animation->ease(elapsed, duration);
+    int new_value = (start_at < end_at)
+        ? start_at + progress * (end_at - start_at)
+        : end_at + (1 - progress) * (start_at - end_at);
 
     template->update(animation, new_value);
 
@@ -85,7 +75,11 @@ static int process_animation(animation_t * animation, uint16_t dt)
     {
         animation->start = loop_at;
         animation->elapsed = 0;
-        // animation->duration = template->duration / (end_at - template->start + 1) * (end_at - loop_at);
+
+        if (1 == end_at - loop_at)
+        {
+            animation->ease = short_ease_in;
+        }
         return 1;
     }
     return 0;
@@ -247,4 +241,5 @@ void add_animation(const char * type, entity_t * entity)
     animation->duration = template->duration;
     animation->entity = entity;
     animation->tpl = template;
+    animation->ease = linear_ease_in;
 }

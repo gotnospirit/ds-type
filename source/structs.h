@@ -40,6 +40,8 @@ typedef void animation_step_t(animation_t *, int);
 typedef struct GameState game_state_t;
 typedef void game_state_processor_t(game_state_t *);
 
+typedef float easing_t(int, int);
+
 typedef struct
 {
     uint16_t width, height;
@@ -130,6 +132,7 @@ struct Animation
     uint16_t elapsed, duration;
     entity_t * entity;
     animation_template_t const * tpl;
+    easing_t * ease;
 };
 
 struct Entity
