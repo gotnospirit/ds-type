@@ -218,19 +218,19 @@ static int process_level_tiles(JsonValue const &root, list_t * container, JsonVa
 
 static int process_level_hitbox(const char * type, JsonValue const &root, hitbox_t * hitbox)
 {
-    int nb_points = Json::Size(root);
+    int nb_coords = Json::Size(root);
 
-    if (!nb_points)
+    if (!nb_coords)
     {
         return 0;
     }
-    else if (0 != (nb_points % 2))
+    else if (0 != (nb_coords % 2))
     {
         printf("Invalid hitbox\n");
         return 1;
     }
 
-    nb_points /= 2;
+    int nb_points = nb_coords / 2;
 
     point_t * points = (point_t *)malloc(sizeof(point_t) * nb_points);
     if (NULL == points)
@@ -238,6 +238,10 @@ static int process_level_hitbox(const char * type, JsonValue const &root, hitbox
         printf("Failed to alloc points\n");
         return 2;
     }
+
+    hitbox->points = points;
+    hitbox->nb_points = nb_points;
+    hitbox->anchor = 0 == strncmp(type, "top", 3) ? TOP : BOTTOM;
 
     int i = 0;
     point_t * point = NULL;
