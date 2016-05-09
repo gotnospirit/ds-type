@@ -25,7 +25,7 @@
         {"x":2176,"top":"tile_1","bottom":"tile_1"},{"x":2240,"top":"tile_6","bottom":"tile_6"},{"x":2304,"top":"tile_1","bottom":"tile_1","flip_y":true},
         {"x":2368,"top":"tile_4","bottom":"tile_4"},{"x":2432,"top":"tile_5","bottom":"tile_6"},{"x":2496,"top":"tile_2","bottom":"tile_3"},
         {"x":2560,"top":"tile_4","bottom":"tile_5"},{"x":2624,"top":"tile_5","bottom":"tile_6"},{"x":2688,"top":"tile_6","bottom":"tile_5"},
-        {"x":2752,"bottom":"tile_3"},{"x":2816,"top":"tile_2","bottom":"tile_3"},{"x":2880,"top":"tile_5","bottom":"tile_5"},
+        {"x":2752,"bottom":"tile_2"},{"x":2816,"top":"tile_3","bottom":"tile_3"},{"x":2880,"top":"tile_5","bottom":"tile_5"},
         {"x":2944,"top":"tile_8","bottom":"tile_8"},{"x":3136,"top":"tile_5","bottom":"tile_5"},{"x":3200,"top":"tile_5","bottom":"tile_5"},
         {"x":3264,"top":"tile_2","bottom":"tile_2"},{"x":3328,"top":"tile_4","bottom":"tile_4"},{"x":3392,"top":"tile_6","bottom":"tile_5"},
         {"x":3456,"top":"tile_4","bottom":"tile_4"},{"x":3520,"top":"tile_5","bottom":"tile_5"},{"x":3584,"top":"tile_2","bottom":"tile_2"},
