@@ -37,7 +37,7 @@ static uint8_t render_pipe_size = 0;
 static list_t * debug_pipe = NULL;
 static uint8_t debug_pipe_size = 0;
 
-static void draw_hitbox(hitbox_t * hitbox)
+static void draw_hitbox(hitbox_t const * hitbox)
 {
     float r = 42 / 255.0f;
     float g = 230 / 255.0f;
@@ -52,8 +52,6 @@ static void draw_hitbox(hitbox_t * hitbox)
     }
 
     C3D_ImmDrawEnd();
-
-    free(hitbox->points);
 }
 
 static void draw_frame(float x1, float y1, float x2, float y2, float tx1, float ty1, float tx2, float ty2, uint8_t flip_x, uint8_t flip_y)
@@ -271,6 +269,8 @@ void process_rendering()
     while (list_next(debug_pipe, (void **)&hitbox))
     {
         draw_hitbox(hitbox);
+
+        free(hitbox->points);
         hitbox = list_dealloc(debug_pipe, hitbox);
         --debug_pipe_size;
     }
