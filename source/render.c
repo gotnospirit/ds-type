@@ -34,6 +34,28 @@ static C3D_RenderTarget * top_right;
 static list_t * render_pipe = NULL;
 static uint8_t render_pipe_size = 0;
 
+static list_t * debug_pipe = NULL;
+static uint8_t debug_pipe_size = 0;
+
+static void draw_hitbox(hitbox_t * hitbox)
+{
+    float r = 42 / 255.0f;
+    float g = 230 / 255.0f;
+    float b = 25 / 255.0f;
+
+    C3D_ImmDrawBegin(GPU_TRIANGLE_STRIP);
+
+    for (int i = 0; i < hitbox->nb_points; ++i)
+    {
+        C3D_ImmSendAttrib(hitbox->points[i].x, hitbox->points[i].y, 0.5f, 0.0f);
+        C3D_ImmSendAttrib(r, g, b, 1.0f);
+    }
+
+    C3D_ImmDrawEnd();
+
+    free(hitbox->points);
+}
+
 static void draw_frame(float x1, float y1, float x2, float y2, float tx1, float ty1, float tx2, float ty2, uint8_t flip_x, uint8_t flip_y)
 {
     C3D_ImmDrawBegin(GPU_TRIANGLE_STRIP);
@@ -146,6 +168,12 @@ int init_rendering(surface_t * screen)
         return 2;
     }
 
+    debug_pipe = list_new(sizeof(hitbox_t), 1);
+    if (NULL == debug_pipe)
+    {
+        return 3;
+    }
+
     // Initialize the render target
     top_left = C3D_RenderTargetCreate(SCREEN_HEIGHT, SCREEN_WIDTH, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
     C3D_RenderTargetSetClear(top_left, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
@@ -206,6 +234,7 @@ void shutdown_rendering()
     shutdown_textures();
 
     list_delete(&render_pipe);
+    list_delete(&debug_pipe);
 
     // Deinitialize graphics
     C3D_Fini();
@@ -216,6 +245,7 @@ void process_rendering()
 {
     texture_t const * gpu_texture = NULL;
     sprite_t const ** sprite = NULL;
+    hitbox_t * hitbox = NULL;
     float iod = osGet3DSliderState() * 15;
 
     // Render the scene
@@ -226,15 +256,23 @@ void process_rendering()
         iod = 0;
     }
 
-    printf("\x1b[4;0Hrender: %4d", render_pipe_size);
+    printf("\x1b[4;0Hrender: %4d, %4d", render_pipe_size, debug_pipe_size);
 
     int i = 6;
     C3D_FrameDrawOn(top_left);
+
     while (list_next(render_pipe, (void **)&sprite))
     {
         render_sprite(*sprite, &gpu_texture, -iod);
         printf("\x1b[%d;0H* %p at %4d %4d", i, *sprite, (*sprite)->x, (*sprite)->y);
         ++i;
+    }
+
+    while (list_next(debug_pipe, (void **)&hitbox))
+    {
+        draw_hitbox(hitbox);
+        hitbox = list_dealloc(debug_pipe, hitbox);
+        --debug_pipe_size;
     }
 
     for (; i < 28; ++i)
@@ -301,4 +339,86 @@ int remove_from_rendering(sprite_t * sprite)
         }
     }
     return 0;
+}
+
+void debug_hitboxes(list_t const * hitboxes, rectangle_t const * camera)
+{
+    int i = 0, x = 0, y = 0;
+    uint8_t visible = 0, max = 0;
+    uint16_t camera_left = camera->left, camera_right = camera->right, camera_bottom = camera->bottom;
+    uint16_t min_x = camera_right, max_x = 0;
+
+    hitbox_t * hitbox = NULL;
+
+    while (list_next(hitboxes, (void **)&hitbox))
+    {
+        visible = 0;
+        max = hitbox->nb_points;
+        min_x = camera_right;
+        max_x = 0;
+
+        for (i = 0; i < max; ++i)
+        {
+            x = hitbox->points[i].x;
+
+            if (x < min_x)
+            {
+                min_x = x;
+            }
+
+            if (x > max_x)
+            {
+                max_x = x;
+            }
+
+            if (x >= camera_left && x < camera_right)
+            {
+                ++visible;
+                break;
+            }
+        }
+
+        if (!visible && (camera_left < min_x || camera_right > max_x))
+        {
+            continue;
+        }
+
+        point_t * points = (point_t *)malloc(sizeof(point_t) * max);
+        if (NULL != points)
+        {
+            hitbox_t * copy = (hitbox_t *)list_alloc(debug_pipe);
+            if (NULL != copy)
+            {
+                for (i = 0; i < max; ++i)
+                {
+                    x = hitbox->points[i].x;
+                    y = hitbox->points[i].y;
+
+                    if (x >= camera_right)
+                    {
+                        x = camera_right - 1;
+                    }
+                    else if (x < camera_left)
+                    {
+                        x = camera_left;
+                    }
+
+                    x -= camera_left;
+
+                    if (BOTTOM == hitbox->anchor)
+                    {
+                        y = camera_bottom - y;
+                    }
+
+                    points[i].x = x;
+                    points[i].y = y;
+                }
+
+                copy->points = points;
+                copy->nb_points = max;
+                copy->anchor = hitbox->anchor;
+                ++debug_pipe_size;
+            }
+        }
+    }
 }

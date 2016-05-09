@@ -10,8 +10,12 @@
 #include "render.h"
 #include "texture.h"
 
-static void update_level_tiles(list_t * container, uint16_t camera_left, uint16_t camera_right, uint16_t offset_y)
+static uint8_t show_hitbox_debug = 0;
+
+static void update_level_tiles(list_t * container, rectangle_t const * camera)
 {
+    uint16_t camera_left = camera->left, camera_right = camera->right, offset_y = camera->bottom;
+
     tile_t * tile = NULL;
     sprite_t * sprite = NULL;
     int x = 0;
@@ -138,6 +142,11 @@ void level_logic(level_t * level, surface_t const * screen, uint16_t dt)
         }
     }
 
+    if (pressed(KEY_SELECT))
+    {
+        show_hitbox_debug = show_hitbox_debug ? 0 : 1;
+    }
+
     int32_t camera_left = level->camera.left + incr;
     uint16_t max_camera_left = level->max_camera_left;
     if (camera_left < 0)
@@ -156,7 +165,12 @@ void level_logic(level_t * level, surface_t const * screen, uint16_t dt)
     level->camera.top = 0;
     level->camera.bottom = camera_bottom;
 
-    update_level_tiles(level->tiles, camera_left, camera_right, camera_bottom);
+    update_level_tiles(level->tiles, &level->camera);
+
+    if (show_hitbox_debug)
+    {
+        debug_hitboxes(level->hitboxes, &level->camera);
+    }
 
     printf("\x1b[0;0Hcamera: %5d %5d %5d %5d", level->camera.top, level->camera.right, level->camera.bottom, level->camera.left);
     printf("\x1b[1;0Hincr: %3d, scroll end: %5d", level->incr, max_camera_left);

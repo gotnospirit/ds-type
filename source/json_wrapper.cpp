@@ -231,12 +231,17 @@ static int process_level_hitbox(const char * type, JsonValue const &root, hitbox
     }
 
     int nb_points = nb_coords / 2;
+    if (nb_points < 3)
+    {
+        printf("Invalid hitbox\n");
+        return 2;
+    }
 
     point_t * points = (point_t *)malloc(sizeof(point_t) * nb_points);
     if (NULL == points)
     {
         printf("Failed to alloc points\n");
-        return 2;
+        return 3;
     }
 
     hitbox->points = points;
