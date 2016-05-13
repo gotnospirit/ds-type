@@ -244,6 +244,7 @@ static int process_level_hitbox(const char * type, JsonValue const &root, hitbox
         return 3;
     }
 
+    hitbox->type = 4 == nb_points ? RECTANGLE : POLYGON;
     hitbox->points = points;
     hitbox->nb_points = nb_points;
     hitbox->anchor = 0 == strncmp(type, "top", 3) ? TOP : BOTTOM;

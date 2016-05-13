@@ -31,6 +31,13 @@ typedef enum
     BOTTOM
 } anchor_t;
 
+typedef enum
+{
+    RECTANGLE,
+    POLYGON,
+    CIRCLE
+} hitbox_type_t;
+
 typedef struct Entity entity_t;
 typedef int logic_t(entity_t *, rectangle_t const *);
 
@@ -90,6 +97,7 @@ typedef struct
 
 typedef struct
 {
+    hitbox_type_t type;
     point_t * points;
     uint8_t nb_points;
     anchor_t anchor;
