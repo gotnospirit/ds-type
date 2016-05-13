@@ -35,6 +35,7 @@ static entity_t * entity_free(entity_t * entity)
 {
     remove_from_animations(entity);
 
+    entity->type = NULL;
     free(entity->data);
 
     sprite_t * sprite = entity->sprite;
@@ -76,6 +77,7 @@ static entity_t * spawn_entity(entity_template_t const * template)
     }
     ++entities_size;
 
+    result->type = template->name;
     result->x = 0;
     result->y = 0;
     result->width = frame->width;

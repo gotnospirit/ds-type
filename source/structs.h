@@ -137,6 +137,7 @@ struct Animation
 
 struct Entity
 {
+    const char * type;
     int x, y;
     uint16_t width, height;
     sprite_t * sprite;
