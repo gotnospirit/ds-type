@@ -9,6 +9,7 @@
 #include "input.h"
 #include "render.h"
 #include "texture.h"
+#include "utils.h"
 
 static uint8_t show_hitbox_debug = 0;
 
@@ -169,7 +170,7 @@ void level_logic(level_t * level, surface_t const * screen, uint16_t dt)
 
     if (show_hitbox_debug)
     {
-        debug_hitboxes(level->hitboxes, &level->camera);
+        select_hitboxes(level, render_level_hitbox);
     }
 
     printf("\x1b[0;0Hcamera: %5d %5d %5d %5d", level->camera.top, level->camera.right, level->camera.bottom, level->camera.left);

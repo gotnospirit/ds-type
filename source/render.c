@@ -341,84 +341,52 @@ int remove_from_rendering(sprite_t * sprite)
     return 0;
 }
 
-void debug_hitboxes(list_t const * hitboxes, rectangle_t const * camera)
+void render_level_hitbox(hitbox_t const * hitbox, rectangle_t const * camera)
 {
     int i = 0, x = 0, y = 0;
-    uint8_t visible = 0, max = 0;
+    uint8_t max = hitbox->nb_points;
     uint16_t camera_left = camera->left, camera_right = camera->right, camera_bottom = camera->bottom;
-    uint16_t min_x = camera_right, max_x = 0;
 
-    hitbox_t * hitbox = NULL;
-
-    while (list_next(hitboxes, (void **)&hitbox))
+    point_t * points = (point_t *)malloc(sizeof(point_t) * max);
+    if (NULL != points)
     {
-        visible = 0;
-        max = hitbox->nb_points;
-        min_x = camera_right;
-        max_x = 0;
-
-        for (i = 0; i < max; ++i)
+        hitbox_t * copy = (hitbox_t *)list_alloc(debug_pipe);
+        if (NULL != copy)
         {
-            x = hitbox->points[i].x;
-
-            if (x < min_x)
+            for (i = 0; i < max; ++i)
             {
-                min_x = x;
-            }
+                x = hitbox->points[i].x;
+                y = hitbox->points[i].y;
 
-            if (x > max_x)
-            {
-                max_x = x;
-            }
-
-            if (x >= camera_left && x < camera_right)
-            {
-                ++visible;
-                break;
-            }
-        }
-
-        if (!visible && (camera_left < min_x || camera_right > max_x))
-        {
-            continue;
-        }
-
-        point_t * points = (point_t *)malloc(sizeof(point_t) * max);
-        if (NULL != points)
-        {
-            hitbox_t * copy = (hitbox_t *)list_alloc(debug_pipe);
-            if (NULL != copy)
-            {
-                for (i = 0; i < max; ++i)
+                if (x >= camera_right)
                 {
-                    x = hitbox->points[i].x;
-                    y = hitbox->points[i].y;
-
-                    if (x >= camera_right)
-                    {
-                        x = camera_right - 1;
-                    }
-                    else if (x < camera_left)
-                    {
-                        x = camera_left;
-                    }
-
-                    x -= camera_left;
-
-                    if (BOTTOM == hitbox->anchor)
-                    {
-                        y = camera_bottom - y;
-                    }
-
-                    points[i].x = x;
-                    points[i].y = y;
+                    x = camera_right - 1;
+                }
+                else if (x < camera_left)
+                {
+                    x = camera_left;
                 }
 
-                copy->points = points;
-                copy->nb_points = max;
-                copy->anchor = hitbox->anchor;
-                ++debug_pipe_size;
+                x -= camera_left;
+
+                if (BOTTOM == hitbox->anchor)
+                {
+                    y = camera_bottom - y;
+                }
+
+                points[i].x = x;
+                points[i].y = y;
             }
+
+            copy->shape = hitbox->shape;
+            copy->points = points;
+            copy->nb_points = max;
+            copy->anchor = hitbox->anchor;
+            ++debug_pipe_size;
+        }
+        else
+        {
+            free(points);
         }
     }
 }

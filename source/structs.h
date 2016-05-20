@@ -36,7 +36,7 @@ typedef enum
     RECTANGLE,
     POLYGON,
     CIRCLE
-} hitbox_type_t;
+} hitbox_shape_t;
 
 typedef struct Entity entity_t;
 typedef int logic_t(entity_t *, rectangle_t const *);
@@ -46,6 +46,9 @@ typedef void animation_step_t(animation_t *, int);
 
 typedef struct GameState game_state_t;
 typedef void game_state_processor_t(game_state_t *);
+
+typedef struct Hitbox hitbox_t;
+typedef void hitbox_processor_t(hitbox_t const *, rectangle_t const *);
 
 typedef float easing_t(int, int);
 
@@ -97,14 +100,6 @@ typedef struct
 
 typedef struct
 {
-    hitbox_type_t type;
-    point_t * points;
-    uint8_t nb_points;
-    anchor_t anchor;
-} hitbox_t;
-
-typedef struct
-{
     rectangle_t camera;
     int incr;
     uint16_t max_camera_left;
@@ -133,6 +128,14 @@ typedef struct
     anchor_t anchor;
     uint8_t velocity;
 } entity_template_t;
+
+struct Hitbox
+{
+    hitbox_shape_t shape;
+    point_t * points;
+    uint8_t nb_points;
+    anchor_t anchor;
+};
 
 struct Animation
 {

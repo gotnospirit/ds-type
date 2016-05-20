@@ -11,6 +11,6 @@ void process_rendering();
 int add_to_rendering(sprite_t *);
 int remove_from_rendering(sprite_t *);
 
-void debug_hitboxes(list_t const *, rectangle_t const *);
+void render_level_hitbox(hitbox_t const *, rectangle_t const *);
 
 #endif
