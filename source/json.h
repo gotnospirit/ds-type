@@ -6,6 +6,8 @@
 class Json
 {
 public:
+    static JsonValue const * Find(JsonValue const &, const char *);
+
     static const char * GetString(JsonValue const &, const char *);
     static int GetNumber(JsonValue const &, const char *);
     static bool GetBoolean(JsonValue const &, const char *);
@@ -19,8 +21,6 @@ public:
     JsonValue value;
 
 private:
-    static JsonValue Find(JsonValue const &, const char *);
-
     char * source = 0;
     char * endptr = 0;
     JsonAllocator allocator;
