@@ -131,6 +131,7 @@ typedef struct
 
 struct Hitbox
 {
+    char * type;
     hitbox_shape_t shape;
     point_t * points;
     uint8_t nb_points;
@@ -157,6 +158,7 @@ struct Entity
     anchor_t anchor;
     uint8_t velocity;
     uint8_t newly;
+    hitbox_t const * hitbox;
 };
 
 struct GameState

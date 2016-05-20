@@ -7,8 +7,10 @@
 #include "logic.h"
 #include "animation.h"
 #include "list.h"
+#include "utils.h"
 
 static list_t * templates = NULL;
+static list_t * hitboxes = NULL;
 static list_t * sprites = NULL;
 static list_t * entities = NULL;
 static list_t * shots = NULL;
@@ -16,6 +18,7 @@ static list_t * shots = NULL;
 static entity_t * charge = NULL;
 
 static uint8_t templates_size = 0;
+static uint8_t hitboxes_size = 0;
 static uint8_t entities_size = 0;
 
 static entity_template_t * template_get(const char * name)
@@ -31,11 +34,25 @@ static entity_template_t * template_get(const char * name)
     return NULL;
 }
 
+static hitbox_t const * hitbox_get(const char * name)
+{
+    hitbox_t * hitbox = NULL;
+    while (list_next(hitboxes, (void **)&hitbox))
+    {
+        if (0 == strcmp(hitbox->type, name))
+        {
+            return hitbox;
+        }
+    }
+    return NULL;
+}
+
 static entity_t * entity_free(entity_t * entity)
 {
     remove_from_animations(entity);
 
     entity->type = NULL;
+    entity->hitbox = NULL;
     free(entity->data);
 
     sprite_t * sprite = entity->sprite;
@@ -88,6 +105,7 @@ static entity_t * spawn_entity(entity_template_t const * template)
     result->anchor = template->anchor;
     result->velocity = template->velocity;
     result->newly = 1;
+    result->hitbox = NULL;
     return result;
 }
 
@@ -100,6 +118,12 @@ static int init_ship_entity()
         if (NULL == entity)
         {
             return 1;
+        }
+
+        hitbox_t const * hitbox = hitbox_get("ship");
+        if (NULL != hitbox)
+        {
+            entity->hitbox = hitbox;
         }
 
         add_to_rendering(entity->sprite);
@@ -140,49 +164,55 @@ int init_entities()
         return 1;
     }
 
+    hitboxes = list_new(sizeof(hitbox_t), 1);
+    if (NULL == hitboxes)
+    {
+        return 2;
+    }
+
     sprites = list_new(sizeof(sprite_t), 1);
     if (NULL == sprites)
     {
-        return 2;
+        return 3;
     }
 
     entities = list_new(sizeof(entity_t), 1);
     if (NULL == entities)
     {
-        return 3;
+        return 4;
     }
 
     shots = list_new(sizeof(shot_t), 1);
     if (NULL == shots)
     {
-        return 4;
+        return 5;
     }
 
     if (0 != init_animations())
     {
-        return 5;
+        return 6;
     }
 
     texture_t * texture = texture_new("base");
     if (NULL == texture)
     {
-        return 6;
+        return 7;
     }
 
     json_wrapper_t * json = json_new("base");
     if (NULL == json)
     {
-        return 7;
+        return 8;
     }
     else if (0 != parse_base(json, texture))
     {
         json_delete(json);
-        return 8;
+        return 9;
     }
     json_delete(json);
 
     return (0 != init_ship_entity() || 0 != init_charge_entity())
-        ? 9 : 0;
+        ? 10 : 0;
 }
 
 void shutdown_entities()
@@ -213,6 +243,29 @@ void shutdown_entities()
     }
     list_delete(&templates);
     templates_size = 0;
+
+    hitbox_t * hitbox = NULL;
+    while (list_next(hitboxes, (void **)&hitbox))
+    {
+        free(hitbox->type);
+        free(hitbox->points);
+    }
+    list_delete(&hitboxes);
+}
+
+hitbox_t * entity_hitbox_new(const char * type, point_t * points, uint8_t nb_points, anchor_t anchor)
+{
+    hitbox_t * hitbox = (hitbox_t *)list_alloc(hitboxes);
+    if (NULL != hitbox)
+    {
+        hitbox->type = strdup(type);
+        hitbox->shape = nb_points > 4 ? POLYGON : RECTANGLE;
+        hitbox->points = points;
+        hitbox->nb_points = nb_points;
+        hitbox->anchor = anchor;
+        ++hitboxes_size;
+    }
+    return hitbox;
 }
 
 entity_template_t * entity_template_new(const char * name, int current_frame, texture_t const * texture, const char * logic_method, anchor_t anchor, uint8_t velocity)
@@ -270,7 +323,7 @@ shot_t * entity_shot_new(const char * name, int threshold)
 
 void entities_logic(rectangle_t const * camera, uint16_t dt)
 {
-    printf("\x1b[3;0H%3d entities, %3d templates, beam %3d%%", entities_size, templates_size, ((charge_t *)charge->data)->strength);
+    printf("\x1b[3;0Hent: %2d, tpl: %2d, hbx: %2d, beam %3d%%", entities_size, templates_size, hitboxes_size, ((charge_t *)charge->data)->strength);
 
     logic_t * logic = NULL;
     entity_t * entity = NULL;
@@ -339,7 +392,7 @@ const char * entity_stop_charge()
     return "shot";
 }
 
-entity_t * entity_spawn_shot()
+entity_t * entity_spawn_shot(const char * type)
 {
     entity_template_t * template = template_get("shot");
     if (NULL != template)
@@ -347,6 +400,12 @@ entity_t * entity_spawn_shot()
         entity_t * result = spawn_entity(template);
         if (NULL != result)
         {
+            hitbox_t const * hitbox = hitbox_get(type);
+            if (NULL != hitbox)
+            {
+                result->hitbox = hitbox;
+            }
+
             add_to_rendering(result->sprite);
             return result;
         }

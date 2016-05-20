@@ -85,7 +85,7 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
     {
         const char * type = entity_stop_charge();
 
-        entity_t * shot = entity_spawn_shot();
+        entity_t * shot = entity_spawn_shot(type);
         if (NULL != shot)
         {
             entity_anchor(shot, entity, MIDDLE_RIGHT);

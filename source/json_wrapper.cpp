@@ -216,38 +216,14 @@ static int process_level_tiles(JsonValue const &root, list_t * container, JsonVa
     return 0;
 }
 
-static int process_level_hitbox(const char * type, JsonValue const &root, hitbox_t * hitbox)
+point_t * process_hitbox_points(JsonValue const &root, int nb_points)
 {
-    int nb_coords = Json::Size(root);
-
-    if (!nb_coords)
-    {
-        return 0;
-    }
-    else if (0 != (nb_coords % 2))
-    {
-        printf("Invalid hitbox\n");
-        return 1;
-    }
-
-    int nb_points = nb_coords / 2;
-    if (nb_points < 3)
-    {
-        printf("Invalid hitbox\n");
-        return 2;
-    }
-
     point_t * points = (point_t *)malloc(sizeof(point_t) * nb_points);
     if (NULL == points)
     {
         printf("Failed to alloc points\n");
-        return 3;
+        return NULL;
     }
-
-    hitbox->type = 4 == nb_points ? RECTANGLE : POLYGON;
-    hitbox->points = points;
-    hitbox->nb_points = nb_points;
-    hitbox->anchor = 0 == strncmp(type, "top", 3) ? TOP : BOTTOM;
 
     int i = 0;
     point_t * point = NULL;
@@ -266,6 +242,33 @@ static int process_level_hitbox(const char * type, JsonValue const &root, hitbox
         }
         ++i;
     }
+    return points;
+}
+
+static int process_level_hitbox(const char * type, JsonValue const &root, hitbox_t * hitbox)
+{
+    int nb_coords = Json::Size(root);
+
+    if (nb_coords <= 0 || 0 != (nb_coords % 2))
+    {
+        printf("Invalid hitbox\n");
+        return 1;
+    }
+
+    int nb_points = nb_coords / 2;
+
+    point_t * points = process_hitbox_points(root, nb_points);
+    if (NULL == points)
+    {
+        return 2;
+    }
+
+    hitbox->type = NULL;
+    hitbox->shape = nb_points > 4 ? POLYGON : RECTANGLE;
+    hitbox->points = points;
+    hitbox->nb_points = nb_points;
+    hitbox->anchor = 0 == strncmp(type, "top", 3) ? TOP : BOTTOM;
+
     return 0;
 }
 
@@ -366,6 +369,63 @@ static int process_base_shots(JsonValue const &root)
     return 0;
 }
 
+static int process_base_hitbox(const char * type, anchor_t anchor, JsonValue const &root)
+{
+    int nb_coords = Json::Size(root);
+
+    if (nb_coords <= 0 || 0 != (nb_coords % 2))
+    {
+        printf("Invalid hitbox\n");
+        return 1;
+    }
+
+    int nb_points = nb_coords / 2;
+
+    point_t * points = process_hitbox_points(root, nb_points);
+    if (NULL == points)
+    {
+        return 2;
+    }
+    else if (NULL == entity_hitbox_new(type, points, nb_points, anchor))
+    {
+        printf("Hitbox not created\n");
+        return 3;
+    }
+    return 0;
+}
+
+static int process_base_hitboxes(JsonValue const &root)
+{
+    const char * type = NULL;
+    int anchor = 0;
+    JsonValue const * points = NULL;
+
+    for (auto const &node : root)
+    {
+        auto const &value = node->value;
+
+        type = Json::GetString(value, "id");
+        anchor = Json::GetNumber(value, "anchor");
+        points = Json::Find(value, "points");
+
+        if (NULL == type)
+        {
+            printf("Missing hitbox's id\n");
+            return 1;
+        }
+        else if (NULL == points)
+        {
+            printf("Missing hitbox's points\n");
+            return 2;
+        }
+        else if (0 != process_base_hitbox(type, (anchor_t)anchor, *points))
+        {
+            return 3;
+        }
+    }
+    return 0;
+}
+
 static int process_base_entities(JsonValue const &root, texture_t const * texture)
 {
     const char * name = NULL;
@@ -458,6 +518,7 @@ int parse_base(json_wrapper_t * o, texture_t * spritesheet)
 
     JsonNode const * frames_node = NULL;
     JsonNode const * entities_node = NULL;
+    JsonNode const * hitboxes_node = NULL;
     JsonNode const * animations_node = NULL;
     JsonNode const * shots_node = NULL;
 
@@ -474,6 +535,10 @@ int parse_base(json_wrapper_t * o, texture_t * spritesheet)
         else if (0 == strncmp(key, "entities", 8))
         {
             entities_node = node;
+        }
+        else if (0 == strncmp(key, "hitboxes", 8))
+        {
+            hitboxes_node = node;
         }
         else if (0 == strncmp(key, "animations", 10))
         {
@@ -521,6 +586,10 @@ int parse_base(json_wrapper_t * o, texture_t * spritesheet)
     else if (0 != process_base_shots(shots_node->value))
     {
         return 8;
+    }
+    else if (0 != process_base_hitboxes(hitboxes_node->value))
+    {
+        return 9;
     }
     return 0;
 }

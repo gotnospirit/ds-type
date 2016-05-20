@@ -106,6 +106,7 @@ void level_delete(level_t * level)
     hitbox_t * hitbox = NULL;
     while (list_next(level->hitboxes, (void **)&hitbox))
     {
+        free(hitbox->type);
         free(hitbox->points);
     }
     list_delete(&level->hitboxes);

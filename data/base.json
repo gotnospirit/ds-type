@@ -18,6 +18,14 @@
         {"id":"charge","frame":38,"anchor":3},
         {"id":"shot","frame":5,"logic":"logic_shot","anchor":5,"velocity":10}
     ],
+    "hitboxes" : [
+        {"id":"ship","points":[1,2,1,14,31,2,31,14]},
+        {"id":"shot","points":[0,0,0,4,5,0,5,4],"anchor":5},
+        {"id":"lowshot","points":[0,0,0,10,10,0,10,10],"anchor":5},
+        {"id":"midshot","points":[0,0,0,10,14,0,14,10],"anchor":5},
+        {"id":"highshot","points":[0,0,0,14,19,0,19,14],"anchor":5},
+        {"id":"fullshot","points":[0,0,0,16,24,0,24,16],"anchor":5}
+    ],
     "shots" : [
         {"id":"fullshot","threshold":90},
         {"id":"highshot","threshold":59},
