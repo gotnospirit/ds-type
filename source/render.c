@@ -49,7 +49,7 @@ static void draw_hitbox(hitbox_t const * hitbox)
     for (int i = 0; i < hitbox->nb_points; ++i)
     {
         C3D_ImmSendAttrib(hitbox->points[i].x, hitbox->points[i].y, 0.5f, 0.0f);
-        C3D_ImmSendAttrib(r, g, b, 1.0f);
+        C3D_ImmSendAttrib(r, g, b, 0.8f);
     }
 
     C3D_ImmDrawEnd();
