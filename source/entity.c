@@ -8,6 +8,7 @@
 #include "animation.h"
 #include "list.h"
 #include "utils.h"
+#include "input.h"
 
 static list_t * templates = NULL;
 static list_t * hitboxes = NULL;
@@ -20,6 +21,8 @@ static entity_t * charge = NULL;
 static uint8_t templates_size = 0;
 static uint8_t hitboxes_size = 0;
 static uint8_t entities_size = 0;
+
+static uint8_t show_hitbox_debug = 0;
 
 static entity_template_t * template_get(const char * name)
 {
@@ -155,6 +158,21 @@ static int init_charge_entity()
         charge = entity;
     }
     return 0;
+}
+
+static void debug_entities_hitbox(rectangle_t const * camera)
+{
+    entity_t * entity = NULL;
+    hitbox_t const * hitbox = NULL;
+    while (list_next(entities, (void **)&entity))
+    {
+        hitbox = entity->hitbox;
+
+        if (NULL != hitbox)
+        {
+            render_entity_hitbox(hitbox, entity, camera);
+        }
+    }
 }
 
 int init_entities()
@@ -326,6 +344,11 @@ void entities_logic(rectangle_t const * camera, uint16_t dt)
 {
     printf("\x1b[3;0Hent: %2d, tpl: %2d, hbx: %2d, beam %3d%%", entities_size, templates_size, hitboxes_size, ((charge_t *)charge->data)->strength);
 
+    if (pressed(KEY_SELECT))
+    {
+        show_hitbox_debug = show_hitbox_debug ? 0 : 1;
+    }
+
     logic_t * logic = NULL;
     entity_t * entity = NULL;
     while (list_next(entities, (void **)&entity))
@@ -345,6 +368,18 @@ void entities_logic(rectangle_t const * camera, uint16_t dt)
     }
 
     process_animations(dt);
+}
+
+void entities_hittest(level_t const * level)
+{
+    if (show_hitbox_debug)
+    {
+        debug_entities_hitbox(&level->camera);
+    }
+
+    // collisions between level's hitbox and entities?
+
+    // collisions between entities?
 }
 
 void sprites_update(rectangle_t const * camera)
@@ -412,50 +447,13 @@ entity_t * entity_spawn_shot(const char * type)
 
 void entity_update_surface(entity_t * entity, uint16_t new_width, uint16_t new_height)
 {
-    uint16_t old_width = entity->width;
-    uint16_t old_height = entity->height;
-
-    switch (entity->anchor)
-    {
-        case TOP_CENTER:
-            entity->x += (old_width - new_width) / 2;
-            break;
-
-        case TOP_RIGHT:
-            entity->x += (old_width - new_width);
-            break;
-
-        case MIDDLE_LEFT:
-            entity->y += (old_height - new_height) / 2;
-            break;
-
-        case MIDDLE_CENTER:
-            entity->x += (old_width - new_width) / 2;
-            entity->y += (old_height - new_height) / 2;
-            break;
-
-        case MIDDLE_RIGHT:
-            entity->x += (old_width - new_width);
-            entity->y += (old_height - new_height) / 2;
-            break;
-
-        case BOTTOM_LEFT:
-            entity->y += (old_height - new_height);
-            break;
-
-        case BOTTOM_CENTER:
-            entity->x += (old_width - new_width) / 2;
-            entity->y += (old_height - new_height);
-            break;
-
-        case BOTTOM_RIGHT:
-            entity->x += (old_width - new_width);
-            entity->y += (old_height - new_height);
-            break;
-
-        default:
-            break;
-    }
+    apply_anchor(
+        entity->anchor,
+        entity->width - new_width,
+        entity->height - new_height,
+        &entity->x,
+        &entity->y
+    );
 
     entity->width = new_width;
     entity->height = new_height;

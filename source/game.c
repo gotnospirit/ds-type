@@ -37,6 +37,7 @@ static void game_update(level_t * level)
     entities_logic(&level->camera, dt);
 
     // collision
+    entities_hittest(level);
 
     // reflect entities' updates to their sprite
     sprites_update(&level->camera);

@@ -13,6 +13,8 @@ hitbox_t * entity_hitbox_new(const char *, point_t *, uint8_t, anchor_t);
 shot_t * entity_shot_new(const char *, int);
 
 void entities_logic(rectangle_t const *, uint16_t);
+void entities_hittest(level_t const *);
+
 void sprites_update(rectangle_t const *);
 
 entity_t * entity_start_charge();

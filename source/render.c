@@ -8,6 +8,7 @@
 #include "structs.h"
 #include "list.h"
 #include "texture.h"
+#include "utils.h"
 
 // Used to transfer the final rendered display to the framebuffer
 #define DISPLAY_TRANSFER_FLAGS \
@@ -142,6 +143,57 @@ static void render_sprite(sprite_t const * sprite, texture_t const ** gpu_textur
                 frame->left, frame->top, frame->right, frame->bottom,
                 sprite->flip_x, sprite->flip_y
             );
+        }
+    }
+}
+
+static void render_hitbox(hitbox_t const * hitbox, rectangle_t const * camera, int offset_x, int offset_y)
+{
+    int i = 0, x = 0, y = 0;
+    uint8_t max = hitbox->nb_points;
+    uint16_t camera_left = camera->left, camera_right = camera->right, camera_bottom = camera->bottom;
+
+    point_t * points = (point_t *)malloc(sizeof(point_t) * max);
+    if (NULL != points)
+    {
+        hitbox_t * copy = (hitbox_t *)list_alloc(debug_pipe);
+        if (NULL != copy)
+        {
+            for (i = 0; i < max; ++i)
+            {
+                x = offset_x + hitbox->points[i].x;
+                y = offset_y + hitbox->points[i].y;
+
+                if (x >= camera_right)
+                {
+                    x = camera_right - 1;
+                }
+                else if (x < camera_left)
+                {
+                    x = camera_left;
+                }
+
+                x -= camera_left;
+
+                if (BOTTOM == hitbox->anchor)
+                {
+                    y = camera_bottom - y;
+                }
+
+                points[i].x = x;
+                points[i].y = y;
+            }
+
+            copy->type = NULL;
+            copy->shape = hitbox->shape;
+            copy->points = points;
+            copy->nb_points = max;
+            copy->anchor = hitbox->anchor;
+            ++debug_pipe_size;
+        }
+        else
+        {
+            free(points);
         }
     }
 }
@@ -344,51 +396,28 @@ int remove_from_rendering(sprite_t * sprite)
 
 void render_level_hitbox(hitbox_t const * hitbox, rectangle_t const * camera)
 {
-    int i = 0, x = 0, y = 0;
-    uint8_t max = hitbox->nb_points;
-    uint16_t camera_left = camera->left, camera_right = camera->right, camera_bottom = camera->bottom;
+    render_hitbox(hitbox, camera, 0, 0);
+}
 
-    point_t * points = (point_t *)malloc(sizeof(point_t) * max);
-    if (NULL != points)
+void render_entity_hitbox(hitbox_t const * hitbox, entity_t const * entity, rectangle_t const * camera)
+{
+    surface_t dim;
+    dim.width = 0;
+    dim.height = 0;
+
+    if (get_hitbox_surface(hitbox, &dim))
     {
-        hitbox_t * copy = (hitbox_t *)list_alloc(debug_pipe);
-        if (NULL != copy)
-        {
-            for (i = 0; i < max; ++i)
-            {
-                x = hitbox->points[i].x;
-                y = hitbox->points[i].y;
+        int offset_x = entity->x;
+        int offset_y = entity->y;
 
-                if (x >= camera_right)
-                {
-                    x = camera_right - 1;
-                }
-                else if (x < camera_left)
-                {
-                    x = camera_left;
-                }
+        apply_anchor(
+            hitbox->anchor,
+            entity->width - dim.width,
+            entity->height - dim.height,
+            &offset_x,
+            &offset_y
+        );
 
-                x -= camera_left;
-
-                if (BOTTOM == hitbox->anchor)
-                {
-                    y = camera_bottom - y;
-                }
-
-                points[i].x = x;
-                points[i].y = y;
-            }
-
-            copy->type = NULL;
-            copy->shape = hitbox->shape;
-            copy->points = points;
-            copy->nb_points = max;
-            copy->anchor = hitbox->anchor;
-            ++debug_pipe_size;
-        }
-        else
-        {
-            free(points);
-        }
+        render_hitbox(hitbox, camera, offset_x, offset_y);
     }
 }

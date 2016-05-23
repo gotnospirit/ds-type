@@ -12,5 +12,6 @@ int add_to_rendering(sprite_t *);
 int remove_from_rendering(sprite_t *);
 
 void render_level_hitbox(hitbox_t const *, rectangle_t const *);
+void render_entity_hitbox(hitbox_t const *, entity_t const *, rectangle_t const *);
 
 #endif
