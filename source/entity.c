@@ -34,17 +34,22 @@ static entity_template_t * template_get(const char * name)
     return NULL;
 }
 
-static hitbox_t const * hitbox_get(const char * name)
+static void hitbox_set(const char * type, entity_t * entity)
 {
+    if (NULL == entity)
+    {
+        return ;
+    }
+
     hitbox_t * hitbox = NULL;
     while (list_next(hitboxes, (void **)&hitbox))
     {
-        if (0 == strcmp(hitbox->type, name))
+        if (0 == strcmp(hitbox->type, type))
         {
-            return hitbox;
+            entity->hitbox = hitbox;
+            return ;
         }
     }
-    return NULL;
 }
 
 static entity_t * entity_free(entity_t * entity)
@@ -120,11 +125,7 @@ static int init_ship_entity()
             return 1;
         }
 
-        hitbox_t const * hitbox = hitbox_get("ship");
-        if (NULL != hitbox)
-        {
-            entity->hitbox = hitbox;
-        }
+        hitbox_set("ship", entity);
 
         add_to_rendering(entity->sprite);
     }
@@ -400,11 +401,7 @@ entity_t * entity_spawn_shot(const char * type)
         entity_t * result = spawn_entity(template);
         if (NULL != result)
         {
-            hitbox_t const * hitbox = hitbox_get(type);
-            if (NULL != hitbox)
-            {
-                result->hitbox = hitbox;
-            }
+            hitbox_set(type, result);
 
             add_to_rendering(result->sprite);
             return result;
