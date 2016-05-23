@@ -39,8 +39,7 @@
         mov outclr, zeros
     .else
         ; Set vertex color
-        mov outclr.xyz, v1
-        mov outclr.w, ones
+        mov outclr, v1
 
         mov outtc0, zeros
     .end
