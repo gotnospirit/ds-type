@@ -9,7 +9,6 @@
 #include "input.h"
 #include "render.h"
 #include "texture.h"
-#include "utils.h"
 
 static uint8_t show_hitbox_debug = 0;
 
@@ -48,6 +47,54 @@ static void update_level_tiles(list_t * container, rectangle_t const * camera)
             add_to_rendering(sprite);
             tile->visible = 1;
         }
+    }
+}
+
+static void select_hitboxes(level_t const * level)
+{
+    rectangle_t const * camera = &level->camera;
+
+    list_t const * hitboxes = level->hitboxes;
+    int i = 0, x = 0;
+    uint8_t visible = 0, max = 0;
+    uint16_t camera_left = camera->left, camera_right = camera->right;
+    uint16_t min_x = camera_right, max_x = 0;
+
+    hitbox_t * hitbox = NULL;
+    while (list_next(hitboxes, (void **)&hitbox))
+    {
+        visible = 0;
+        max = hitbox->nb_points;
+        min_x = camera_right;
+        max_x = 0;
+
+        for (i = 0; i < max; ++i)
+        {
+            x = hitbox->points[i].x;
+
+            if (x < min_x)
+            {
+                min_x = x;
+            }
+
+            if (x > max_x)
+            {
+                max_x = x;
+            }
+
+            if (x >= camera_left && x < camera_right)
+            {
+                ++visible;
+                break;
+            }
+        }
+
+        if (!visible && (camera_left < min_x || camera_right > max_x))
+        {
+            continue;
+        }
+
+        render_level_hitbox(hitbox, camera);
     }
 }
 
@@ -171,7 +218,7 @@ void level_logic(level_t * level, surface_t const * screen, uint16_t dt)
 
     if (show_hitbox_debug)
     {
-        select_hitboxes(level, render_level_hitbox);
+        select_hitboxes(level);
     }
 
     printf("\x1b[0;0Hcamera: %5d %5d %5d %5d", level->camera.top, level->camera.right, level->camera.bottom, level->camera.left);

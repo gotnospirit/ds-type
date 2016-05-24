@@ -377,9 +377,16 @@ void entities_hittest(level_t const * level)
         debug_entities_hitbox(&level->camera);
     }
 
-    // collisions between level's hitbox and entities?
 
-    // collisions between entities?
+    entity_t * entity = NULL;
+    while (list_next(entities, (void **)&entity))
+    {
+        if (NULL != entity->hitbox)
+        {
+            // collisions with any level's hitbox?
+            // collisions with another entity?
+        }
+    }
 }
 
 void sprites_update(rectangle_t const * camera)
