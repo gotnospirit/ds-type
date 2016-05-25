@@ -272,16 +272,17 @@ void shutdown_entities()
     list_delete(&hitboxes);
 }
 
-hitbox_t * entity_hitbox_new(const char * name, point_t * points, uint8_t nb_points, anchor_t anchor)
+hitbox_t * entity_hitbox_new(const char * name, point_t * points, uint8_t nb_points, hitbox_shape_t shape, anchor_t anchor, rectangle_t boundaries)
 {
     hitbox_t * hitbox = (hitbox_t *)list_alloc(hitboxes);
     if (NULL != hitbox)
     {
         hitbox->name = strdup(name);
-        hitbox->shape = nb_points > 4 ? POLYGON : RECTANGLE;
+        hitbox->shape = shape;
         hitbox->points = points;
         hitbox->nb_points = nb_points;
         hitbox->anchor = anchor;
+        hitbox->boundaries = boundaries;
         ++hitboxes_size;
     }
     return hitbox;

@@ -133,6 +133,7 @@ typedef struct
     point_t * points;
     uint8_t nb_points;
     anchor_t anchor;
+    rectangle_t boundaries;
 } hitbox_t;
 
 struct Animation

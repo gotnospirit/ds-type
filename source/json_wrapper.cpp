@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <math.h>
 
 #include "json_wrapper.h"
 #include "json.h"
@@ -216,7 +217,7 @@ static int process_level_tiles(JsonValue const &root, list_t * container, JsonVa
     return 0;
 }
 
-point_t * process_hitbox_points(JsonValue const &root, int nb_points)
+point_t * process_hitbox_points(JsonValue const &root, int nb_points, hitbox_shape_t shape, rectangle_t * boundaries)
 {
     point_t * points = (point_t *)malloc(sizeof(point_t) * nb_points);
     if (NULL == points)
@@ -225,8 +226,11 @@ point_t * process_hitbox_points(JsonValue const &root, int nb_points)
         return NULL;
     }
 
-    int i = 0;
+    int i = 0, x = 0, y = 0;
+    int min_x = 0, max_x = 0, min_y = 0, max_y = 0;
     point_t * point = NULL;
+
+    min_x = min_y = (int)pow(2, 16);
 
     for (auto const &node : root)
     {
@@ -234,14 +238,40 @@ point_t * process_hitbox_points(JsonValue const &root, int nb_points)
         {
             point = &points[i / 2];
 
-            point->x = node->value.toNumber();
+            point->x = x = node->value.toNumber();
+
+            if (x < min_x)
+            {
+                min_x = x;
+            }
+
+            if (x > max_x)
+            {
+                max_x = x;
+            }
         }
         else
         {
-            point->y = node->value.toNumber();
+            point->y = y = node->value.toNumber();
+
+            if (y < min_y)
+            {
+                min_y = y;
+            }
+
+            if (y > max_y)
+            {
+                max_y = y;
+            }
         }
         ++i;
     }
+
+    boundaries->top = min_y;
+    boundaries->bottom = max_y;
+    boundaries->left = min_x;
+    boundaries->right = max_x;
+
     return points;
 }
 
@@ -256,15 +286,16 @@ static int process_level_hitbox(const char * type, JsonValue const &root, hitbox
     }
 
     int nb_points = nb_coords / 2;
+    hitbox_shape_t shape = nb_points > 4 ? POLYGON : RECTANGLE;
 
-    point_t * points = process_hitbox_points(root, nb_points);
+    point_t * points = process_hitbox_points(root, nb_points, shape, &hitbox->boundaries);
     if (NULL == points)
     {
         return 2;
     }
 
     hitbox->name = NULL;
-    hitbox->shape = nb_points > 4 ? POLYGON : RECTANGLE;
+    hitbox->shape = shape;
     hitbox->points = points;
     hitbox->nb_points = nb_points;
     hitbox->anchor = 0 == strncmp(type, "top", 3) ? TOP : BOTTOM;
@@ -380,13 +411,15 @@ static int process_base_hitbox(const char * type, anchor_t anchor, JsonValue con
     }
 
     int nb_points = nb_coords / 2;
+    hitbox_shape_t shape = nb_points > 4 ? POLYGON : RECTANGLE;
+    rectangle_t boundaries;
 
-    point_t * points = process_hitbox_points(root, nb_points);
+    point_t * points = process_hitbox_points(root, nb_points, shape, &boundaries);
     if (NULL == points)
     {
         return 2;
     }
-    else if (NULL == entity_hitbox_new(type, points, nb_points, anchor))
+    else if (NULL == entity_hitbox_new(type, points, nb_points, shape, anchor, boundaries))
     {
         printf("Hitbox not created\n");
         return 3;

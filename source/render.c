@@ -189,6 +189,7 @@ static void render_hitbox(hitbox_t const * hitbox, rectangle_t const * camera, i
             copy->points = points;
             copy->nb_points = max;
             copy->anchor = hitbox->anchor;
+            copy->boundaries = hitbox->boundaries;
             ++debug_pipe_size;
         }
         else
@@ -401,23 +402,16 @@ void render_level_hitbox(hitbox_t const * hitbox, rectangle_t const * camera)
 
 void render_entity_hitbox(hitbox_t const * hitbox, entity_t const * entity, rectangle_t const * camera)
 {
-    surface_t dim;
-    dim.width = 0;
-    dim.height = 0;
+    int offset_x = entity->x;
+    int offset_y = entity->y;
 
-    if (get_hitbox_surface(hitbox, &dim))
-    {
-        int offset_x = entity->x;
-        int offset_y = entity->y;
+    apply_anchor(
+        hitbox->anchor,
+        entity->width - (hitbox->boundaries.right - hitbox->boundaries.left),
+        entity->height - (hitbox->boundaries.bottom - hitbox->boundaries.top),
+        &offset_x,
+        &offset_y
+    );
 
-        apply_anchor(
-            hitbox->anchor,
-            entity->width - dim.width,
-            entity->height - dim.height,
-            &offset_x,
-            &offset_y
-        );
-
-        render_hitbox(hitbox, camera, offset_x, offset_y);
-    }
+    render_hitbox(hitbox, camera, offset_x, offset_y);
 }

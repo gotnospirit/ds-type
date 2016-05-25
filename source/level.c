@@ -58,29 +58,16 @@ static void select_hitboxes(level_t const * level)
     int i = 0, x = 0;
     uint8_t visible = 0, max = 0;
     uint16_t camera_left = camera->left, camera_right = camera->right;
-    uint16_t min_x = camera_right, max_x = 0;
 
     hitbox_t * hitbox = NULL;
     while (list_next(hitboxes, (void **)&hitbox))
     {
         visible = 0;
         max = hitbox->nb_points;
-        min_x = camera_right;
-        max_x = 0;
 
         for (i = 0; i < max; ++i)
         {
             x = hitbox->points[i].x;
-
-            if (x < min_x)
-            {
-                min_x = x;
-            }
-
-            if (x > max_x)
-            {
-                max_x = x;
-            }
 
             if (x >= camera_left && x < camera_right)
             {
@@ -89,7 +76,7 @@ static void select_hitboxes(level_t const * level)
             }
         }
 
-        if (!visible && (camera_left < min_x || camera_right > max_x))
+        if (!visible && (camera_left < hitbox->boundaries.left || camera_right > hitbox->boundaries.right))
         {
             continue;
         }

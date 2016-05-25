@@ -39,56 +39,6 @@ char * read_file(const char * filepath)
     return result;
 }
 
-int get_hitbox_surface(hitbox_t const * hitbox, surface_t * surface)
-{
-    if (NULL == hitbox)
-    {
-        return 0;
-    }
-
-    uint8_t nb_points = hitbox->nb_points;
-    if (nb_points < 2)
-    {
-        return 0;
-    }
-
-    point_t const * points = hitbox->points;
-    uint8_t i = 0;
-    uint32_t min_x = 2 ^ 32, min_y = 2 ^ 32;
-    uint32_t max_x = 0, max_y = 0;
-    int x = 0, y = 0;
-
-    for (; i < nb_points; ++i)
-    {
-        x = points[i].x;
-        y = points[i].y;
-
-        if (x < min_x)
-        {
-            min_x = x;
-        }
-
-        if (x > max_x)
-        {
-            max_x = x;
-        }
-
-        if (y < min_y)
-        {
-            min_y = y;
-        }
-
-        if (y > max_y)
-        {
-            max_y = y;
-        }
-    }
-
-    surface->width = max_x - min_x;
-    surface->height = max_y - min_y;
-    return 1;
-}
-
 void apply_anchor(anchor_t anchor, int width_diff, int height_diff, int * x, int * y)
 {
     switch (anchor)
