@@ -10,6 +10,8 @@
 #include "utils.h"
 #include "input.h"
 
+#define BROAD_HIT_TEST(r1, r2) (((r1.right >= r2.left) && (r1.left <= r2.right)) && ((r1.bottom >= r2.top) && (r1.top <= r2.bottom)))
+
 static list_t * templates = NULL;
 static list_t * hitboxes = NULL;
 static list_t * sprites = NULL;
@@ -173,6 +175,63 @@ static void debug_entities_hitbox(rectangle_t const * camera)
             render_entity_hitbox(hitbox, entity, camera);
         }
     }
+}
+
+static uint8_t entity_collides_level(entity_t const * entity, hitbox_t const * level_hitbox, rectangle_t const * camera)
+{
+    uint8_t result = 0;
+
+    // broad phase
+
+    //  get a rectangle for entity's hitbox
+    hitbox_t const * entity_hitbox = entity->hitbox;
+    rectangle_t entity_hitbox_bounds, level_hitbox_bounds;
+    rectangle_t const * boundaries = &entity_hitbox->boundaries;
+    int x = entity->x, y = entity->y;
+
+    entity_hitbox_bounds.left = x + boundaries->left;
+    entity_hitbox_bounds.right = x + boundaries->right;
+    entity_hitbox_bounds.top = y + boundaries->top;
+    entity_hitbox_bounds.bottom = y + boundaries->bottom;
+
+    if (BOTTOM == level_hitbox->anchor)
+    {
+        //  get a rectangle for level's hitbox
+        boundaries = &level_hitbox->boundaries;
+
+        level_hitbox_bounds.left = boundaries->left;
+        level_hitbox_bounds.right = boundaries->right;
+        level_hitbox_bounds.top = camera->bottom - boundaries->top;
+        level_hitbox_bounds.bottom = camera->bottom - boundaries->bottom;
+
+        level_hitbox_bounds.top ^= level_hitbox_bounds.bottom;
+        level_hitbox_bounds.bottom ^= level_hitbox_bounds.top;
+        level_hitbox_bounds.top ^= level_hitbox_bounds.bottom;
+
+        if (BROAD_HIT_TEST(entity_hitbox_bounds, level_hitbox_bounds))
+        {
+            result = 1;
+        }
+    }
+    else if (BROAD_HIT_TEST(entity_hitbox_bounds, level_hitbox->boundaries))
+    {
+        result = 1;
+    }
+
+    if (result)
+    {
+        // need narrow phase?
+        if (RECTANGLE != entity_hitbox->shape || RECTANGLE != level_hitbox->shape)
+        {
+            // result = 0;
+            printf("\x1b[2;0Hdo perform SAT");
+        }
+        else
+        {
+            printf("\x1b[2;0Hcollides with level");
+        }
+    }
+    return result;
 }
 
 int init_entities()
@@ -373,18 +432,31 @@ void entities_logic(rectangle_t const * camera, uint16_t dt)
 
 void entities_hittest(level_t const * level)
 {
+    rectangle_t const * camera = &level->camera;
+
     if (show_hitbox_debug)
     {
-        debug_entities_hitbox(&level->camera);
+        debug_entities_hitbox(camera);
     }
 
+    printf("\x1b[2;0H                   ");
 
     entity_t * entity = NULL;
+    hitbox_t * hitbox = NULL;
     while (list_next(entities, (void **)&entity))
     {
         if (NULL != entity->hitbox)
         {
             // collisions with any level's hitbox?
+            while (list_next(level->hitboxes, (void **)&hitbox))
+            {
+                if (entity_collides_level(entity, hitbox, camera))
+                {
+                    // react !
+                    break;
+                }
+            }
+
             // collisions with another entity?
         }
     }
