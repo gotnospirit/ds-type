@@ -184,7 +184,7 @@ static void render_hitbox(hitbox_t const * hitbox, rectangle_t const * camera, i
                 points[i].y = y;
             }
 
-            copy->type = NULL;
+            copy->name = NULL;
             copy->shape = hitbox->shape;
             copy->points = points;
             copy->nb_points = max;
@@ -322,7 +322,7 @@ void process_rendering()
     {
         draw_hitbox(hitbox);
 
-        free(hitbox->type);
+        free(hitbox->name);
         free(hitbox->points);
         hitbox = list_dealloc(debug_pipe, hitbox);
         --debug_pipe_size;

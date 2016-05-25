@@ -128,7 +128,7 @@ typedef struct
 
 typedef struct
 {
-    char * type;
+    char * name;
     hitbox_shape_t shape;
     point_t * points;
     uint8_t nb_points;

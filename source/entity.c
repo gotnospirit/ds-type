@@ -37,7 +37,7 @@ static entity_template_t * template_get(const char * name)
     return NULL;
 }
 
-static void hitbox_set(const char * type, entity_t * entity)
+static void hitbox_set(const char * name, entity_t * entity)
 {
     if (NULL == entity)
     {
@@ -47,7 +47,7 @@ static void hitbox_set(const char * type, entity_t * entity)
     hitbox_t * hitbox = NULL;
     while (list_next(hitboxes, (void **)&hitbox))
     {
-        if (0 == strcmp(hitbox->type, type))
+        if (0 == strcmp(hitbox->name, name))
         {
             entity->hitbox = hitbox;
             return ;
@@ -266,18 +266,18 @@ void shutdown_entities()
     hitbox_t * hitbox = NULL;
     while (list_next(hitboxes, (void **)&hitbox))
     {
-        free(hitbox->type);
+        free(hitbox->name);
         free(hitbox->points);
     }
     list_delete(&hitboxes);
 }
 
-hitbox_t * entity_hitbox_new(const char * type, point_t * points, uint8_t nb_points, anchor_t anchor)
+hitbox_t * entity_hitbox_new(const char * name, point_t * points, uint8_t nb_points, anchor_t anchor)
 {
     hitbox_t * hitbox = (hitbox_t *)list_alloc(hitboxes);
     if (NULL != hitbox)
     {
-        hitbox->type = strdup(type);
+        hitbox->name = strdup(name);
         hitbox->shape = nb_points > 4 ? POLYGON : RECTANGLE;
         hitbox->points = points;
         hitbox->nb_points = nb_points;

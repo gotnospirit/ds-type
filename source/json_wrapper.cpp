@@ -263,7 +263,7 @@ static int process_level_hitbox(const char * type, JsonValue const &root, hitbox
         return 2;
     }
 
-    hitbox->type = NULL;
+    hitbox->name = NULL;
     hitbox->shape = nb_points > 4 ? POLYGON : RECTANGLE;
     hitbox->points = points;
     hitbox->nb_points = nb_points;
