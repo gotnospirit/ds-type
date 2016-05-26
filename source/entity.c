@@ -511,7 +511,7 @@ entity_t const * entity_get(const char * type)
 const char * entity_stop_charge()
 {
     charge_t * info = (charge_t *)charge->data;
-    uint8_t strength = info->strength;
+    int strength = info->strength;
     info->strength = 0;
 
     shot_t * shot = NULL;

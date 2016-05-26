@@ -38,7 +38,7 @@ static void keep_inside(entity_t * entity, rectangle_t const * camera)
 
 int logic_hero(entity_t * entity, rectangle_t const * camera)
 {
-    int const incr = entity->velocity;
+    uint8_t const incr = entity->velocity;
 
     entity->x += stick_dx() * incr;
     entity->y += stick_dy() * incr;

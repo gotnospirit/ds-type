@@ -112,7 +112,7 @@ typedef struct
 
 typedef struct
 {
-    int strength;
+    uint8_t strength;
 } charge_t;
 
 typedef struct
