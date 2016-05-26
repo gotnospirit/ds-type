@@ -63,7 +63,22 @@ static int process_animation(animation_t * animation, uint16_t dt)
         ? start_at + progress * (end_at - start_at)
         : end_at + (1 - progress) * (start_at - end_at);
 
-    template->update(animation, new_value);
+    if (new_value != animation->current)
+    {
+        animation->current = new_value;
+
+        entity_t * entity = (entity_t *)animation->entity;
+        sprite_t * sprite = entity->sprite;
+        if (NULL != sprite)
+        {
+            frame_t const * frame = get_frame(sprite->texture, new_value);
+            if (NULL != frame)
+            {
+                sprite->frame = frame;
+                entity_update_surface(entity, frame->width, frame->height);
+            }
+        }
+    }
 
     if (elapsed < duration)
     {
@@ -110,24 +125,9 @@ void shutdown_animations()
     list_delete(&templates);
 }
 
-animation_template_t * animation_template_new(const char * name, int start, int end, uint16_t duration, int loop, const char * update_method)
+animation_template_t * animation_template_new(const char * name, int start, int end, uint16_t duration, int loop)
 {
     if (-1 != loop && (loop < start || loop >= end))
-    {
-        return NULL;
-    }
-
-    animation_step_t * callback = NULL;
-
-    if (0 == strncmp(update_method, "frame", 5))
-    {
-        callback = frame_step;
-    }
-    else if (0 == strncmp(update_method, "value", 5))
-    {
-        callback = value_step;
-    }
-    else
     {
         return NULL;
     }
@@ -140,7 +140,6 @@ animation_template_t * animation_template_new(const char * name, int start, int 
         result->end = end;
         result->duration = duration;
         result->loop = loop;
-        result->update = callback;
     }
     return result;
 }
@@ -165,41 +164,6 @@ void process_animations(uint16_t dt)
         if (!process_animation(animation, dt))
         {
             animation = list_dealloc(animations, animation);
-        }
-    }
-}
-
-void frame_step(animation_t * animation, int value)
-{
-    if (value != animation->current)
-    {
-        animation->current = value;
-
-        entity_t * entity = (entity_t *)animation->entity;
-        sprite_t * sprite = entity->sprite;
-        if (NULL != sprite)
-        {
-            frame_t const * frame = get_frame(sprite->texture, value);
-            if (NULL != frame)
-            {
-                sprite->frame = frame;
-                entity_update_surface(entity, frame->width, frame->height);
-            }
-        }
-    }
-}
-
-void value_step(animation_t * animation, int value)
-{
-    if (value != animation->current)
-    {
-        animation->current = value;
-
-        entity_t * entity = (entity_t *)animation->entity;
-        charge_t * info = (charge_t *)entity->data;
-        if (NULL != info)
-        {
-            info->strength = value;
         }
     }
 }

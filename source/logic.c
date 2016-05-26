@@ -1,7 +1,9 @@
 #include "logic.h"
 #include "input.h"
 #include "entity.h"
+#include "render.h"
 #include "animation.h"
+#include "utils.h"
 
 static void keep_inside(entity_t * entity, rectangle_t const * camera)
 {
@@ -62,25 +64,6 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
         add_animation("rolldownback", entity);
     }
 
-    if (pressed(KEY_A))
-    {
-        entity_t * charge = entity_start_charge();
-        if (NULL != charge)
-        {
-            entity_anchor(charge, entity, MIDDLE_RIGHT);
-            add_animation("charge", charge);
-            add_animation("beam", charge);
-        }
-    }
-    else if (held(KEY_A))
-    {
-        entity_t * charge = entity_get_charge();
-        if (NULL != charge)
-        {
-            entity_anchor(charge, entity, MIDDLE_RIGHT);
-        }
-    }
-
     if (released(KEY_A))
     {
         const char * type = entity_stop_charge();
@@ -91,6 +74,48 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
             entity_anchor(shot, entity, MIDDLE_RIGHT);
             add_animation(type, shot);
         }
+    }
+    return 1;
+}
+
+int logic_charge(entity_t * entity, rectangle_t const * camera)
+{
+    if (pressed(KEY_A))
+    {
+        add_to_rendering(entity->sprite);
+
+        entity_t const * ship = entity_get("ship");
+        if (NULL != ship)
+        {
+            entity_anchor(entity, ship, MIDDLE_RIGHT);
+        }
+        add_animation("charge", entity);
+    }
+    else if (held(KEY_A))
+    {
+        entity_t const * ship = entity_get("ship");
+        if (NULL != ship)
+        {
+            entity_anchor(entity, ship, MIDDLE_RIGHT);
+
+            charge_t * info = (charge_t *)entity->data;
+            if (NULL != info)
+            {
+                uint8_t value = info->strength + entity->velocity;
+                if (value > 100)
+                {
+                    value = 100;
+                }
+
+                info->strength = value;
+            }
+        }
+    }
+
+    if (released(KEY_A))
+    {
+        remove_from_rendering(entity->sprite);
+        remove_from_animations(entity);
     }
     return 1;
 }

@@ -14,13 +14,12 @@ shot_t * entity_shot_new(const char *, int);
 
 void entities_logic(level_t const *, uint16_t);
 
-entity_t * entity_start_charge();
-entity_t * entity_get_charge();
+entity_t const * entity_get(const char *);
+
 const char * entity_stop_charge();
 
 entity_t * entity_spawn_shot(const char *);
 
 void entity_update_surface(entity_t *, uint16_t, uint16_t);
-void entity_anchor(entity_t *, entity_t *, anchor_t);
 
 #endif

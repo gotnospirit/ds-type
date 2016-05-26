@@ -18,6 +18,7 @@ static list_t * sprites = NULL;
 static list_t * entities = NULL;
 static list_t * shots = NULL;
 
+static entity_t * ship = NULL;
 static entity_t * charge = NULL;
 
 static uint8_t templates_size = 0;
@@ -133,6 +134,8 @@ static int init_ship_entity()
         hitbox_set("ship", entity);
 
         add_to_rendering(entity->sprite);
+
+        ship = entity;
     }
     return 0;
 }
@@ -344,6 +347,9 @@ void shutdown_entities()
 {
     shutdown_animations();
 
+    ship = NULL;
+    charge = NULL;
+
     shot_t * shot = NULL;
     while (list_next(shots, (void **)&shot))
     {
@@ -425,6 +431,10 @@ entity_template_t * entity_template_new(const char * name, int current_frame, te
         {
             result->logic = logic_shot;
         }
+        else if (0 == strncmp(logic_method, "logic_charge", 12))
+        {
+            result->logic = logic_charge;
+        }
         else
         {
             printf("Unsupported '%s'\n", logic_method);
@@ -485,22 +495,21 @@ void entities_logic(level_t const * level, uint16_t dt)
     sprites_update(camera);
 }
 
-entity_t * entity_start_charge()
+entity_t const * entity_get(const char * type)
 {
-    add_to_rendering(charge->sprite);
-    return charge;
-}
-
-entity_t * entity_get_charge()
-{
-    return charge;
+    if (0 == strncmp(type, "ship", 4))
+    {
+        return ship;
+    }
+    else if (0 == strncmp(type, "charge", 6))
+    {
+        return charge;
+    }
+    return NULL;
 }
 
 const char * entity_stop_charge()
 {
-    remove_from_rendering(charge->sprite);
-    remove_from_animations(charge);
-
     charge_t * info = (charge_t *)charge->data;
     uint8_t strength = info->strength;
     info->strength = 0;
@@ -545,33 +554,4 @@ void entity_update_surface(entity_t * entity, uint16_t new_width, uint16_t new_h
 
     entity->width = new_width;
     entity->height = new_height;
-}
-
-void entity_anchor(entity_t * target, entity_t * base, anchor_t anchor)
-{
-    if (TOP_LEFT == anchor || TOP_CENTER == anchor || TOP_RIGHT == anchor)
-    {
-        target->y = base->y;
-    }
-    else if (BOTTOM_LEFT == anchor || BOTTOM_CENTER == anchor || BOTTOM_RIGHT == anchor)
-    {
-        target->y = base->y + base->height;
-    }
-    else
-    {
-        target->y = base->y + (base->height - target->height) / 2;
-    }
-
-    if (TOP_LEFT == anchor || MIDDLE_LEFT == anchor || BOTTOM_LEFT == anchor)
-    {
-        target->x = base->x;
-    }
-    else if (TOP_RIGHT == anchor || MIDDLE_RIGHT == anchor || BOTTOM_RIGHT == anchor)
-    {
-        target->x = base->x + base->width;
-    }
-    else
-    {
-        target->x = base->x + (base->width - target->width) / 2;
-    }
 }

@@ -39,6 +39,35 @@ char * read_file(const char * filepath)
     return result;
 }
 
+void entity_anchor(entity_t * target, entity_t const * base, anchor_t const anchor)
+{
+    if (TOP_LEFT == anchor || TOP_CENTER == anchor || TOP_RIGHT == anchor)
+    {
+        target->y = base->y;
+    }
+    else if (BOTTOM_LEFT == anchor || BOTTOM_CENTER == anchor || BOTTOM_RIGHT == anchor)
+    {
+        target->y = base->y + base->height;
+    }
+    else
+    {
+        target->y = base->y + (base->height - target->height) / 2;
+    }
+
+    if (TOP_LEFT == anchor || MIDDLE_LEFT == anchor || BOTTOM_LEFT == anchor)
+    {
+        target->x = base->x;
+    }
+    else if (TOP_RIGHT == anchor || MIDDLE_RIGHT == anchor || BOTTOM_RIGHT == anchor)
+    {
+        target->x = base->x + base->width;
+    }
+    else
+    {
+        target->x = base->x + (base->width - target->width) / 2;
+    }
+}
+
 void apply_anchor(anchor_t anchor, int width_diff, int height_diff, int * x, int * y)
 {
     switch (anchor)

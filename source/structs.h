@@ -41,9 +41,6 @@ typedef enum
 typedef struct Entity entity_t;
 typedef int logic_t(entity_t *, rectangle_t const *);
 
-typedef struct Animation animation_t;
-typedef void animation_step_t(animation_t *, int);
-
 typedef struct GameState game_state_t;
 typedef void game_state_processor_t(game_state_t *);
 
@@ -83,8 +80,16 @@ typedef struct
     char * name;
     int start, end, loop;
     uint16_t duration;
-    animation_step_t * update;
 } animation_template_t;
+
+typedef struct
+{
+    int start, current;
+    uint16_t elapsed, duration;
+    entity_t * entity;
+    animation_template_t const * tpl;
+    easing_t * ease;
+} animation_t;
 
 typedef struct
 {
@@ -135,15 +140,6 @@ typedef struct
     anchor_t anchor;
     rectangle_t boundaries;
 } hitbox_t;
-
-struct Animation
-{
-    int start, current;
-    uint16_t elapsed, duration;
-    entity_t * entity;
-    animation_template_t const * tpl;
-    easing_t * ease;
-};
 
 struct Entity
 {

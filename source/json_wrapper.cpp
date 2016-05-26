@@ -328,7 +328,6 @@ static int process_level_hitboxes(JsonValue const &root, list_t * container)
 static int process_base_animations(JsonValue const &root)
 {
     const char * name = NULL;
-    const char * type = NULL;
     int start = 0, end = 0, loop = 0;
     uint16_t duration = 0;
 
@@ -337,7 +336,6 @@ static int process_base_animations(JsonValue const &root)
         auto const &value = node->value;
 
         name = Json::GetString(value, "id");
-        type = Json::GetString(value, "type");
         start = Json::GetNumber(value, "start");
         end = Json::GetNumber(value, "end");
         loop = Json::GetNumber(value, "loop");
@@ -348,21 +346,16 @@ static int process_base_animations(JsonValue const &root)
             printf("Missing animation's id\n");
             return 1;
         }
-        else if (NULL == type)
-        {
-            printf("Missing animation's type\n");
-            return 2;
-        }
         else if (start < 0 || end < 0 || duration < 0)
         {
             printf("Invalid animation parameters\n");
-            return 3;
+            return 2;
         }
 
-        if (NULL == animation_template_new(name, start, end, duration, loop, type))
+        if (NULL == animation_template_new(name, start, end, duration, loop))
         {
             printf("Template not created\n");
-            return 4;
+            return 3;
         }
     }
     return 0;
