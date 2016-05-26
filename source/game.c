@@ -21,30 +21,6 @@ static int basic_events()
         ? 1 : 0;
 }
 
-static void game_update(level_t * level)
-{
-    u64 current_time = osGetTime();
-    if (0 == last_time)
-    {
-        last_time = current_time;
-    }
-
-    u16 dt = current_time - last_time;
-
-    // apply game logic
-    level_logic(level, &screen, dt);
-
-    entities_logic(&level->camera, dt);
-
-    // collision
-    entities_hittest(level);
-
-    // reflect entities' updates to their sprite
-    sprites_update(&level->camera);
-
-    last_time = current_time;
-}
-
 void initialize(game_state_t * state)
 {
     if (0 != init_rendering(&screen))
@@ -125,7 +101,19 @@ void run_level(game_state_t * state)
     }
     else
     {
-        game_update(state->data);
+        u64 current_time = osGetTime();
+        if (0 == last_time)
+        {
+            last_time = current_time;
+        }
+
+        u16 dt = current_time - last_time;
+
+        level_logic(state->data, &screen, dt);
+
+        entities_logic(state->data, dt);
+
+        last_time = current_time;
 
         process_rendering();
     }

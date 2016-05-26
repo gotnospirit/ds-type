@@ -234,6 +234,53 @@ static uint8_t entity_collides_level(entity_t const * entity, hitbox_t const * l
     return result;
 }
 
+static void entities_hittest(level_t const * level)
+{
+    rectangle_t const * camera = &level->camera;
+
+    if (show_hitbox_debug)
+    {
+        debug_entities_hitbox(camera);
+    }
+
+    printf("\x1b[2;0H                   ");
+
+    entity_t * entity = NULL;
+    hitbox_t * hitbox = NULL;
+    while (list_next(entities, (void **)&entity))
+    {
+        if (NULL != entity->hitbox)
+        {
+            // collisions with any level's hitbox?
+            while (list_next(level->hitboxes, (void **)&hitbox))
+            {
+                if (entity_collides_level(entity, hitbox, camera))
+                {
+                    // react !
+                    break;
+                }
+            }
+
+            // collisions with another entity?
+        }
+    }
+}
+
+static void sprites_update(rectangle_t const * camera)
+{
+    int camera_left = camera->left;
+    int camera_top = camera->top;
+
+    sprite_t * sprite = NULL;
+    entity_t * entity = NULL;
+    while (list_next(entities, (void **)&entity))
+    {
+        sprite = entity->sprite;
+        sprite->x = entity->x - camera_left;
+        sprite->y = entity->y - camera_top;
+    }
+}
+
 int init_entities()
 {
     templates = list_new(sizeof(entity_template_t), 1);
@@ -400,9 +447,11 @@ shot_t * entity_shot_new(const char * name, int threshold)
     return result;
 }
 
-void entities_logic(rectangle_t const * camera, uint16_t dt)
+void entities_logic(level_t const * level, uint16_t dt)
 {
     printf("\x1b[3;0Hent: %2d, tpl: %2d, hbx: %2d, beam %3d%%", entities_size, templates_size, hitboxes_size, ((charge_t *)charge->data)->strength);
+
+    rectangle_t const * camera = &level->camera;
 
     if (pressed(KEY_SELECT))
     {
@@ -427,54 +476,13 @@ void entities_logic(rectangle_t const * camera, uint16_t dt)
         }
     }
 
+    // collision
+    entities_hittest(level);
+
     process_animations(dt);
-}
 
-void entities_hittest(level_t const * level)
-{
-    rectangle_t const * camera = &level->camera;
-
-    if (show_hitbox_debug)
-    {
-        debug_entities_hitbox(camera);
-    }
-
-    printf("\x1b[2;0H                   ");
-
-    entity_t * entity = NULL;
-    hitbox_t * hitbox = NULL;
-    while (list_next(entities, (void **)&entity))
-    {
-        if (NULL != entity->hitbox)
-        {
-            // collisions with any level's hitbox?
-            while (list_next(level->hitboxes, (void **)&hitbox))
-            {
-                if (entity_collides_level(entity, hitbox, camera))
-                {
-                    // react !
-                    break;
-                }
-            }
-
-            // collisions with another entity?
-        }
-    }
-}
-
-void sprites_update(rectangle_t const * camera)
-{
-    int camera_left = camera->left;
-    int camera_top = camera->top;
-
-    sprite_t * sprite = NULL;
-    entity_t * entity = NULL;
-    while (list_next(entities, (void **)&entity))
-    {
-        sprite = entity->sprite;
-        sprite->x = entity->x - camera_left;
-        sprite->y = entity->y - camera_top;
-    }
+    // reflect entities' updates to their sprite
+    sprites_update(camera);
 }
 
 entity_t * entity_start_charge()

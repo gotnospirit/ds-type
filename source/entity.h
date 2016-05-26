@@ -12,10 +12,7 @@ entity_template_t * entity_template_new(const char *, int, texture_t const *, co
 hitbox_t * entity_hitbox_new(const char *, point_t *, uint8_t, hitbox_shape_t, anchor_t, rectangle_t);
 shot_t * entity_shot_new(const char *, int);
 
-void entities_logic(rectangle_t const *, uint16_t);
-void entities_hittest(level_t const *);
-
-void sprites_update(rectangle_t const *);
+void entities_logic(level_t const *, uint16_t);
 
 entity_t * entity_start_charge();
 entity_t * entity_get_charge();
