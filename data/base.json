@@ -15,8 +15,8 @@
         {"id":"ship","frame":2,"logic":"logic_hero","velocity":5},
         {"id":"orb","frame":8},
         {"id":"device","frame":26},
-        {"id":"charge","frame":38,"logic":"logic_charge","anchor":3,"velocity":1},
-        {"id":"shot","frame":5,"logic":"logic_shot","anchor":5,"velocity":10}
+        {"id":"charge","frame":38,"logic":"logic_charge","velocity":1},
+        {"id":"shot","frame":5,"logic":"logic_shot","velocity":10}
     ],
     "hitboxes" : [
         {"id":"ship","points":[1,2,1,14,31,2,31,14]},
@@ -42,11 +42,11 @@
         {"id":"explosion","start":20,"end":25,"duration":1000},
         {"id":"device_level_1","start":26,"end":31,"duration":1000},
         {"id":"device_level_2","start":32,"end":37,"duration":1000},
-        {"id":"charge","start":38,"end":45,"duration":600,"loop":38},
-        {"id":"lowshot","start":46,"end":47,"duration":200,"loop":46},
-        {"id":"midshot","start":46,"end":49,"duration":400,"loop":48},
-        {"id":"highshot","start":46,"end":51,"duration":500,"loop":50},
-        {"id":"fullshot","start":46,"end":55,"duration":600,"loop":54},
+        {"id":"charge","start":38,"end":45,"duration":600,"loop":38,"anchor":3},
+        {"id":"lowshot","start":46,"end":47,"duration":200,"loop":46,"anchor":5},
+        {"id":"midshot","start":46,"end":49,"duration":400,"loop":48,"anchor":5},
+        {"id":"highshot","start":46,"end":51,"duration":500,"loop":50,"anchor":5},
+        {"id":"fullshot","start":46,"end":55,"duration":600,"loop":54,"anchor":5},
         {"id":"boost","start":56,"end":59,"duration":600,"loop":58},
         {"id":"dead","start":60,"end":67,"duration":1000}
     ]

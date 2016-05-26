@@ -328,7 +328,7 @@ static int process_level_hitboxes(JsonValue const &root, list_t * container)
 static int process_base_animations(JsonValue const &root)
 {
     const char * name = NULL;
-    int start = 0, end = 0, loop = 0;
+    int start = 0, end = 0, loop = 0, anchor = 0;
     uint16_t duration = 0;
 
     for (auto const &node : root)
@@ -340,6 +340,7 @@ static int process_base_animations(JsonValue const &root)
         end = Json::GetNumber(value, "end");
         loop = Json::GetNumber(value, "loop");
         duration = Json::GetNumber(value, "duration");
+        anchor = Json::GetNumber(value, "anchor");
 
         if (NULL == name)
         {
@@ -351,11 +352,21 @@ static int process_base_animations(JsonValue const &root)
             printf("Invalid animation parameters\n");
             return 2;
         }
+        else if (anchor >= 9)
+        {
+            printf("Invalid anchor value for %s (max 8)\n", name);
+            return 3;
+        }
 
-        if (NULL == animation_template_new(name, start, end, duration, loop))
+        if (anchor < 0)
+        {
+            anchor = 0;
+        }
+
+        if (NULL == animation_template_new(name, start, end, duration, loop, (anchor_t)anchor))
         {
             printf("Template not created\n");
-            return 3;
+            return 4;
         }
     }
     return 0;
@@ -456,7 +467,7 @@ static int process_base_entities(JsonValue const &root, texture_t const * textur
 {
     const char * name = NULL;
     const char * logic_method = NULL;
-    int frame = 0, anchor = 0, velocity = 0;
+    int frame = 0, velocity = 0;
 
     for (auto const &node : root)
     {
@@ -464,7 +475,6 @@ static int process_base_entities(JsonValue const &root, texture_t const * textur
 
         name = Json::GetString(value, "id");
         frame = Json::GetNumber(value, "frame");
-        anchor = Json::GetNumber(value, "anchor");
         logic_method = Json::GetString(value, "logic");
         velocity = Json::GetNumber(value, "velocity");
 
@@ -478,20 +488,10 @@ static int process_base_entities(JsonValue const &root, texture_t const * textur
             printf("Missing idle frame for %s\n", name);
             return 2;
         }
-        else if (anchor >= 9)
-        {
-            printf("Invalid anchor value for %s (max 8)\n", name);
-            return 3;
-        }
         else if (velocity > 255)
         {
             printf("Invalid velocity value for %s (max 255)\n", name);
             return 4;
-        }
-
-        if (anchor < 0)
-        {
-            anchor = 0;
         }
 
         if (velocity < 0)
@@ -504,7 +504,7 @@ static int process_base_entities(JsonValue const &root, texture_t const * textur
             printf("Frame %d not found\n", frame);
             return 5;
         }
-        else if (NULL == entity_template_new(name, frame, texture, logic_method, (anchor_t)anchor, velocity))
+        else if (NULL == entity_template_new(name, frame, texture, logic_method, velocity))
         {
             printf("Template not created\n");
             return 6;

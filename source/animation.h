@@ -8,7 +8,7 @@
 int init_animations();
 void shutdown_animations();
 
-animation_template_t * animation_template_new(const char *, int, int, uint16_t, int);
+animation_template_t * animation_template_new(const char *, int, int, uint16_t, int, anchor_t);
 
 void remove_from_animations(entity_t *);
 

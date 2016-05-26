@@ -8,7 +8,7 @@
 int init_entities();
 void shutdown_entities();
 
-entity_template_t * entity_template_new(const char *, int, texture_t const *, const char *, anchor_t, uint8_t);
+entity_template_t * entity_template_new(const char *, int, texture_t const *, const char *, uint8_t);
 hitbox_t * entity_hitbox_new(const char *, point_t *, uint8_t, hitbox_shape_t, anchor_t, rectangle_t);
 shot_t * entity_shot_new(const char *, int);
 
@@ -20,6 +20,6 @@ const char * entity_stop_charge();
 
 entity_t * entity_spawn_shot(const char *);
 
-void entity_update_surface(entity_t *, uint16_t, uint16_t);
+void entity_update_surface(entity_t *, uint16_t, uint16_t, anchor_t);
 
 #endif

@@ -80,6 +80,7 @@ typedef struct
     char * name;
     int start, end, loop;
     uint16_t duration;
+    anchor_t anchor;
 } animation_template_t;
 
 typedef struct
@@ -127,7 +128,6 @@ typedef struct
     texture_t const * texture;
     frame_t const * frame;
     logic_t * logic;
-    anchor_t anchor;
     uint8_t velocity;
 } entity_template_t;
 
@@ -149,7 +149,6 @@ struct Entity
     sprite_t * sprite;
     logic_t * logic;
     void * data; // charge_t, ...
-    anchor_t anchor;
     uint8_t velocity;
     uint8_t newly;
     hitbox_t const * hitbox;

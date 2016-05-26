@@ -113,7 +113,6 @@ static entity_t * spawn_entity(entity_template_t const * template)
     result->sprite = sprite;
     result->logic = template->logic;
     result->data = NULL;
-    result->anchor = template->anchor;
     result->velocity = template->velocity;
     result->newly = 1;
     result->hitbox = NULL;
@@ -400,7 +399,7 @@ hitbox_t * entity_hitbox_new(const char * name, point_t * points, uint8_t nb_poi
     return hitbox;
 }
 
-entity_template_t * entity_template_new(const char * name, int current_frame, texture_t const * texture, const char * logic_method, anchor_t anchor, uint8_t velocity)
+entity_template_t * entity_template_new(const char * name, int current_frame, texture_t const * texture, const char * logic_method, uint8_t velocity)
 {
     entity_template_t * result = (entity_template_t *)list_alloc(templates);
     if (NULL == result)
@@ -418,7 +417,6 @@ entity_template_t * entity_template_new(const char * name, int current_frame, te
     result->texture = texture;
     result->frame = frame;
     result->logic = NULL;
-    result->anchor = anchor;
     result->velocity = velocity;
 
     if (NULL != logic_method)
@@ -542,10 +540,10 @@ entity_t * entity_spawn_shot(const char * type)
     return NULL;
 }
 
-void entity_update_surface(entity_t * entity, uint16_t new_width, uint16_t new_height)
+void entity_update_surface(entity_t * entity, uint16_t new_width, uint16_t new_height, anchor_t anchor)
 {
     apply_anchor(
-        entity->anchor,
+        anchor,
         entity->width - new_width,
         entity->height - new_height,
         &entity->x,

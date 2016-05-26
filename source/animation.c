@@ -75,7 +75,7 @@ static int process_animation(animation_t * animation, uint16_t dt)
             if (NULL != frame)
             {
                 sprite->frame = frame;
-                entity_update_surface(entity, frame->width, frame->height);
+                entity_update_surface(entity, frame->width, frame->height, template->anchor);
             }
         }
     }
@@ -125,7 +125,7 @@ void shutdown_animations()
     list_delete(&templates);
 }
 
-animation_template_t * animation_template_new(const char * name, int start, int end, uint16_t duration, int loop)
+animation_template_t * animation_template_new(const char * name, int start, int end, uint16_t duration, int loop, anchor_t anchor)
 {
     if (-1 != loop && (loop < start || loop >= end))
     {
@@ -138,8 +138,9 @@ animation_template_t * animation_template_new(const char * name, int start, int 
         result->name = strdup(name);
         result->start = start;
         result->end = end;
-        result->duration = duration;
         result->loop = loop;
+        result->duration = duration;
+        result->anchor = anchor;
     }
     return result;
 }
