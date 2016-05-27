@@ -1,22 +1,24 @@
 {
     "frames" : [
-        {"x":0,"y":0,"width":32,"height":16},{"x":32,"y":0,"width":32,"height":16},{"x":64,"y":0,"width":32,"height":16},{"x":96,"y":0,"width":32,"height":16},{"x":128,"y":0,"width":32,"height":16},
-        {"x":160,"y":0,"width":14,"height":12},{"x":174,"y":0,"width":14,"height":12},{"x":188,"y":4,"width":16,"height":4},
-        {"x":0,"y":16,"width":16,"height":16},{"x":16,"y":16,"width":16,"height":16},{"x":32,"y":16,"width":16,"height":16},{"x":48,"y":16,"width":16,"height":16},{"x":64,"y":16,"width":16,"height":16},{"x":76,"y":16,"width":16,"height":16},{"x":88,"y":16,"width":16,"height":16},{"x":104,"y":16,"width":16,"height":16},{"x":120,"y":16,"width":16,"height":16},{"x":136,"y":16,"width":16,"height":16},{"x":152,"y":16,"width":16,"height":16},{"x":168,"y":16,"width":16,"height":16},
-        {"x":0,"y":32,"width":32,"height":32},{"x":32,"y":32,"width":32,"height":32},{"x":64,"y":32,"width":32,"height":32},{"x":96,"y":32,"width":32,"height":32},{"x":128,"y":32,"width":32,"height":32},{"x":160,"y":32,"width":32,"height":32},
-        {"x":0,"y":64,"width":20,"height":20},{"x":20,"y":64,"width":20,"height":20},{"x":40,"y":64,"width":20,"height":20},{"x":60,"y":64,"width":20,"height":20},{"x":80,"y":64,"width":20,"height":20},{"x":100,"y":64,"width":20,"height":20},
-        {"x":0,"y":84,"width":26,"height":22},{"x":26,"y":84,"width":26,"height":22},{"x":52,"y":84,"width":26,"height":22},{"x":78,"y":84,"width":26,"height":22},{"x":104,"y":84,"width":26,"height":22},{"x":130,"y":84,"width":26,"height":22},
-        {"x":0,"y":106,"width":34,"height":32},{"x":34,"y":106,"width":34,"height":32},{"x":68,"y":106,"width":33,"height":32},{"x":101,"y":106,"width":33,"height":32},{"x":134,"y":106,"width":33,"height":32},{"x":167,"y":106,"width":32,"height":32},{"x":199,"y":106,"width":32,"height":32},{"x":231,"y":106,"width":25,"height":32},
-        {"x":0,"y":138,"width":16,"height":16},{"x":16,"y":138,"width":16,"height":16},{"x":32,"y":138,"width":32,"height":16},{"x":64,"y":138,"width":32,"height":16},{"x":96,"y":138,"width":48,"height":16},{"x":144,"y":138,"width":48,"height":16},{"x":192,"y":138,"width":64,"height":16},{"x":0,"y":154,"width":64,"height":16},{"x":64,"y":154,"width":80,"height":16},{"x":144,"y":154,"width":80,"height":16},
-        {"x":0,"y":170,"width":32,"height":32},{"x":32,"y":170,"width":32,"height":32},{"x":64,"y":170,"width":32,"height":32},{"x":96,"y":170,"width":29,"height":32},
-        {"x":0,"y":202,"width":32,"height":28},{"x":32,"y":202,"width":32,"height":28},{"x":64,"y":202,"width":21,"height":28},{"x":85,"y":202,"width":22,"height":28},{"x":107,"y":202,"width":24,"height":28},{"x":131,"y":202,"width":26,"height":28},{"x":157,"y":202,"width":28,"height":28},{"x":185,"y":202,"width":32,"height":28}
+        {"x":0,"y":0,"width":32,"height":16},{"x":0,"y":16,"width":32,"height":16},{"x":0,"y":32,"width":32,"height":16},{"x":0,"y":48,"width":32,"height":16},{"x":0,"y":64,"width":32,"height":16},
+        {"x":0,"y":80,"width":14,"height":12},{"x":14,"y":80,"width":14,"height":12},
+        {"x":0,"y":92,"width":16,"height":4},
+        {"x":32,"y":0,"width":16,"height":14},{"x":48,"y":0,"width":16,"height":14},{"x":32,"y":14,"width":16,"height":14},{"x":48,"y":14,"width":16,"height":14},{"x":32,"y":28,"width":16,"height":14},{"x":48,"y":28,"width":16,"height":14},{"x":32,"y":42,"width":16,"height":14},{"x":48,"y":42,"width":16,"height":14},{"x":32,"y":56,"width":16,"height":14},{"x":48,"y":56,"width":16,"height":14},{"x":32,"y":70,"width":16,"height":14},{"x":48,"y":70,"width":16,"height":14},
+        {"x":64,"y":0,"width":32,"height":32},{"x":96,"y":0,"width":32,"height":32},{"x":128,"y":0,"width":32,"height":32},{"x":160,"y":0,"width":32,"height":32},{"x":192,"y":0,"width":32,"height":32},{"x":224,"y":0,"width":32,"height":32},
+        {"x":210,"y":160,"width":20,"height":16},{"x":210,"y":176,"width":20,"height":16},{"x":210,"y":192,"width":20,"height":16},{"x":210,"y":208,"width":20,"height":16},{"x":210,"y":224,"width":20,"height":16},{"x":210,"y":240,"width":20,"height":16},
+        {"x":230,"y":124,"width":26,"height":22},{"x":230,"y":146,"width":26,"height":22},{"x":230,"y":168,"width":26,"height":22},{"x":230,"y":190,"width":26,"height":22},{"x":230,"y":212,"width":26,"height":22},{"x":230,"y":234,"width":26,"height":22},
+        {"x":64,"y":32,"width":34,"height":32},{"x":98,"y":32,"width":34,"height":32},{"x":132,"y":32,"width":27,"height":32},{"x":159,"y":32,"width":25,"height":32},{"x":184,"y":32,"width":29,"height":32},{"x":213,"y":32,"width":26,"height":32},{"x":64,"y":64,"width":23,"height":32},{"x":87,"y":64,"width":20,"height":32},
+        {"x":0,"y":96,"width":16,"height":16},{"x":16,"y":96,"width":16,"height":16},{"x":32,"y":96,"width":32,"height":16},{"x":64,"y":96,"width":32,"height":16},{"x":96,"y":96,"width":48,"height":16},{"x":144,"y":96,"width":48,"height":16},{"x":192,"y":96,"width":64,"height":16},{"x":0,"y":112,"width":64,"height":16},{"x":64,"y":112,"width":80,"height":16},{"x":144,"y":112,"width":80,"height":16},
+        {"x":107,"y":64,"width":32,"height":32},{"x":139,"y":64,"width":32,"height":32},{"x":171,"y":64,"width":32,"height":32},{"x":203,"y":64,"width":29,"height":32},
+        {"x":0,"y":128,"width":32,"height":28},{"x":32,"y":128,"width":32,"height":28},{"x":64,"y":128,"width":21,"height":28},{"x":85,"y":128,"width":22,"height":28},{"x":107,"y":128,"width":24,"height":28},{"x":131,"y":128,"width":26,"height":28},{"x":157,"y":128,"width":28,"height":28},{"x":185,"y":128,"width":32,"height":28},
+        {"x":0,"y":156,"width":24,"height":48},{"x":24,"y":156,"width":32,"height":48},{"x":56,"y":156,"width":40,"height":48},{"x":96,"y":156,"width":48,"height":48},{"x":144,"y":156,"width":56,"height":48}
     ],
     "entities" : [
         {"id":"ship","frame":2,"logic":"logic_hero","velocity":5},
         {"id":"orb","frame":8},
         {"id":"device","frame":26},
         {"id":"charge","frame":38,"logic":"logic_charge","velocity":1},
-        {"id":"shot","frame":5,"logic":"logic_shot","velocity":10}
+        {"id":"shot","frame":7,"logic":"logic_shot","velocity":10}
     ],
     "hitboxes" : [
         {"id":"ship","points":[1,2,1,14,31,2,31,14]},
@@ -37,9 +39,9 @@
         {"id":"rollup","start":2,"end":4,"duration":300},
         {"id":"rollupback","start":4,"end":2,"duration":300},
         {"id":"rolldown","start":2,"end":0,"duration":300},
-        {"id":"shot","start":5,"end":7,"duration":200},
+        {"id":"shot_explosion_1","start":5,"end":6,"duration":300},
         {"id":"orb","start":8,"end":19,"duration":1000},
-        {"id":"explosion","start":20,"end":25,"duration":1000},
+        {"id":"enemy_explosion","start":20,"end":25,"duration":1000},
         {"id":"device_level_1","start":26,"end":31,"duration":1000},
         {"id":"device_level_2","start":32,"end":37,"duration":1000},
         {"id":"charge","start":38,"end":45,"duration":600,"loop":38,"anchor":3},
@@ -47,7 +49,8 @@
         {"id":"midshot","start":46,"end":49,"duration":400,"loop":48,"anchor":5},
         {"id":"highshot","start":46,"end":51,"duration":500,"loop":50,"anchor":5},
         {"id":"fullshot","start":46,"end":55,"duration":600,"loop":54,"anchor":5},
-        {"id":"boost","start":56,"end":59,"duration":600,"loop":58},
-        {"id":"dead","start":60,"end":67,"duration":1000}
+        {"id":"boost","start":56,"end":59,"duration":600,"loop":58,"anchor":5},
+        {"id":"ship_death","start":60,"end":67,"duration":1000,"anchor":4},
+        {"id":"shot_explosion_2","start":68,"end":73,"duration":400,"anchor":4}
     ]
 }
