@@ -43,15 +43,12 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
     float dx = stick_dx() * incr;
     float dy = stick_dy() * incr;
 
+    // don't let the ship going outside the camera's scope
+    keep_inside(entity, camera, &dx, &dy);
+
     if (dx != 0 || dy != 0)
     {
-        // don't let the ship going outside the camera's scope
-        keep_inside(entity, camera, &dx, &dy);
-
-        if (dx != 0 || dy != 0)
-        {
-            entity_move_ship(dx, dy);
-        }
+        entity_move_ship(dx, dy);
     }
 
     if (pressed(KEY_UP))
