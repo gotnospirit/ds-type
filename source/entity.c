@@ -96,6 +96,7 @@ static entity_t * spawn_entity(entity_template_t const * template)
     sprite->frame = frame;
     sprite->flip_x = 0;
     sprite->flip_y = 0;
+    sprite->visible = 0;
 
     entity_t * result = (entity_t *)list_alloc(entities);
     if (NULL == result)

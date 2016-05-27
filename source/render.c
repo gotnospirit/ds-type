@@ -351,7 +351,7 @@ void process_rendering()
 
 int add_to_rendering(sprite_t * sprite)
 {
-    if (NULL == sprite)
+    if (NULL == sprite || sprite->visible)
     {
         return 0;
     }
@@ -370,6 +370,7 @@ int add_to_rendering(sprite_t * sprite)
     {
         return 0;
     }
+    sprite->visible = 1;
     *ptr = sprite;
     ++render_pipe_size;
     return 1;
@@ -377,7 +378,7 @@ int add_to_rendering(sprite_t * sprite)
 
 int remove_from_rendering(sprite_t * sprite)
 {
-    if (NULL == sprite)
+    if (NULL == sprite || !sprite->visible)
     {
         return 0;
     }
@@ -387,6 +388,7 @@ int remove_from_rendering(sprite_t * sprite)
     {
         if (*ptr == sprite)
         {
+            sprite->visible = 0;
             list_dealloc(render_pipe, ptr);
             --render_pipe_size;
             return 1;

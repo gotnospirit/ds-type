@@ -158,6 +158,7 @@ static int create_tile(const char * name, int x, bool is_top_tile, bool flip_y, 
     sprite->frame = frame;
     sprite->flip_x = is_top_tile ? 1 : 0;
     sprite->flip_y = flip_y ? 1 : 0;
+    sprite->visible = 0;
 
     tile_t * tile = (tile_t *)list_alloc(container);
     if (NULL == tile)
@@ -169,7 +170,6 @@ static int create_tile(const char * name, int x, bool is_top_tile, bool flip_y, 
     tile->x = x;
     tile->width = width;
     tile->height = height;
-    tile->visible = 0;
     tile->anchor = is_top_tile ? TOP : BOTTOM;
     tile->sprite = sprite;
     return 0;

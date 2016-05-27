@@ -19,22 +19,20 @@ static void update_level_tiles(list_t * container, rectangle_t const * camera)
     tile_t * tile = NULL;
     sprite_t * sprite = NULL;
     int x = 0;
+    uint8_t visible = 0;
     while (list_next(container, (void **)&tile))
     {
         x = tile->x;
         sprite = tile->sprite;
+        visible = sprite->visible;
 
         if ((x >= camera_right) || ((x + tile->width) < camera_left))
         {
-            if (tile->visible)
-            {
-                remove_from_rendering(sprite);
-                tile->visible = 0;
-            }
+            remove_from_rendering(sprite);
             continue;
         }
 
-        if (tile->visible)
+        if (visible)
         {
             sprite->x = x - camera_left;
         }
@@ -45,7 +43,6 @@ static void update_level_tiles(list_t * container, rectangle_t const * camera)
                 ? 0 : offset_y - tile->height;
 
             add_to_rendering(sprite);
-            tile->visible = 1;
         }
     }
 }
@@ -129,10 +126,7 @@ void level_delete(level_t * level)
     tile_t * tile = NULL;
     while (list_next(level->tiles, (void **)&tile))
     {
-        if (tile->visible)
-        {
-            remove_from_rendering(tile->sprite);
-        }
+        remove_from_rendering(tile->sprite);
         free(tile->sprite);
     }
     list_delete(&level->tiles);

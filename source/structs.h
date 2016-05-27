@@ -73,6 +73,7 @@ typedef struct
     frame_t const * frame;
     // uint8_t depth
     uint8_t flip_x, flip_y;
+    uint8_t visible;
 } sprite_t;
 
 typedef struct
@@ -96,7 +97,6 @@ typedef struct
 {
     int x;
     uint16_t width, height;
-    uint8_t visible;
     anchor_t anchor;
     sprite_t * sprite;
 } tile_t;
