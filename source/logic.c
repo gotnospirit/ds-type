@@ -78,23 +78,9 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
 
 int logic_charge(entity_t * entity, rectangle_t const * camera)
 {
-    if (pressed(KEY_A))
+    if (held(KEY_A))
     {
-        entity_start_charge();
-    }
-    else if (held(KEY_A))
-    {
-        charge_t * info = (charge_t *)entity->data;
-        if (NULL != info)
-        {
-            uint8_t value = info->strength + entity->velocity;
-            if (value > 100)
-            {
-                value = 100;
-            }
-
-            info->strength = value;
-        }
+        entity_increment_charge();
     }
 
     if (released(KEY_A))

@@ -20,7 +20,7 @@ void entity_spawn_shot();
 
 void entity_move_ship(float, float);
 
-void entity_start_charge();
+void entity_increment_charge();
 void entity_stop_charge();
 
 void entity_update_sprite(entity_t *, int, anchor_t);

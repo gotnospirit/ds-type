@@ -26,6 +26,7 @@ static uint8_t hitboxes_size = 0;
 static uint8_t entities_size = 0;
 
 static uint8_t show_hitbox_debug = 0;
+static uint8_t lowest_charge_threshold = 255;
 
 static entity_template_t * template_get(const char * name)
 {
@@ -452,6 +453,11 @@ shot_t * entity_shot_new(const char * name, int threshold)
     {
         result->name = strdup(name);
         result->threshold = threshold;
+
+        if (threshold < lowest_charge_threshold)
+        {
+            lowest_charge_threshold = threshold;
+        }
     }
     return result;
 }
@@ -550,11 +556,25 @@ void entity_move_ship(float dx, float dy)
     charge->y += dy;
 }
 
-void entity_start_charge()
+void entity_increment_charge()
 {
-    add_to_rendering(charge->sprite);
-    entity_anchor(charge, ship, MIDDLE_RIGHT);
-    add_animation("charge", charge);
+    charge_t * info = (charge_t *)charge->data;
+    if (NULL != info)
+    {
+        uint8_t value = info->strength + charge->velocity;
+        if (value >= lowest_charge_threshold && add_to_rendering(charge->sprite))
+        {
+            entity_anchor(charge, ship, MIDDLE_RIGHT);
+            add_animation("charge", charge);
+        }
+
+        if (value > 100)
+        {
+            value = 100;
+        }
+
+        info->strength = value;
+    }
 }
 
 void entity_stop_charge()
