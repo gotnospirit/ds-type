@@ -16,10 +16,13 @@ void entities_logic(level_t const *, uint16_t);
 
 entity_t const * entity_get(const char *);
 
-const char * entity_stop_charge();
+void entity_spawn_shot();
 
-entity_t * entity_spawn_shot(const char *);
+void entity_move_ship(float, float);
 
-void entity_update_surface(entity_t *, uint16_t, uint16_t, anchor_t);
+void entity_start_charge();
+void entity_stop_charge();
+
+void entity_update_sprite(entity_t *, int, anchor_t);
 
 #endif

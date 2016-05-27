@@ -5,20 +5,20 @@
 #include "animation.h"
 #include "utils.h"
 
-static void keep_inside(entity_t * entity, rectangle_t const * camera)
+static void keep_inside(entity_t * entity, rectangle_t const * camera, float * dx, float * dy)
 {
     int y = entity->y;
     int height = entity->height;
     int camera_top = camera->top;
     int camera_bottom = camera->bottom;
 
-    if (y < camera_top)
+    if ((y + *dy) < camera_top)
     {
-        entity->y = camera_top;
+        *dy = camera_top - y;
     }
-    else if ((y + height) > camera_bottom)
+    else if ((y + *dy + height) > camera_bottom)
     {
-        entity->y = camera_bottom - height;
+        *dy = camera_bottom - (y + height);
     }
 
     int x = entity->x;
@@ -26,13 +26,13 @@ static void keep_inside(entity_t * entity, rectangle_t const * camera)
     int camera_left = camera->left;
     int camera_right = camera->right;
 
-    if (x < camera_left)
+    if ((x + *dx) < camera_left)
     {
-        entity->x = camera_left;
+        *dx = camera_left - x;
     }
-    else if ((x + width) > camera_right)
+    else if ((x + *dx + width) > camera_right)
     {
-        entity->x = camera_right - width;
+        *dx = camera_right - (x + width);
     }
 }
 
@@ -40,11 +40,19 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
 {
     uint8_t const incr = entity->velocity;
 
-    entity->x += stick_dx() * incr;
-    entity->y += stick_dy() * incr;
+    float dx = stick_dx() * incr;
+    float dy = stick_dy() * incr;
 
-    // keep ship inside the camera's scope
-    keep_inside(entity, camera);
+    if (dx != 0 || dy != 0)
+    {
+        // don't let the ship going outside the camera's scope
+        keep_inside(entity, camera, &dx, &dy);
+
+        if (dx != 0 || dy != 0)
+        {
+            entity_move_ship(dx, dy);
+        }
+    }
 
     if (pressed(KEY_UP))
     {
@@ -66,14 +74,7 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
 
     if (released(KEY_A))
     {
-        const char * type = entity_stop_charge();
-
-        entity_t * shot = entity_spawn_shot(type);
-        if (NULL != shot)
-        {
-            entity_anchor(shot, entity, MIDDLE_RIGHT);
-            add_animation(type, shot);
-        }
+        entity_spawn_shot();
     }
     return 1;
 }
@@ -82,40 +83,26 @@ int logic_charge(entity_t * entity, rectangle_t const * camera)
 {
     if (pressed(KEY_A))
     {
-        add_to_rendering(entity->sprite);
-
-        entity_t const * ship = entity_get("ship");
-        if (NULL != ship)
-        {
-            entity_anchor(entity, ship, MIDDLE_RIGHT);
-        }
-        add_animation("charge", entity);
+        entity_start_charge();
     }
     else if (held(KEY_A))
     {
-        entity_t const * ship = entity_get("ship");
-        if (NULL != ship)
+        charge_t * info = (charge_t *)entity->data;
+        if (NULL != info)
         {
-            entity_anchor(entity, ship, MIDDLE_RIGHT);
-
-            charge_t * info = (charge_t *)entity->data;
-            if (NULL != info)
+            uint8_t value = info->strength + entity->velocity;
+            if (value > 100)
             {
-                uint8_t value = info->strength + entity->velocity;
-                if (value > 100)
-                {
-                    value = 100;
-                }
-
-                info->strength = value;
+                value = 100;
             }
+
+            info->strength = value;
         }
     }
 
     if (released(KEY_A))
     {
-        remove_from_rendering(entity->sprite);
-        remove_from_animations(entity);
+        entity_stop_charge();
     }
     return 1;
 }

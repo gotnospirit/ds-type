@@ -506,8 +506,10 @@ entity_t const * entity_get(const char * type)
     return NULL;
 }
 
-const char * entity_stop_charge()
+void entity_spawn_shot()
 {
+    const char * type = "shot";
+
     charge_t * info = (charge_t *)charge->data;
     int strength = info->strength;
     info->strength = 0;
@@ -517,39 +519,72 @@ const char * entity_stop_charge()
     {
         if (strength > shot->threshold)
         {
-            return shot->name;
+            type = shot->name;
+            break;
         }
     }
-    return "shot";
-}
 
-entity_t * entity_spawn_shot(const char * type)
-{
     entity_template_t * template = template_get("shot");
     if (NULL != template)
     {
-        entity_t * result = spawn_entity(template);
-        if (NULL != result)
+        entity_t * entity = spawn_entity(template);
+        if (NULL != entity)
         {
-            hitbox_set(type, result);
+            hitbox_set(type, entity);
 
-            add_to_rendering(result->sprite);
-            return result;
+            add_to_rendering(entity->sprite);
+
+            entity_anchor(entity, ship, MIDDLE_RIGHT);
+            add_animation(type, entity);
         }
     }
-    return NULL;
 }
 
-void entity_update_surface(entity_t * entity, uint16_t new_width, uint16_t new_height, anchor_t anchor)
+void entity_move_ship(float dx, float dy)
 {
-    apply_anchor(
-        anchor,
-        entity->width - new_width,
-        entity->height - new_height,
-        &entity->x,
-        &entity->y
-    );
+    ship->x += dx;
+    ship->y += dy;
 
-    entity->width = new_width;
-    entity->height = new_height;
+    charge->x += dx;
+    charge->y += dy;
+}
+
+void entity_start_charge()
+{
+    add_to_rendering(charge->sprite);
+    entity_anchor(charge, ship, MIDDLE_RIGHT);
+    add_animation("charge", charge);
+}
+
+void entity_stop_charge()
+{
+    remove_from_rendering(charge->sprite);
+    remove_from_animations(charge);
+}
+
+void entity_update_sprite(entity_t * entity, int frame_index, anchor_t anchor)
+{
+    sprite_t * sprite = entity->sprite;
+    frame_t const * frame = get_frame(sprite->texture, frame_index);
+    if (NULL != frame)
+    {
+        uint16_t old_width = entity->width, old_height = entity->height;
+        uint16_t new_width = frame->width, new_height = frame->height;
+
+        if (old_width != new_width || old_height != new_height)
+        {
+            apply_anchor(
+                anchor,
+                old_width - new_width,
+                old_height - new_height,
+                &entity->x,
+                &entity->y
+            );
+
+            entity->width = new_width;
+            entity->height = new_height;
+        }
+
+        sprite->frame = frame;
+    }
 }

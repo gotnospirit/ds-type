@@ -402,13 +402,15 @@ void render_level_hitbox(hitbox_t const * hitbox, rectangle_t const * camera)
 
 void render_entity_hitbox(hitbox_t const * hitbox, entity_t const * entity, rectangle_t const * camera)
 {
+    rectangle_t const * boundaries = &hitbox->boundaries;
+
     int offset_x = entity->x;
     int offset_y = entity->y;
 
     apply_anchor(
         hitbox->anchor,
-        entity->width - (hitbox->boundaries.right - hitbox->boundaries.left),
-        entity->height - (hitbox->boundaries.bottom - hitbox->boundaries.top),
+        entity->width - (boundaries->right - boundaries->left),
+        entity->height - (boundaries->bottom - boundaries->top),
         &offset_x,
         &offset_y
     );

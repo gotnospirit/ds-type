@@ -67,17 +67,7 @@ static int process_animation(animation_t * animation, uint16_t dt)
     {
         animation->current = new_value;
 
-        entity_t * entity = (entity_t *)animation->entity;
-        sprite_t * sprite = entity->sprite;
-        if (NULL != sprite)
-        {
-            frame_t const * frame = get_frame(sprite->texture, new_value);
-            if (NULL != frame)
-            {
-                sprite->frame = frame;
-                entity_update_surface(entity, frame->width, frame->height, template->anchor);
-            }
-        }
+        entity_update_sprite(animation->entity, new_value, template->anchor);
     }
 
     if (elapsed < duration)
