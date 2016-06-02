@@ -4,6 +4,7 @@
 #include "render.h"
 #include "animation.h"
 #include "utils.h"
+#include "defer.h"
 
 static void keep_inside(entity_t * entity, rectangle_t const * camera, float * dx, float * dy)
 {
@@ -53,20 +54,20 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
 
     if (pressed(KEY_UP))
     {
-        add_animation("rollup", entity, NULL);
+        add_animation("rollup", entity);
     }
     else if (pressed(KEY_DOWN))
     {
-        add_animation("rolldown", entity, NULL);
+        add_animation("rolldown", entity);
     }
 
     if (released(KEY_UP))
     {
-        add_animation("rollupback", entity, NULL);
+        add_animation("rollupback", entity);
     }
     else if (released(KEY_DOWN))
     {
-        add_animation("rolldownback", entity, NULL);
+        add_animation("rolldownback", entity);
     }
 
     if (released(KEY_A))
@@ -105,16 +106,17 @@ int logic_shot(entity_t * entity, rectangle_t const * camera)
     return 1;
 }
 
-void remove_entity_on_end(const char * animation_type, entity_t * entity)
+void remove_entity_on_end(payload_t * payload)
 {
-    entity_delete(entity);
+    entity_delete((entity_t *)payload);
 }
 
 void logic_shot_hit_level(entity_t * entity)
 {
     const char * animation_type = (0 == strncmp(entity->hitbox->name, "shot", 4))
         ? "shot_explosion_1" : "shot_explosion_2";
-    add_animation(animation_type, entity, remove_entity_on_end);
+    uint16_t duration = add_animation(animation_type, entity);
+    defer_new(duration + 150, remove_entity_on_end, entity);
     entity->dying = 1;
     // prevent further hit test
     entity->hitbox = NULL;

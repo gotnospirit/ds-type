@@ -87,12 +87,6 @@ static int process_animation(animation_t * animation, uint16_t dt)
         }
         return 1;
     }
-
-    on_animation_end_t * on_end = animation->on_end;
-    if (on_end)
-    {
-        on_end(template->name, animation->entity);
-    }
     return 0;
 }
 
@@ -165,12 +159,12 @@ void process_animations(uint16_t dt)
     }
 }
 
-void add_animation(const char * type, entity_t * entity, on_animation_end_t * on_end)
+uint16_t add_animation(const char * type, entity_t * entity)
 {
     animation_template_t * template = template_get(type);
     if (NULL == template)
     {
-        return ;
+        return 0;
     }
 
     animation_t * animation = find(entity);
@@ -188,7 +182,7 @@ void add_animation(const char * type, entity_t * entity, on_animation_end_t * on
         animation = (animation_t *)list_alloc(animations);
         if (NULL == animation)
         {
-            return ;
+            return 0;
         }
     }
 
@@ -199,5 +193,5 @@ void add_animation(const char * type, entity_t * entity, on_animation_end_t * on
     animation->entity = entity;
     animation->tpl = template;
     animation->ease = linear_ease_in;
-    animation->on_end = on_end;
+    return animation->duration;
 }

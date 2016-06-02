@@ -11,6 +11,7 @@
 #include "level.h"
 #include "entity.h"
 #include "logic.h"
+#include "defer.h"
 
 static surface_t screen;
 static uint64_t last_time = 0;
@@ -30,6 +31,12 @@ void initialize(game_state_t * state)
     }
 
     if (0 != init_entities())
+    {
+        state->next = loading_error;
+        return ;
+    }
+
+    if (0 != init_defers())
     {
         state->next = loading_error;
         return ;
@@ -109,6 +116,8 @@ void run_level(game_state_t * state)
 
         u16 dt = current_time - last_time;
 
+        defer_tick(dt);
+
         level_logic(state->data, &screen, dt);
 
         entities_logic(state->data, dt);
@@ -131,6 +140,7 @@ void shutdown(game_state_t * state)
 {
     state->next = NULL;
 
+    shutdown_defers();
     shutdown_entities();
     shutdown_rendering();
 }

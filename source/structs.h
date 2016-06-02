@@ -47,7 +47,15 @@ typedef void entity_hit_entity_t(entity_t *, entity_t *);
 typedef struct GameState game_state_t;
 typedef void game_state_processor_t(game_state_t *);
 
-typedef void on_animation_end_t(const char *, entity_t *);
+typedef void payload_t;
+typedef void callback_t(payload_t *);
+
+typedef struct
+{
+    int64_t delay;
+    callback_t * callback;
+    payload_t * payload;
+} defer_t;
 
 typedef float easing_t(int, int);
 
@@ -96,7 +104,6 @@ typedef struct
     entity_t * entity;
     animation_template_t const * tpl;
     easing_t * ease;
-    on_animation_end_t * on_end;
 } animation_t;
 
 typedef struct

@@ -14,6 +14,6 @@ void remove_from_animations(entity_t *);
 
 void process_animations(uint16_t);
 
-void add_animation(const char *, entity_t *, on_animation_end_t *);
+uint16_t add_animation(const char *, entity_t *);
 
 #endif
