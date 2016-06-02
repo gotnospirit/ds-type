@@ -38,7 +38,7 @@ static void keep_inside(entity_t * entity, rectangle_t const * camera, float * d
 
 int logic_hero(entity_t * entity, rectangle_t const * camera)
 {
-    uint8_t const incr = entity->velocity;
+    uint8_t const incr = entity->tpl->velocity;
 
     float dx = stick_dx() * incr;
     float dy = stick_dy() * incr;
@@ -53,20 +53,20 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
 
     if (pressed(KEY_UP))
     {
-        add_animation("rollup", entity);
+        add_animation("rollup", entity, NULL);
     }
     else if (pressed(KEY_DOWN))
     {
-        add_animation("rolldown", entity);
+        add_animation("rolldown", entity, NULL);
     }
 
     if (released(KEY_UP))
     {
-        add_animation("rollupback", entity);
+        add_animation("rollupback", entity, NULL);
     }
     else if (released(KEY_DOWN))
     {
-        add_animation("rolldownback", entity);
+        add_animation("rolldownback", entity, NULL);
     }
 
     if (released(KEY_A))
@@ -98,6 +98,24 @@ int logic_shot(entity_t * entity, rectangle_t const * camera)
         return 0;
     }
 
-    entity->x += entity->velocity;
+    if (!entity->dying)
+    {
+        entity->x += entity->tpl->velocity;
+    }
     return 1;
+}
+
+void remove_entity_on_end(const char * animation_type, entity_t * entity)
+{
+    entity_delete(entity);
+}
+
+void logic_shot_hit_level(entity_t * entity)
+{
+    const char * animation_type = (0 == strncmp(entity->hitbox->name, "shot", 4))
+        ? "shot_explosion_1" : "shot_explosion_2";
+    add_animation(animation_type, entity, remove_entity_on_end);
+    entity->dying = 1;
+    // prevent further hit test
+    entity->hitbox = NULL;
 }

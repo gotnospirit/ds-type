@@ -466,7 +466,6 @@ static int process_base_hitboxes(JsonValue const &root)
 static int process_base_entities(JsonValue const &root, texture_t const * texture)
 {
     const char * name = NULL;
-    const char * logic_method = NULL;
     int frame = 0, velocity = 0;
 
     for (auto const &node : root)
@@ -475,7 +474,6 @@ static int process_base_entities(JsonValue const &root, texture_t const * textur
 
         name = Json::GetString(value, "id");
         frame = Json::GetNumber(value, "frame");
-        logic_method = Json::GetString(value, "logic");
         velocity = Json::GetNumber(value, "velocity");
 
         if (NULL == name)
@@ -504,7 +502,7 @@ static int process_base_entities(JsonValue const &root, texture_t const * textur
             printf("Frame %d not found\n", frame);
             return 5;
         }
-        else if (NULL == entity_template_new(name, frame, texture, logic_method, velocity))
+        else if (NULL == entity_template_new(name, frame, texture, velocity))
         {
             printf("Template not created\n");
             return 6;

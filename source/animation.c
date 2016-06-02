@@ -29,12 +29,12 @@ static int is_roll(const char * type)
         ? 1 : 0;
 }
 
-static animation_t * find_roll(entity_t * entity)
+static animation_t * find(entity_t * entity)
 {
     animation_t * animation = NULL;
     while (list_next(animations, (void **)&animation))
     {
-        if (entity == animation->entity && is_roll(animation->tpl->name))
+        if (entity == animation->entity)
         {
             return animation;
         }
@@ -86,6 +86,12 @@ static int process_animation(animation_t * animation, uint16_t dt)
             animation->ease = short_ease_in;
         }
         return 1;
+    }
+
+    on_animation_end_t * on_end = animation->on_end;
+    if (on_end)
+    {
+        on_end(template->name, animation->entity);
     }
     return 0;
 }
@@ -159,7 +165,7 @@ void process_animations(uint16_t dt)
     }
 }
 
-void add_animation(const char * type, entity_t * entity)
+void add_animation(const char * type, entity_t * entity, on_animation_end_t * on_end)
 {
     animation_template_t * template = template_get(type);
     if (NULL == template)
@@ -167,27 +173,23 @@ void add_animation(const char * type, entity_t * entity)
         return ;
     }
 
-    animation_t * animation = NULL;
-    int start = -1;
+    animation_t * animation = find(entity);
+    int start = template->start;
 
-    // Une animation de déplacement du vaisseau doit remplacer la précédente
-    if (is_roll(type))
+    if (NULL != animation)
     {
-        animation = find_roll(entity);
-        if (NULL != animation)
+        if (is_roll(type))
         {
             start = animation->current;
         }
     }
-
-    if (NULL == animation)
+    else
     {
         animation = (animation_t *)list_alloc(animations);
         if (NULL == animation)
         {
             return ;
         }
-        start = template->start;
     }
 
     animation->start = -1 != start ? start : 0;
@@ -197,4 +199,5 @@ void add_animation(const char * type, entity_t * entity)
     animation->entity = entity;
     animation->tpl = template;
     animation->ease = linear_ease_in;
+    animation->on_end = on_end;
 }

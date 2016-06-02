@@ -7,4 +7,6 @@ int logic_hero(entity_t *, rectangle_t const *);
 int logic_charge(entity_t *, rectangle_t const *);
 int logic_shot(entity_t *, rectangle_t const *);
 
+void logic_shot_hit_level(entity_t *);
+
 #endif

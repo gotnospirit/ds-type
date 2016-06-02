@@ -39,10 +39,15 @@ typedef enum
 } hitbox_shape_t;
 
 typedef struct Entity entity_t;
-typedef int logic_t(entity_t *, rectangle_t const *);
+
+typedef int entity_update_t(entity_t *, rectangle_t const *);
+typedef void entity_hit_level_t(entity_t *);
+typedef void entity_hit_entity_t(entity_t *, entity_t *);
 
 typedef struct GameState game_state_t;
 typedef void game_state_processor_t(game_state_t *);
+
+typedef void on_animation_end_t(const char *, entity_t *);
 
 typedef float easing_t(int, int);
 
@@ -91,6 +96,7 @@ typedef struct
     entity_t * entity;
     animation_template_t const * tpl;
     easing_t * ease;
+    on_animation_end_t * on_end;
 } animation_t;
 
 typedef struct
@@ -127,7 +133,9 @@ typedef struct
     char * name;
     texture_t const * texture;
     frame_t const * frame;
-    logic_t * logic;
+    entity_update_t * update;
+    entity_hit_level_t * hit_level;
+    entity_hit_entity_t * hit_entity;
     uint8_t velocity;
 } entity_template_t;
 
@@ -143,15 +151,13 @@ typedef struct
 
 struct Entity
 {
-    const char * type;
     int x, y;
     uint16_t width, height;
     sprite_t * sprite;
-    logic_t * logic;
     void * data; // charge_t, ...
-    uint8_t velocity;
-    uint8_t newly;
+    uint8_t newly, dying;
     hitbox_t const * hitbox;
+    entity_template_t const * tpl;
 };
 
 struct GameState

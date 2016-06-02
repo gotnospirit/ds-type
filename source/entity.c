@@ -59,22 +59,6 @@ static void hitbox_set(const char * name, entity_t * entity)
     }
 }
 
-static entity_t * entity_free(entity_t * entity)
-{
-    remove_from_animations(entity);
-
-    entity->type = NULL;
-    entity->hitbox = NULL;
-    free(entity->data);
-
-    sprite_t * sprite = entity->sprite;
-    remove_from_rendering(sprite);
-    list_dealloc(sprites, sprite);
-
-    --entities_size;
-    return list_dealloc(entities, entity);
-}
-
 static entity_t * spawn_entity(entity_template_t const * template)
 {
     texture_t const * texture = template->texture;
@@ -107,17 +91,16 @@ static entity_t * spawn_entity(entity_template_t const * template)
     }
     ++entities_size;
 
-    result->type = template->name;
     result->x = 0;
     result->y = 0;
     result->width = frame->width;
     result->height = frame->height;
     result->sprite = sprite;
-    result->logic = template->logic;
     result->data = NULL;
-    result->velocity = template->velocity;
     result->newly = 1;
+    result->dying = 0;
     result->hitbox = NULL;
+    result->tpl = template;
     return result;
 }
 
@@ -155,7 +138,7 @@ static int init_charge_entity()
         charge_t * info = malloc(sizeof(charge_t));
         if (NULL == info)
         {
-            entity_free(entity);
+            entity_delete(entity);
             return 2;
         }
         info->strength = 0;
@@ -249,6 +232,8 @@ static void entities_hittest(level_t const * level)
 
     printf("\x1b[2;0H                   ");
 
+    entity_hit_level_t * fn = NULL;
+
     entity_t * entity = NULL;
     hitbox_t * hitbox = NULL;
     while (list_next(entities, (void **)&entity))
@@ -261,6 +246,11 @@ static void entities_hittest(level_t const * level)
                 if (entity_collides_level(entity, hitbox, camera))
                 {
                     // react !
+                    fn = entity->tpl->hit_level;
+                    if (fn)
+                    {
+                        fn(entity);
+                    }
                     break;
                 }
             }
@@ -361,7 +351,7 @@ void shutdown_entities()
     entity_t * entity = NULL;
     while (list_next(entities, (void **)&entity))
     {
-        entity = entity_free(entity);
+        entity = entity_delete(entity);
     }
     list_delete(&entities);
     entities_size = 0;
@@ -401,48 +391,42 @@ hitbox_t * entity_hitbox_new(const char * name, point_t * points, uint8_t nb_poi
     return hitbox;
 }
 
-entity_template_t * entity_template_new(const char * name, int current_frame, texture_t const * texture, const char * logic_method, uint8_t velocity)
+entity_template_t * entity_template_new(const char * name, int current_frame, texture_t const * texture, uint8_t velocity)
 {
-    entity_template_t * result = (entity_template_t *)list_alloc(templates);
-    if (NULL == result)
-    {
-        return NULL;
-    }
-
     frame_t const * frame = get_frame(texture, current_frame);
     if (NULL == frame)
     {
         return NULL;
     }
 
+    entity_template_t * result = (entity_template_t *)list_alloc(templates);
+    if (NULL == result)
+    {
+        return NULL;
+    }
+    ++templates_size;
+
     result->name = strdup(name);
     result->texture = texture;
     result->frame = frame;
-    result->logic = NULL;
+    result->update = NULL;
+    result->hit_level = NULL;
+    result->hit_entity = NULL;
     result->velocity = velocity;
 
-    if (NULL != logic_method)
+    if (0 == strncmp(name, "ship", 4))
     {
-        if (0 == strncmp(logic_method, "logic_hero", 10))
-        {
-            result->logic = logic_hero;
-        }
-        else if (0 == strncmp(logic_method, "logic_shot", 10))
-        {
-            result->logic = logic_shot;
-        }
-        else if (0 == strncmp(logic_method, "logic_charge", 12))
-        {
-            result->logic = logic_charge;
-        }
-        else
-        {
-            printf("Unsupported '%s'\n", logic_method);
-            list_dealloc(templates, result);
-            return NULL;
-        }
+        result->update = logic_hero;
     }
-    ++templates_size;
+    else if (0 == strncmp(name, "shot", 4))
+    {
+        result->update = logic_shot;
+        result->hit_level = logic_shot_hit_level;
+    }
+    else if (0 == strncmp(name, "charge", 6))
+    {
+        result->update = logic_charge;
+    }
     return result;
 }
 
@@ -473,7 +457,7 @@ void entities_logic(level_t const * level, uint16_t dt)
         show_hitbox_debug = show_hitbox_debug ? 0 : 1;
     }
 
-    logic_t * logic = NULL;
+    entity_update_t * fn = NULL;
     entity_t * entity = NULL;
     while (list_next(entities, (void **)&entity))
     {
@@ -483,11 +467,10 @@ void entities_logic(level_t const * level, uint16_t dt)
             continue;
         }
 
-        logic = entity->logic;
-
-        if (NULL != logic && !logic(entity, camera))
+        fn = entity->tpl->update;
+        if (fn && !fn(entity, camera))
         {
-            entity = entity_free(entity);
+            entity = entity_delete(entity);
         }
     }
 
@@ -511,6 +494,22 @@ entity_t const * entity_get(const char * type)
         return charge;
     }
     return NULL;
+}
+
+entity_t * entity_delete(entity_t * entity)
+{
+    remove_from_animations(entity);
+
+    entity->hitbox = NULL;
+    entity->tpl = NULL;
+    free(entity->data);
+
+    sprite_t * sprite = entity->sprite;
+    remove_from_rendering(sprite);
+    list_dealloc(sprites, sprite);
+
+    --entities_size;
+    return list_dealloc(entities, entity);
 }
 
 void entity_spawn_shot()
@@ -542,7 +541,7 @@ void entity_spawn_shot()
             add_to_rendering(entity->sprite);
 
             entity_anchor(entity, ship, MIDDLE_RIGHT);
-            add_animation(type, entity);
+            add_animation(type, entity, NULL);
         }
     }
 }
@@ -561,11 +560,12 @@ void entity_increment_charge()
     charge_t * info = (charge_t *)charge->data;
     if (NULL != info)
     {
-        uint8_t value = info->strength + charge->velocity;
+        uint8_t value = info->strength + charge->tpl->velocity;
+        // show animation 'charge' when we pass the first threshold
         if (value >= lowest_charge_threshold && add_to_rendering(charge->sprite))
         {
             entity_anchor(charge, ship, MIDDLE_RIGHT);
-            add_animation("charge", charge);
+            add_animation("charge", charge, NULL);
         }
 
         if (value > 100)

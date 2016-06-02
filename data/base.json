@@ -14,11 +14,11 @@
         {"x":0,"y":156,"width":24,"height":48},{"x":24,"y":156,"width":32,"height":48},{"x":56,"y":156,"width":40,"height":48},{"x":96,"y":156,"width":48,"height":48},{"x":144,"y":156,"width":56,"height":48}
     ],
     "entities" : [
-        {"id":"ship","frame":2,"logic":"logic_hero","velocity":5},
+        {"id":"ship","frame":2,"velocity":5},
         {"id":"orb","frame":8},
         {"id":"device","frame":26},
-        {"id":"charge","frame":38,"logic":"logic_charge","velocity":1},
-        {"id":"shot","frame":7,"logic":"logic_shot","velocity":10}
+        {"id":"charge","frame":38,"velocity":1},
+        {"id":"shot","frame":7,"velocity":10}
     ],
     "hitboxes" : [
         {"id":"ship","points":[1,2,1,14,31,2,31,14]},
@@ -39,7 +39,7 @@
         {"id":"rollup","start":2,"end":4,"duration":300},
         {"id":"rollupback","start":4,"end":2,"duration":300},
         {"id":"rolldown","start":2,"end":0,"duration":300},
-        {"id":"shot_explosion_1","start":5,"end":6,"duration":300},
+        {"id":"shot_explosion_1","start":5,"end":6,"duration":150,"anchor":5},
         {"id":"orb","start":8,"end":19,"duration":1000},
         {"id":"enemy_explosion","start":20,"end":25,"duration":1000},
         {"id":"device_level_1","start":26,"end":31,"duration":1000},
@@ -51,6 +51,6 @@
         {"id":"fullshot","start":46,"end":55,"duration":600,"loop":54,"anchor":5},
         {"id":"boost","start":56,"end":59,"duration":600,"loop":58,"anchor":5},
         {"id":"ship_death","start":60,"end":67,"duration":1000,"anchor":4},
-        {"id":"shot_explosion_2","start":68,"end":73,"duration":400,"anchor":4}
+        {"id":"shot_explosion_2","start":68,"end":72,"duration":300,"anchor":4}
     ]
 }
