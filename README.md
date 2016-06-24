@@ -4,8 +4,9 @@ R-Type clone for 3DS using [libctru](https://github.com/smealum/ctrulib) & [citr
 # missing features
 - [x] shots
 - [x] charged shots
-- [ ] collisions
+- [x] collisions with levels
 - [ ] enemies
+- [ ] collisions with enemies
 - [ ] auxiliary device
 - [ ] sound
 - [ ] score
