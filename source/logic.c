@@ -54,20 +54,20 @@ int logic_hero(entity_t * entity, rectangle_t const * camera)
 
     if (pressed(KEY_UP))
     {
-        add_animation("rollup", entity);
+        animation_new("rollup", entity);
     }
     else if (pressed(KEY_DOWN))
     {
-        add_animation("rolldown", entity);
+        animation_new("rolldown", entity);
     }
 
     if (released(KEY_UP))
     {
-        add_animation("rollupback", entity);
+        animation_new("rollupback", entity);
     }
     else if (released(KEY_DOWN))
     {
-        add_animation("rolldownback", entity);
+        animation_new("rolldownback", entity);
     }
 
     if (released(KEY_A))
@@ -115,7 +115,7 @@ void logic_shot_hit_level(entity_t * entity)
 {
     const char * animation_type = (0 == strncmp(entity->hitbox->name, "shot", 4))
         ? "shot_explosion_1" : "shot_explosion_2";
-    uint16_t duration = add_animation(animation_type, entity);
+    uint16_t duration = animation_new(animation_type, entity);
     defer_new(duration + 150, remove_entity_on_end, entity);
     entity->dying = 1;
     // prevent further hit test

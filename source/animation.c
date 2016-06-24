@@ -159,7 +159,7 @@ void process_animations(uint16_t dt)
     }
 }
 
-uint16_t add_animation(const char * type, entity_t * entity)
+uint16_t animation_new(const char * type, entity_t * entity)
 {
     animation_template_t * template = template_get(type);
     if (NULL == template)

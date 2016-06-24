@@ -541,7 +541,7 @@ void entity_spawn_shot()
             add_to_rendering(entity->sprite);
 
             entity_anchor(entity, ship, MIDDLE_RIGHT);
-            add_animation(type, entity);
+            animation_new(type, entity);
         }
     }
 }
@@ -565,7 +565,7 @@ void entity_increment_charge()
         if (value >= lowest_charge_threshold && add_to_rendering(charge->sprite))
         {
             entity_anchor(charge, ship, MIDDLE_RIGHT);
-            add_animation("charge", charge);
+            animation_new("charge", charge);
         }
 
         if (value > 100)
